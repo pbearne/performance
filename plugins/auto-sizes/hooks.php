@@ -159,7 +159,6 @@ function auto_sizes_prime_attachment_caches( string $content, string $context = 
 	while ( $processor->next_tag( array( 'tag_name' => 'IMG' ) ) ) {
 		$class = $processor->get_attribute( 'class' );
 
-		// Only apply the dominant color to images that have a src attribute.
 		if ( ! is_string( $class ) ) {
 			continue;
 		}
@@ -199,7 +198,7 @@ add_filter( 'the_content', 'auto_sizes_prime_attachment_caches', 6 );
  */
 function auto_sizes_filter_image_tag( string $content, array $parsed_block, WP_Block $block ): string {
 	$processor = new WP_HTML_Tag_Processor( $content );
-	$has_image = $processor->next_tag( array( 'tag_name' => 'img' ) );
+	$has_image = $processor->next_tag( array( 'tag_name' => 'IMG' ) );
 
 	// Only update the markup if an image is found.
 	if ( $has_image ) {
@@ -208,8 +207,6 @@ function auto_sizes_filter_image_tag( string $content, array $parsed_block, WP_B
 		 * Callback for calculating image sizes attribute value for an image block.
 		 *
 		 * This is a workaround to use block context data when calculating the img sizes attribute.
-		 *
-		 * @since n.e.x.t
 		 *
 		 * @param string $sizes The image sizes attribute value.
 		 * @param string $size  The image size data.
