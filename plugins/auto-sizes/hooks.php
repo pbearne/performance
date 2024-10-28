@@ -143,12 +143,15 @@ function auto_sizes_get_width( string $layout_width, int $image_width ): string 
  *
  * @since n.e.x.t
  *
- * @param string $content The HTML content.
- * @param string $context Optional. Additional context to pass to the filters.
- *                        Defaults to `current_filter()` when not set.
+ * @param string|mixed $content The HTML content.
+ * @param string       $context Optional. Additional context to pass to the filters.
+ *                              Defaults to `current_filter()` when not set.
  * @return string The HTML content.
  */
-function auto_sizes_prime_attachment_caches( string $content, string $context = null ): string {
+function auto_sizes_prime_attachment_caches( $content, string $context = null ): string {
+	if ( ! is_string( $content ) ) {
+		return '';
+	}
 	if ( null === $context ) {
 		$context = current_filter();
 	}
@@ -191,12 +194,15 @@ add_filter( 'the_content', 'auto_sizes_prime_attachment_caches', 6 );
  *
  * @since 1.1.0
  *
- * @param string                                                   $content      The block content about to be rendered.
+ * @param string|mixed                                             $content      The block content about to be rendered.
  * @param array{ attrs?: array{ align?: string, width?: string } } $parsed_block The parsed block.
  * @param WP_Block                                                 $block        Block instance.
  * @return string The updated block content.
  */
-function auto_sizes_filter_image_tag( string $content, array $parsed_block, WP_Block $block ): string {
+function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $block ): string {
+	if ( ! is_string( $content ) ) {
+		return '';
+	}
 	$processor = new WP_HTML_Tag_Processor( $content );
 	$has_image = $processor->next_tag( array( 'tag_name' => 'IMG' ) );
 
