@@ -223,7 +223,7 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 			$width     = $block->attributes['width'] ?? '';
 
 			// Hypothetical function to calculate better sizes.
-			$sizes = auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string), $alignment, (string) $width );
+			$sizes = auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string) $alignment, (string) $width );
 
 			return $sizes;
 		};
