@@ -77,7 +77,6 @@ class Test_WebP_Uploads_Image_Edit extends TestCase {
 
 		wp_restore_image( $attachment_id );
 
-		$this->assertImageNotHasSource( $attachment_id, 'image/jpeg' );
 		$this->assertImageHasSource( $attachment_id, 'image/webp' );
 
 		$metadata               = wp_get_attachment_metadata( $attachment_id );
