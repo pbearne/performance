@@ -166,8 +166,8 @@ function auto_sizes_prime_attachment_caches( $content, string $context = null ):
 			continue;
 		}
 
-		if ( preg_match( '/wp-image-([0-9]+)/i', $class, $class_id ) === 1 ) {
-			$attachment_id = absint( $class_id[1] );
+		if ( preg_match( '/(?:^|\s)wp-image-([1-9][0-9]*)(?:\s|$)/', $class, $class_id ) === 1 ) {
+			$attachment_id = (int) $class_id[1];
 			if ( $attachment_id > 0 ) {
 				$images[] = $attachment_id;
 			}
