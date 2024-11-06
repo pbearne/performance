@@ -170,7 +170,7 @@ function auto_sizes_prime_attachment_caches( $content ): string {
 	}
 
 	// Reduce the array to unique attachment IDs.
-	$attachment_ids = array_unique( array_filter( $images ) );
+	$attachment_ids = array_unique( $images );
 
 	if ( count( $attachment_ids ) > 1 ) {
 		/*
