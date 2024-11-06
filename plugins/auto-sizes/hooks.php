@@ -144,16 +144,11 @@ function auto_sizes_get_width( string $layout_width, int $image_width ): string 
  * @since n.e.x.t
  *
  * @param string|mixed $content The HTML content.
- * @param string       $context Optional. Additional context to pass to the filters.
- *                              Defaults to `current_filter()` when not set.
  * @return string The HTML content.
  */
-function auto_sizes_prime_attachment_caches( $content, string $context = null ): string {
+function auto_sizes_prime_attachment_caches( $content ): string {
 	if ( ! is_string( $content ) ) {
 		return '';
-	}
-	if ( null === $context ) {
-		$context = current_filter();
 	}
 
 	$processor = new WP_HTML_Tag_Processor( $content );
