@@ -11,7 +11,9 @@ Optimizes the performance of embeds by lazy-loading iframes and scripts.
 
 == Description ==
 
-This plugin's purpose is to optimize the performance of [embeds in WordPress](https://wordpress.org/documentation/article/embeds/), such as Tweets, YouTube videos, TikToks, and so on. The current optimizations include:
+This plugin's purpose is to optimize the performance of [embeds in WordPress](https://wordpress.org/documentation/article/embeds/), such as Tweets, YouTube videos, TikToks, and others.
+
+The current optimizations include:
 
 1. Lazy loading embeds just before they come into view
 2. Adding preconnect links for embeds in the initial viewport

@@ -11,7 +11,9 @@ Optimizes LCP image loading with `fetchpriority=high` and applies image lazy-loa
 
 == Description ==
 
-This plugin optimizes the loading of images (and videos) with prioritization, lazy loading, and even some size reduction:
+This plugin optimizes the loading of images (and videos) with prioritization, lazy loading, and more accurate image size selection.
+
+The current optimizations include:
 
 1. Ensuring `fetchpriority=high` is only added to an `IMG` when it is the Largest Contentful Paint (LCP) element across all responsive breakpoints.
 2. Adding breakpoint-specific `fetchpriority=high` preload links for the LCP elements which are `IMG` elements or elements with a CSS `background-image` inline style.
