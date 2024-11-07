@@ -22,12 +22,7 @@ The current optimizations include:
 5. Reducing the size of the `poster` image of a `VIDEO` from full size to the size appropriate for the maximum width of the video (on desktop).
 6. Lazy-loading `VIDEO` tags by setting the appropriate attributes based on whether they appear in the initial viewport. If a `VIDEO` is the LCP element, it gets `preload=auto`; if it is in an initial viewport, the `preload=metadata` default is left; if it is not in an initial viewport, it gets `preload=none`. Lazy-loaded videos also get initial `preload`, `autoplay`, and `poster` attributes restored when the `VIDEO` is going to enter the viewport.
 
-This plugin requires the [Optimization Detective](https://wordpress.org/plugins/optimization-detective/) as a dependency. Please refer to that plugin for additional background on how this plugin works as well as additional developer options. Information about images and videos displayed on a given visit are stored in URL Metrics grouped by the following viewport widths according to WordPress’s common responsive breakpoints:
-
-Mobile: 0-480px  
-Phablet: 481-600px  
-Tablet: 601-782px  
-Desktop: \>782px
+**This plugin requires the [Optimization Detective](https://wordpress.org/plugins/optimization-detective/) plugin as a dependency.** Please refer to that plugin for additional background on how this plugin works as well as additional developer options.
 
 This grouping is essential for proper optimization since different breakpoints in a theme's responsive design may result in differing elements being the LCP element or whether an element is visible at all.
 
