@@ -426,8 +426,9 @@ function perflab_render_plugin_card( array $plugin_data ): void {
 		);
 
 		$action_links[] = sprintf(
-			'<a class="button perflab-install-active-plugin" href="%s">%s</a>',
+			'<a class="button perflab-install-active-plugin" href="%s" data-plugin-slug="%s">%s</a>',
 			esc_url( $url ),
+			esc_attr( $plugin_data['slug'] ),
 			esc_html__( 'Activate', 'default' )
 		);
 	} else {

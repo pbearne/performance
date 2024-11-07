@@ -291,6 +291,36 @@ function perflab_install_activate_plugin_callback(): void {
 add_action( 'admin_action_perflab_install_activate_plugin', 'perflab_install_activate_plugin_callback' );
 
 /**
+ * Callback for handling installation/activation of plugin using ajax.
+ */
+function perflab_install_activate_plugin_ajax_callback(): void {
+	check_ajax_referer( 'perflab_install_activate_plugin_ajax', '_ajax_nonce' );
+
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
+
+	if ( ! isset( $_POST['slug'] ) ) {
+		wp_send_json_error( __( 'Missing required parameter.', 'performance-lab' ), 400 );
+	}
+
+	$plugin_slug = perflab_sanitize_plugin_slug( wp_unslash( $_POST['slug'] ) );
+	if ( null === $plugin_slug ) {
+		wp_send_json_error( __( 'Invalid plugin.', 'performance-lab' ), 400 );
+	}
+
+	// Install and activate the plugin and its dependencies.
+	$result = perflab_install_and_activate_plugin( $plugin_slug );
+	if ( $result instanceof WP_Error ) {
+		wp_send_json_error( $result->get_error_message() );
+	}
+
+	wp_send_json_success();
+}
+add_action( 'wp_ajax_perflab_install_activate_plugin', 'perflab_install_activate_plugin_ajax_callback' );
+
+/**
  * Callback function to handle admin inline style.
  *
  * @since 3.0.0
@@ -402,8 +432,18 @@ function perflab_plugin_admin_notices(): void {
  * @since 3.1.0
  */
 function perflab_print_plugin_progress_indicator_script(): void {
+	$nonce = wp_create_nonce( 'perflab_install_activate_plugin_ajax' );
+
+	$script_data = array(
+		'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+		'nonce'          => $nonce,
+		'activatingText' => __( 'Activating...', 'performance-lab' ),
+		'activateText'   => __( 'Activate', 'performance-lab' ),
+		'activatedText'  => __( 'Active', 'performance-lab' ),
+	);
+
 	$js_function = <<<JS
-		function addPluginProgressIndicator( message ) {
+		function addPluginProgressIndicator( data ) {
 			document.addEventListener( 'DOMContentLoaded', function () {
 				document.addEventListener( 'click', function ( event ) {
 					if (
@@ -411,11 +451,51 @@ function perflab_print_plugin_progress_indicator_script(): void {
 							'perflab-install-active-plugin'
 						)
 					) {
+						// Prevent the default link behavior.
+						event.preventDefault();
+
 						const target = event.target;
 						target.classList.add( 'updating-message' );
-						target.textContent = message;
+						target.textContent = data.activatingText;
 
-						wp.a11y.speak( message );
+						wp.a11y.speak( data.activatingText );
+
+						const pluginSlug = target.getAttribute('data-plugin-slug');
+
+						fetch(data.ajaxUrl, {
+							method: 'POST',
+							credentials: 'same-origin',
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded',
+							},
+							body: new URLSearchParams({
+								action: 'perflab_install_activate_plugin',
+								slug: pluginSlug,
+								_ajax_nonce: data.nonce,
+							}),
+						})
+						.then(response => response.json())
+						.then(response => {
+							if (response.success) {
+								const newButton = document.createElement('button');
+								newButton.type = 'button';
+								newButton.className = 'button button-disabled';
+								newButton.disabled = true;
+								newButton.textContent = data.activatedText;
+								target.parentNode.replaceChild(newButton, target);
+							} else {
+								console.error('Error:', response);
+								// TODO: Show error using admin notice.
+								target.classList.remove('updating-message');
+								target.textContent = data.activateText;
+							}
+                    	})
+						.catch(error => {
+							console.error('Error:', error);
+							// TODO: Show error using admin notice.
+							target.classList.remove('updating-message');
+							target.textContent = data.activateText;
+						});
 					}
 				} );
 			} );
@@ -426,7 +506,7 @@ JS;
 		sprintf(
 			'( %s )( %s );',
 			$js_function,
-			wp_json_encode( __( 'Activating...', 'default' ) )
+			wp_json_encode( $script_data )
 		),
 		array( 'type' => 'module' )
 	);
