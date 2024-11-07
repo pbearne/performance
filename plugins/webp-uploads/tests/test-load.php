@@ -55,6 +55,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 
 		// There should be an image_type source, but no JPEG source for the full image.
 		$this->assertImageHasSource( $attachment_id, $mime_type );
+		$this->assertImageNotHasSource( $attachment_id, 'image/jpeg' );
 
 		$metadata = wp_get_attachment_metadata( $attachment_id );
 
@@ -262,6 +263,8 @@ class Test_WebP_Uploads_Load extends TestCase {
 		$file    = get_attached_file( $attachment_id, true );
 		$dirname = pathinfo( $file, PATHINFO_DIRNAME );
 
+		$this->assertImageNotHasSource( $attachment_id, 'image/jpeg' );
+
 		$this->assertImageHasSource( $attachment_id, 'image/webp' );
 		$this->assertFileExists( path_join( $dirname, $metadata['sources']['image/webp']['file'] ) );
 		$this->assertSame( $metadata['sources']['image/webp']['filesize'], wp_filesize( path_join( $dirname, $metadata['sources']['image/webp']['file'] ) ) );
@@ -282,6 +285,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 		$metadata = wp_get_attachment_metadata( $attachment_id );
 		$this->assertEmpty( $metadata['sizes'] );
 
+		$this->assertImageNotHasSource( $attachment_id, 'image/jpeg' );
 		$this->assertImageHasSource( $attachment_id, 'image/webp' );
 	}
 
@@ -702,6 +706,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 		$this->assertArrayHasKey( 'sources', $metadata );
 		$this->assertIsArray( $metadata['sources'] );
 
+		$this->assertImageNotHasSource( $attachment_id, 'image/jpeg' );
 		$this->assertImageHasSource( $attachment_id, 'image/' . $image_type );
 
 		$this->assertImageNotHasSizeSource( $attachment_id, 'thumbnail', 'image/jpeg' );
