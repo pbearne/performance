@@ -24,8 +24,6 @@ The current optimizations include:
 
 **This plugin requires the [Optimization Detective](https://wordpress.org/plugins/optimization-detective/) plugin as a dependency.** Please refer to that plugin for additional background on how this plugin works as well as additional developer options.
 
-This grouping is essential for proper optimization since different breakpoints in a theme's responsive design may result in differing elements being the LCP element or whether an element is visible at all.
-
 👉 **Note:** This plugin optimizes pages for actual visitors, and it depends on visitors to optimize pages. As such, you won't see optimizations applied immediately after activating the plugin. Please wait for URL Metrics to be gathered for both mobile and desktop visits. And since administrator users are not normal visitors typically, optimizations are not applied for admins by default.
 
 There are currently **no settings** and no user interface for this plugin since it is designed to work without any configuration.
