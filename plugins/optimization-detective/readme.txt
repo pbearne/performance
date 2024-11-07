@@ -23,7 +23,14 @@ In order to increase the accuracy of identifying the LCP element, including acro
 
 = Technical Foundation =
 
-At the core of Optimization Detective is the “URL Metric”, information about a page according to how it was loaded by a client with a specific viewport width. This includes which elements were visible in the initial viewport and which one was the LCP element. Each URL on a site can have an associated set of these URL Metrics (stored in a custom post type) which are gathered from real users. It gathers a sample of URL Metrics according to common responsive breakpoints (e.g. mobile, tablet, and desktop). When no more URL Metrics are needed for a URL due to the sample size being obtained for the breakpoints, it discontinues serving the JavaScript to gather the metrics (leveraging the [web-vitals.js](https://github.com/GoogleChrome/web-vitals) library). With the URL Metrics in hand, the output-buffered page is sent through the HTML Tag Processor and--when the [Image Prioritizer](https://wordpress.org/plugins/image-prioritizer/) dependent plugin is installed--the images which were the LCP element for various breakpoints will get prioritized with high-priority preload links (along with `fetchpriority=high` on the actual `img` tag when it is the common LCP element across all breakpoints). LCP elements with background images added via inline `background-image` styles are also prioritized with preload links.
+At the core of Optimization Detective is the “URL Metric”, information about a page according to how it was loaded by a client with a specific viewport width. This includes which elements were visible in the initial viewport and which one was the LCP element. The URL Metric data is also extensible. Each URL on a site can have an associated set of these URL Metrics (stored in a custom post type) which are gathered from the visits of real users. It gathers samples of URL Metrics which are grouped according to WordPress's default responsive breakpoints:
+
+1. Mobile: 0-480px
+2. Phablet: 481-600px
+3. Tablet: 601-782px
+4. Desktop: \>782px
+
+When no more URL Metrics are needed for a URL due to the sample size being obtained for the viewport group, it discontinues serving the JavaScript to gather the metrics (leveraging the [web-vitals.js](https://github.com/GoogleChrome/web-vitals) library). With the URL Metrics in hand, the output-buffered page is sent through the HTML Tag Processor and--when the [Image Prioritizer](https://wordpress.org/plugins/image-prioritizer/) dependent plugin is installed--the images which were the LCP element for various breakpoints will get prioritized with high-priority preload links (along with `fetchpriority=high` on the actual `img` tag when it is the common LCP element across all breakpoints). LCP elements with background images added via inline `background-image` styles are also prioritized with preload links.
 
 URL Metrics have a “freshness TTL” after which they will be stale and the JavaScript will be served again to start gathering metrics again to ensure that the right elements continue to get their loading prioritized. When a URL Metrics custom post type hasn't been touched in a while, it is automatically garbage-collected.
 
@@ -73,12 +80,11 @@ Refer to [Image Prioritizer](https://github.com/WordPress/performance/tree/trunk
 
 **Filter:** `od_breakpoint_max_widths` (default: `array(480, 600, 782)`)
 
-Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the three default breakpoints, then this means there will be four groups:
+Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the two breakpoints defined, 480 and 782, then this means there will be three viewport groups of URL Metrics:
 
 1. Mobile: 0-480px
-2. Phablet: 481-600px
-3. Tablet: 601-782px
-4. Desktop: \>782px
+2. Tablet: 481-782px
+3. Desktop: \>782px
 
 These default breakpoints are reused from Gutenberg which appear to be used the most in media queries that affect frontend styles.
 
