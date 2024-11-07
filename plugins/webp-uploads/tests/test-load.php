@@ -43,15 +43,25 @@ class Test_WebP_Uploads_Load extends TestCase {
 	/**
 	 * Don't create the original mime type for JPEG images.
 	 *
-	 * @dataProvider data_provider_supported_image_types
+	 * @dataProvider data_provider_supported_image_types_with_threshold
 	 */
-	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type ): void {
+	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type, bool $apply_threshold = false ): void {
 		$mime_type = 'image/' . $image_type;
 		$this->set_image_output_type( $image_type );
 		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
 			$this->markTestSkipped( "Mime type $mime_type is not supported." );
 		}
 		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
+
+		if ( $apply_threshold ) {
+			// Add threshold to create a `-scaled` output image for testing.
+			add_filter(
+				'big_image_size_threshold',
+				static function () {
+					return 850;
+				}
+			);
+		}
 
 		// There should be an image_type source, but no JPEG source for the full image.
 		$this->assertImageHasSource( $attachment_id, $mime_type );
@@ -746,6 +756,20 @@ class Test_WebP_Uploads_Load extends TestCase {
 		return array(
 			'webp' => array( 'webp' ),
 			'avif' => array( 'avif' ),
+		);
+	}
+
+	/**
+	 * Data provider for tests returns the supported image types to run the tests with and without threshold check.
+	 *
+	 * @return array<string, array<int, string|true>> An array of valid image types.
+	 */
+	public function data_provider_supported_image_types_with_threshold(): array {
+		return array(
+			'webp'                    => array( 'webp' ),
+			'webp with 850 threshold' => array( 'webp', true ),
+			'avif'                    => array( 'avif' ),
+			'avif with 850 threshold' => array( 'avif', true ),
 		);
 	}
 
