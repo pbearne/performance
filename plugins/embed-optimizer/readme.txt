@@ -69,7 +69,7 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 **Enhancements**
 
-* Leverage URL metrics to reserve space for embeds to reduce CLS. ([1373](https://github.com/WordPress/performance/pull/1373))
+* Leverage URL Metrics to reserve space for embeds to reduce CLS. ([1373](https://github.com/WordPress/performance/pull/1373))
 * Avoid lazy-loading images and embeds unless there are URL Metrics for both mobile and desktop. ([1604](https://github.com/WordPress/performance/pull/1604))
 
 = 0.2.0 =

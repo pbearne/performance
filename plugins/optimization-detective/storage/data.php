@@ -11,9 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Gets the freshness age (TTL) for a given URL metric.
+ * Gets the freshness age (TTL) for a given URL Metric.
  *
- * When a URL metric expires it is eligible to be replaced by a newer one if its viewport lies within the same breakpoint.
+ * When a URL Metric expires it is eligible to be replaced by a newer one if its viewport lies within the same breakpoint.
  *
  * @since 0.1.0
  * @access private
@@ -22,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function od_get_url_metric_freshness_ttl(): int {
 	/**
-	 * Filters the freshness age (TTL) for a given URL metric.
+	 * Filters the freshness age (TTL) for a given URL Metric.
 	 *
-	 * The freshness TTL must be at least zero, in which it considers URL metrics to always be stale.
+	 * The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale.
 	 * In practice, the value should be at least an hour.
 	 *
 	 * @since 0.1.0
@@ -54,7 +54,7 @@ function od_get_url_metric_freshness_ttl(): int {
 /**
  * Gets the normalized query vars for the current request.
  *
- * This is used as a cache key for stored URL metrics.
+ * This is used as a cache key for stored URL Metrics.
  *
  * TODO: For non-singular requests, consider adding the post IDs from The Loop to ensure publishing a new post will invalidate the cache.
  *
@@ -77,7 +77,7 @@ function od_get_normalized_query_vars(): array {
 		);
 	}
 
-	// Vary URL metrics by whether the user is logged in since additional elements may be present.
+	// Vary URL Metrics by whether the user is logged in since additional elements may be present.
 	if ( is_user_logged_in() ) {
 		$normalized_query_vars['user_logged_in'] = true;
 	}
@@ -124,7 +124,7 @@ function od_get_current_url(): string {
 }
 
 /**
- * Gets slug for URL metrics.
+ * Gets slug for URL Metrics.
  *
  * A slug is the hash of the normalized query vars.
  *
@@ -141,7 +141,7 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
- * Computes nonce for storing URL metrics for a specific slug.
+ * Computes nonce for storing URL Metrics for a specific slug.
  *
  * This is used in the REST API to authenticate the storage of new URL metrics from a given URL.
  *

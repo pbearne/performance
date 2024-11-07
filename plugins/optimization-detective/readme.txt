@@ -25,7 +25,7 @@ At the core of Optimization Detective is the “URL Metric”, information about
 
 URL Metrics have a “freshness TTL” after which they will be stale and the JavaScript will be served again to start gathering metrics again to ensure that the right elements continue to get their loading prioritized. When a URL Metrics custom post type hasn't been touched in a while, it is automatically garbage-collected.
 
-👉 **Note:** This plugin optimizes pages for actual visitors, and it depends on visitors to optimize pages (since URL metrics need to be collected). As such, you won't see optimizations applied immediately after activating the plugin (and dependent plugin(s)). And since administrator users are not normal visitors typically, optimizations are not applied for admins by default (but this can be overridden with the `od_can_optimize_response` filter below). URL metrics are not collected for administrators because it is likely that additional elements will be present on the page which are not also shown to non-administrators, meaning the URL metrics could not reliably be reused between them. 
+👉 **Note:** This plugin optimizes pages for actual visitors, and it depends on visitors to optimize pages (since URL Metrics need to be collected). As such, you won't see optimizations applied immediately after activating the plugin (and dependent plugin(s)). And since administrator users are not normal visitors typically, optimizations are not applied for admins by default (but this can be overridden with the `od_can_optimize_response` filter below). URL Metrics are not collected for administrators because it is likely that additional elements will be present on the page which are not also shown to non-administrators, meaning the URL Metrics could not reliably be reused between them. 
 
 There are currently **no settings** and no user interface for this plugin since it is designed to work without any configuration.
 
@@ -39,7 +39,7 @@ Fires when the Optimization Detective is initializing. This action is useful for
 
 **Filter:** `od_breakpoint_max_widths` (default: [480, 600, 782])
 
-Filters the breakpoint max widths to group URL metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0<=480, and another >480. If instead there were three provided breakpoints (320, 480, 576) then this means there will be four groups:
+Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0<=480, and another >480. If instead there were three provided breakpoints (320, 480, 576) then this means there will be four groups:
 
  1. 0-320 (small smartphone)
  2. 321-480 (normal smartphone)
@@ -60,41 +60,41 @@ Filters whether the current response can be optimized. By default, detection and
 
 During development, you may want to force this to always be enabled:
 
-`
-<?php
+```
+< ?php
 add_filter( 'od_can_optimize_response', '__return_true' );
-`
+```
 
 **Filter:** `od_url_metrics_breakpoint_sample_size` (default: 3)
 
-Filters the sample size for a breakpoint's URL metrics on a given URL. The sample size must be greater than zero. During development, it may be helpful to reduce the sample size to 1:
+Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. During development, it may be helpful to reduce the sample size to 1:
 
-`
-<?php
+```
+< ?php
 add_filter( 'od_url_metrics_breakpoint_sample_size', function (): int {
 	return 1;
 } );
-`
+```
 
 **Filter:** `od_url_metric_storage_lock_ttl` (default: 1 minute)
 
 Filters how long a given IP is locked from submitting another metric-storage REST API request. Filtering the TTL to zero will disable any metric storage locking. This is useful, for example, to disable locking when a user is logged-in with code like the following:
 
-`
-<?php
+```
+< ?php
 add_filter( 'od_metrics_storage_lock_ttl', function ( int $ttl ): int {
     return is_user_logged_in() ? 0 : $ttl;
 } );
-`
+```
 
 **Filter:** `od_url_metric_freshness_ttl` (default: 1 day)
 
-Filters the freshness age (TTL) for a given URL metric. The freshness TTL must be at least zero, in which it considers URL metrics to always be stale. In practice, the value should be at least an hour. During development, this can be useful to set to zero:
+Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. During development, this can be useful to set to zero:
 
-`
-<?php
+```
+< ?php
 add_filter( 'od_url_metric_freshness_ttl', '__return_zero' );
-`
+```
 
 **Filter:** `od_detection_time_window` (default: 5 seconds)
 
@@ -116,12 +116,12 @@ ratio at 21:9 (2.333).
 
 During development when you have the DevTools console open, for example, the viewport aspect ratio will be wider than normal. In this case, you may want to increase the maximum aspect ratio:
 
-`
-<?php
+```
+< ?php
 add_filter( 'od_maximum_viewport_aspect_ratio', function () {
 	return 5;
 } );
-`
+```
 
 **Filter:** `od_template_output_buffer` (default: the HTML response)
 
