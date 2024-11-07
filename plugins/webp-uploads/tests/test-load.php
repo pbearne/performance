@@ -117,42 +117,6 @@ class Test_WebP_Uploads_Load extends TestCase {
 	}
 
 	/**
-	 * Create JPEG and output type for JPEG images, if opted in.
-	 *
-	 * @dataProvider data_provider_supported_image_types
-	 */
-	public function test_it_should_create_jpeg_and_webp_for_jpeg_images_if_opted_in( string $image_type ): void {
-		$mime_type = 'image/' . $image_type;
-		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
-			$this->markTestSkipped( "Mime type $mime_type is not supported." );
-		}
-		$this->set_image_output_type( $image_type );
-
-		update_option( 'perflab_generate_webp_and_jpeg', true );
-		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
-
-		// There should be JPEG and mime_type sources for the full image.
-		$this->assertImageHasSource( $attachment_id, 'image/jpeg' );
-		$this->assertImageHasSource( $attachment_id, $mime_type );
-
-		$metadata = wp_get_attachment_metadata( $attachment_id );
-
-		// The full image should be a JPEG.
-		$this->assertArrayHasKey( 'file', $metadata );
-		$this->assertStringEndsWith( $metadata['sources']['image/jpeg']['file'], $metadata['file'] );
-		$this->assertStringEndsWith( $metadata['sources']['image/jpeg']['file'], get_attached_file( $attachment_id ) );
-
-		// The post MIME type should be JPEG.
-		$this->assertSame( 'image/jpeg', get_post_mime_type( $attachment_id ) );
-
-		// There should be JPEG and WebP sources for all sizes.
-		foreach ( array_keys( $metadata['sizes'] ) as $size_name ) {
-			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/jpeg' );
-			$this->assertImageHasSizeSource( $attachment_id, $size_name, $mime_type );
-		}
-	}
-
-	/**
 	 * Create JPEG and output format for JPEG images, if perflab_generate_webp_and_jpeg option set.
 	 *
 	 * @dataProvider data_provider_supported_image_types
