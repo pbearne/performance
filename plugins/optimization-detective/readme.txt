@@ -11,7 +11,7 @@ Provides an API for leveraging real user metrics to detect optimizations to appl
 
 == Description ==
 
-This plugin captures real user metrics about what elements are displayed on the page across a variety of device form factors (e.g. desktop, tablet, and phone) in order to apply loading optimizations which are not possible with WordPress’s current server-side heuristics. This plugin is a dependency which does not provide end-user functionality on its own. For that, please install the dependent plugin [Image Prioritizer](https://wordpress.org/plugins/image-prioritizer/) (among [others](https://github.com/WordPress/performance/labels/%5BPlugin%5D%20Optimization%20Detective) to come from the WordPress Core Performance team).
+This plugin captures real user metrics about what elements are displayed on the page across a variety of device form factors (e.g. desktop, tablet, and phone) in order to apply loading optimizations which are not possible with WordPress’s current server-side heuristics. This plugin is a dependency which does not provide end-user functionality on its own. For that, please install the dependent plugin [Image Prioritizer](https://wordpress.org/plugins/image-prioritizer/) or [Embed Optimizer](https://wordpress.org/plugins/embed-optimizer/) (among [others](https://github.com/WordPress/performance/labels/%5BPlugin%5D%20Optimization%20Detective) to come from the WordPress Core Performance team).
 
 = Background =
 
@@ -25,7 +25,7 @@ At the core of Optimization Detective is the “URL Metric”, information about
 
 URL Metrics have a “freshness TTL” after which they will be stale and the JavaScript will be served again to start gathering metrics again to ensure that the right elements continue to get their loading prioritized. When a URL Metrics custom post type hasn't been touched in a while, it is automatically garbage-collected.
 
-👉 **Note:** This plugin optimizes pages for actual visitors, and it depends on visitors to optimize pages (since URL Metrics need to be collected). As such, you won't see optimizations applied immediately after activating the plugin (and dependent plugin(s)). And since administrator users are not normal visitors typically, optimizations are not applied for admins by default (but this can be overridden with the `od_can_optimize_response` filter below). URL Metrics are not collected for administrators because it is likely that additional elements will be present on the page which are not also shown to non-administrators, meaning the URL Metrics could not reliably be reused between them. 
+👉 **Note:** This plugin optimizes pages for actual visitors, and it depends on visitors to optimize pages (since URL Metrics need to be collected). As such, you won't see optimizations applied immediately after activating the plugin (and dependent plugin(s)). And since administrator users are not normal visitors typically, optimizations are not applied for admins by default (but this can be overridden with the `od_can_optimize_response` filter below). URL Metrics are not collected for administrators because it is likely that additional elements will be present on the page which are not also shown to non-administrators, meaning the URL Metrics could not reliably be reused between them.
 
 There are currently **no settings** and no user interface for this plugin since it is designed to work without any configuration.
 
@@ -37,16 +37,48 @@ When the `WP_DEBUG` constant is enabled, additional logging for Optimization Det
 
 Fires when the Optimization Detective is initializing. This action is useful for loading extension code that depends on Optimization Detective to be running. The version of the plugin is passed as the sole argument so that if the required version is not present, the callback can short circuit.
 
-**Filter:** `od_breakpoint_max_widths` (default: [480, 600, 782])
+**Action:** `od_register_tag_visitors` (argument: `OD_Tag_Visitor_Registry`)
 
-Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0<=480, and another >480. If instead there were three provided breakpoints (320, 480, 576) then this means there will be four groups:
+Fires to register tag visitors before walking over the document to perform optimizations.
 
- 1. 0-320 (small smartphone)
- 2. 321-480 (normal smartphone)
- 3. 481-576 (phablets)
- 4. >576 (desktop)
+For example, to register a new tag visitor that targets `H1` elements:
 
-The default breakpoints are reused from Gutenberg which appear to be used the most in media queries that affect frontend styles.
+`
+<?php
+add_action(
+	'od_register_tag_visitors',
+	static function ( OD_Tag_Visitor_Registry $registry ) {
+		$registry->register(
+			'my-plugin/h1',
+			static function ( OD_Tag_Visitor_Context $context ): bool {
+				if ( $context->processor->get_tag() !== 'H1' ) {
+					return false;
+				}
+				// Now optimize based on stored URL Metrics in $context->url_metric_group_collection.
+				// ...
+
+				// Returning true causes the tag to be tracked in URL Metrics. If there is no need
+				// for this, as in there is no reference to $context->url_metric_group_collection
+				// in a tag visitor, then this can instead return false.
+				return true;
+			}
+		);
+	}
+);
+`
+
+Refer to [Image Prioritizer](https://github.com/WordPress/performance/tree/trunk/plugins/image-prioritizer) and [Embed Optimizer](https://github.com/WordPress/performance/tree/trunk/plugins/embed-optimizer) for real world examples of how tag visitors are used. Registered tag visitors need only be callables, so in addition to providing a closure you may provide a `callable-string` or even a class which has an `__invoke()` method.
+
+**Filter:** `od_breakpoint_max_widths` (default: `array(480, 600, 782)`)
+
+Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the three default breakpoints, then this means there will be four groups:
+
+1. Mobile: 0-480px
+2. Phablet: 481-600px
+3. Tablet: 601-782px
+4. Desktop: \>782px
+
+These default breakpoints are reused from Gutenberg which appear to be used the most in media queries that affect frontend styles.
 
 **Filter:** `od_can_optimize_response` (default: boolean condition, see below)
 
@@ -60,41 +92,41 @@ Filters whether the current response can be optimized. By default, detection and
 
 During development, you may want to force this to always be enabled:
 
-```
-< ?php
+`
+<?php
 add_filter( 'od_can_optimize_response', '__return_true' );
-```
+`
 
 **Filter:** `od_url_metrics_breakpoint_sample_size` (default: 3)
 
 Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. During development, it may be helpful to reduce the sample size to 1:
 
-```
-< ?php
+`
+<?php
 add_filter( 'od_url_metrics_breakpoint_sample_size', function (): int {
 	return 1;
 } );
-```
+`
 
-**Filter:** `od_url_metric_storage_lock_ttl` (default: 1 minute)
+**Filter:** `od_url_metric_storage_lock_ttl` (default: 1 minute in seconds)
 
 Filters how long a given IP is locked from submitting another metric-storage REST API request. Filtering the TTL to zero will disable any metric storage locking. This is useful, for example, to disable locking when a user is logged-in with code like the following:
 
-```
-< ?php
+`
+<?php
 add_filter( 'od_metrics_storage_lock_ttl', function ( int $ttl ): int {
     return is_user_logged_in() ? 0 : $ttl;
 } );
-```
+`
 
-**Filter:** `od_url_metric_freshness_ttl` (default: 1 day)
+**Filter:** `od_url_metric_freshness_ttl` (default: 1 day in seconds)
 
 Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. During development, this can be useful to set to zero:
 
-```
-< ?php
+`
+<?php
 add_filter( 'od_url_metric_freshness_ttl', '__return_zero' );
-```
+`
 
 **Filter:** `od_detection_time_window` (default: 5 seconds)
 
@@ -102,30 +134,90 @@ Filters the time window between serve time and run time in which loading detecti
 
 **Filter:** `od_minimum_viewport_aspect_ratio` (default: 0.4)
 
-Filters the minimum allowed viewport aspect ratio for URL metrics.
+Filters the minimum allowed viewport aspect ratio for URL Metrics.
 
-The 0.4 value is intended to accommodate the phone with the greatest known aspect
-ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
+The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
 
 **Filter:** `od_maximum_viewport_aspect_ratio` (default: 2.5)
 
-Filters the maximum allowed viewport aspect ratio for URL metrics.
+Filters the maximum allowed viewport aspect ratio for URL Metrics.
 
-The 2.5 value is intended to accommodate the phone with the greatest known aspect
-ratio at 21:9 (2.333).
+The 2.5 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
 
 During development when you have the DevTools console open, for example, the viewport aspect ratio will be wider than normal. In this case, you may want to increase the maximum aspect ratio:
 
-```
-< ?php
+`
+<?php
 add_filter( 'od_maximum_viewport_aspect_ratio', function () {
 	return 5;
 } );
-```
+`
 
 **Filter:** `od_template_output_buffer` (default: the HTML response)
 
-Filters the template output buffer prior to sending to the client. This filter is added to implement [#43258](https://core.trac.wordpress.org/ticket/43258) in WordPress core.
+Filters the template output buffer prior to sending to the client. This filter is added to implement [\#43258](https://core.trac.wordpress.org/ticket/43258) in WordPress core.
+
+**Filter:** `od_url_metric_schema_element_item_additional_properties` (default: empty array)
+
+Filters additional schema properties which should be allowed for an element's item in a URL Metric.
+
+For example to add a `resizedBoundingClientRect` property:
+
+`
+<?php
+add_filter(
+	'od_url_metric_schema_element_item_additional_properties',
+	static function ( array $additional_properties ): array {
+		$additional_properties['resizedBoundingClientRect'] = array(
+			'type'       => 'object',
+			'properties' => array_fill_keys(
+				array(
+					'width',
+					'height',
+					'x',
+					'y',
+					'top',
+					'right',
+					'bottom',
+					'left',
+				),
+				array(
+					'type'     => 'number',
+					'required' => true,
+				)
+			),
+		);
+		return $additional_properties;
+	}
+);
+`
+
+See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L81-L110) in Embed Optimizer.
+
+**Filter:** `od_url_metric_schema_root_additional_properties` (default: empty array)
+
+Filters additional schema properties which should be allowed at the root of a URL Metric.
+
+The usage here is the same as the previous filter, except it allows new properties to be added to the root of the URL Metric and not just to one of the object items in the `elements` property.
+
+**Filter:** `od_extension_module_urls` (default: empty array of strings)
+
+Filters the list of extension script module URLs to import when performing detection.
+
+For example:
+
+`
+<?php
+add_filter(
+	'od_extension_module_urls',
+	static function ( array $extension_module_urls ): array {
+		$extension_module_urls[] = add_query_arg( 'ver', '1.0', plugin_dir_url( __FILE__ ) . 'detect.js' );
+		return $extension_module_urls;
+	}
+);
+`
+
+See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L128-L144) in Embed Optimizer. Note in particular the structure of the plugin’s [detect.js](https://github.com/WordPress/performance/blob/trunk/plugins/embed-optimizer/detect.js) script module, how it exports `initialize` and `finalize` functions which Optimization Detective then calls when the page loads and when the page unloads, at which time the URL Metric is constructed and sent to the server for storage. Refer also to the [TypeScript type definitions](https://github.com/WordPress/performance/blob/trunk/plugins/optimization-detective/types.ts).
 
 == Installation ==
 
