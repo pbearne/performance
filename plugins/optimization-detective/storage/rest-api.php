@@ -100,6 +100,16 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
  * @return WP_REST_Response|WP_Error Response.
  */
 function od_handle_rest_request( WP_REST_Request $request ) {
+	// Block cross-origin storage requests since by definition URL Metrics data can only be sourced from the frontend of the site.
+	$origin = $request->get_header( 'origin' );
+	if ( null === $origin || home_url() !== $origin ) {
+		return new WP_Error(
+			'rest_cross_origin_forbidden',
+			__( 'Cross-origin requests are not allowed for this endpoint.', 'optimization-detective' ),
+			array( 'status' => 403 )
+		);
+	}
+
 	$post = OD_URL_Metrics_Post_Type::get_post( $request->get_param( 'slug' ) );
 
 	$url_metric_group_collection = new OD_URL_Metric_Group_Collection(
