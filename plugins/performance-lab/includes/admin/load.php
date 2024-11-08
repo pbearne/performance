@@ -316,6 +316,15 @@ function perflab_install_activate_plugin_ajax_callback(): void {
 		wp_send_json_error( $result->get_error_message() );
 	}
 
+	$plugin_settings_url = perflab_get_plugin_settings_url( $plugin_slug );
+	if ( null !== $plugin_settings_url ) {
+		wp_send_json_success(
+			array(
+				'pluginSettingsURL' => esc_url( $plugin_settings_url ),
+			)
+		);
+	}
+
 	wp_send_json_success();
 }
 add_action( 'wp_ajax_perflab_install_activate_plugin', 'perflab_install_activate_plugin_ajax_callback' );
@@ -440,12 +449,18 @@ function perflab_print_plugin_progress_indicator_script(): void {
 		'activatingText' => __( 'Activating...', 'performance-lab' ),
 		'activateText'   => __( 'Activate', 'performance-lab' ),
 		'activatedText'  => __( 'Active', 'performance-lab' ),
+		'dismissText'    => __( 'Dismiss this notice.', 'performance-lab' ),
+		'successText'    => __( 'Feature activated.', 'performance-lab' ),
+		'reviewText'     => __( ' Review ', 'performance-lab' ),
+		'settingsText'   => __( 'settings', 'performance-lab' ),
+		'endText'        => _x( '.', 'Punctuation mark', 'performance-lab' ),
+		'errorText'      => __( 'There was an error activating the plugin. Please try again.', 'performance-lab' ),
 	);
 
 	$js_function = <<<JS
 		function addPluginProgressIndicator( data ) {
 			document.addEventListener( 'DOMContentLoaded', function () {
-				document.addEventListener( 'click', function ( event ) {
+				document.addEventListener( 'click', async function ( event ) {
 					if (
 						event.target.classList.contains(
 							'perflab-install-active-plugin'
@@ -460,45 +475,112 @@ function perflab_print_plugin_progress_indicator_script(): void {
 
 						wp.a11y.speak( data.activatingText );
 
-						const pluginSlug = target.getAttribute('data-plugin-slug');
+						const pluginSlug = target.getAttribute( 'data-plugin-slug' );
 
-						fetch(data.ajaxUrl, {
-							method: 'POST',
-							credentials: 'same-origin',
-							headers: {
-								'Content-Type': 'application/x-www-form-urlencoded',
-							},
-							body: new URLSearchParams({
-								action: 'perflab_install_activate_plugin',
-								slug: pluginSlug,
-								_ajax_nonce: data.nonce,
-							}),
-						})
-						.then(response => response.json())
-						.then(response => {
-							if (response.success) {
-								const newButton = document.createElement('button');
-								newButton.type = 'button';
-								newButton.className = 'button button-disabled';
-								newButton.disabled = true;
-								newButton.textContent = data.activatedText;
-								target.parentNode.replaceChild(newButton, target);
-							} else {
-								console.error('Error:', response);
-								// TODO: Show error using admin notice.
+						try {
+							const response = await fetch( data.ajaxUrl, {
+								method: 'POST',
+								credentials: 'same-origin',
+								headers: {
+									'Content-Type': 'application/x-www-form-urlencoded',
+								},
+								body: new URLSearchParams( {
+									action: 'perflab_install_activate_plugin',
+									slug: pluginSlug,
+									_ajax_nonce: data.nonce,
+								} ),
+							} );
+
+							const responseData = await response.json();
+
+							if ( !responseData.success ) {
+								showAdminNotice( data.errorText );
+
 								target.classList.remove('updating-message');
 								target.textContent = data.activateText;
+
+								return;
 							}
-                    	})
-						.catch(error => {
-							console.error('Error:', error);
-							// TODO: Show error using admin notice.
-							target.classList.remove('updating-message');
+
+							const newButton = document.createElement( 'button' );
+
+							newButton.type = 'button';
+							newButton.className = 'button button-disabled';
+							newButton.disabled = true;
+							newButton.textContent = data.activatedText;
+
+							target.parentNode.replaceChild( newButton, target );
+							console.log(responseData)
+							showAdminNotice( data.successText, 'success', responseData?.data?.pluginSettingsURL );
+						} catch (error) {
+							showAdminNotice( data.errorText );
+
+							target.classList.remove( 'updating-message' );
 							target.textContent = data.activateText;
-						});
+						}
 					}
 				} );
 			} );
+
+			function showAdminNotice( message, type = 'error', pluginSettingsURL = undefined ) {
+				// Create the notice container elements.
+				const notice = document.createElement( 'div' );
+				const para = document.createElement( 'p' );
+				
+				notice.className = 'notice is-dismissible notice-' + type;
+				para.textContent = message;
+				
+				if ( pluginSettingsURL ) {
+					para.textContent = para.textContent + data.reviewText;
+					
+					const anchor = document.createElement( 'a' );
+					anchor.setAttribute( 'href', pluginSettingsURL );
+					anchor.textContent = data.settingsText;
+					
+					para.appendChild( anchor );
+					para.appendChild( document.createTextNode( data.endText ) );
+				}
+				
+				notice.appendChild( para );
+				
+				const dismissButton = document.createElement( 'button' );
+				const dismissButtonTextWrap = document.createElement( 'span' );
+
+				dismissButton.type = 'button';
+				dismissButton.className = 'notice-dismiss';
+	
+				dismissButtonTextWrap.className = 'screen-reader-text';
+				dismissButtonTextWrap.textContent = data.dismissText;	
+
+				dismissButton.appendChild( dismissButtonTextWrap );
+
+				// Add event listener to remove the notice when dismissed.
+				dismissButton.addEventListener( 'click', () => {
+					notice.remove();
+				} );
+
+				notice.appendChild( dismissButton );
+	
+				// Insert the notice at the top of the admin notices area.
+				const noticeContainer = document.querySelector( '.wrap.plugin-install-php' ) || document.body;
+	
+				if ( !noticeContainer ) {
+					// Fallback append to body if no suitable container is found.
+					document.body.prepend( notice );
+
+					return;
+				} 
+
+				if ( noticeContainer.children.length >= 1 ) {
+					// Insert as the second child.
+					noticeContainer.insertBefore( notice, noticeContainer.children[1] );
+
+					return;
+				}
+
+				// If there's only one child or none, append as the last child.
+				noticeContainer.appendChild( notice );
+			}
 		}
 JS;
 
