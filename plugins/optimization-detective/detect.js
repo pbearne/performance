@@ -85,11 +85,11 @@ function error( ...message ) {
 }
 
 /**
- * Checks whether the URL metric(s) for the provided viewport width is needed.
+ * Checks whether the URL Metric(s) for the provided viewport width is needed.
  *
  * @param {number}                 viewportWidth          - Current viewport width.
  * @param {URLMetricGroupStatus[]} urlMetricGroupStatuses - Viewport group statuses.
- * @return {boolean} Whether URL metrics are needed.
+ * @return {boolean} Whether URL Metrics are needed.
  */
 function isViewportNeeded( viewportWidth, urlMetricGroupStatuses ) {
 	let lastWasLacking = false;
@@ -128,7 +128,7 @@ function recursiveFreeze( obj ) {
 }
 
 /**
- * URL metric being assembled for submission.
+ * URL Metric being assembled for submission.
  *
  * @type {URLMetric}
  */
@@ -155,7 +155,7 @@ function getRootData() {
 }
 
 /**
- * Extends root URL metric data.
+ * Extends root URL Metric data.
  *
  * @param {ExtendedRootData} properties
  */
@@ -241,12 +241,12 @@ function extendElementData( xpath, properties ) {
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
  * @param {string}                 args.restApiNonce               Nonce for writing to the REST API.
  * @param {string}                 args.currentUrl                 Current URL.
- * @param {string}                 args.urlMetricSlug              Slug for URL metric.
- * @param {string}                 args.urlMetricNonce             Nonce for URL metric storage.
- * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL metric group statuses.
- * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL metric storage lock.
+ * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
+ * @param {string}                 args.urlMetricNonce             Nonce for URL Metric storage.
+ * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL Metric group statuses.
+ * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL Metric storage lock.
  * @param {string}                 args.webVitalsLibrarySrc        The URL for the web-vitals library.
- * @param {Object}                 [args.urlMetricGroupCollection] URL metric group collection, when in debug mode.
+ * @param {Object}                 [args.urlMetricGroupCollection] URL Metric group collection, when in debug mode.
  */
 export default async function detect( {
 	serveTime,
@@ -268,7 +268,7 @@ export default async function detect( {
 	const currentTime = getCurrentTime();
 
 	if ( isDebug ) {
-		log( 'Stored URL metric group collection:', urlMetricGroupCollection );
+		log( 'Stored URL Metric group collection:', urlMetricGroupCollection );
 	}
 
 	// Abort running detection logic if it was served in a cached page.
@@ -281,10 +281,10 @@ export default async function detect( {
 		return;
 	}
 
-	// Abort if the current viewport is not among those which need URL metrics.
+	// Abort if the current viewport is not among those which need URL Metrics.
 	if ( ! isViewportNeeded( win.innerWidth, urlMetricGroupStatuses ) ) {
 		if ( isDebug ) {
-			log( 'No need for URL metrics from the current viewport.' );
+			log( 'No need for URL Metrics from the current viewport.' );
 		}
 		return;
 	}

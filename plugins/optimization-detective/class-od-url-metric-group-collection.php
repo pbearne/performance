@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggregate, JsonSerializable {
 
 	/**
-	 * URL metric groups.
+	 * URL Metric groups.
 	 *
 	 * The number of groups corresponds to one greater than the number of
 	 * breakpoints. This is because breakpoints are the dividing line between

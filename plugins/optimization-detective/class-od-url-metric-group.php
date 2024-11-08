@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * URL metrics grouped by viewport according to breakpoints.
+ * URL Metrics grouped by viewport according to breakpoints.
  *
  * @implements IteratorAggregate<int, OD_URL_Metric>
  *
