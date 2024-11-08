@@ -89,6 +89,36 @@ function od_register_endpoint(): void {
 add_action( 'rest_api_init', 'od_register_endpoint' );
 
 /**
+ * Determines if the HTTP origin is an authorized one.
+ *
+ * Note that `is_allowed_http_origin()` is not used directly because the underlying `get_allowed_http_origins()` does
+ * not account for the URL port (although there is a to-do comment committed in core to address this). Additionally,
+ * the `is_allowed_http_origin()` function in core for some reason returns a string rather than a boolean.
+ *
+ * @since n.e.x.t
+ * @access private
+ *
+ * @see get_allowed_http_origins()
+ * @see is_allowed_http_origin()
+ *
+ * @param string $origin Origin to check.
+ * @return bool Whether the origin is allowed.
+ */
+function od_is_allowed_http_origin( string $origin ): bool {
+	$allowed_origins = get_allowed_http_origins();
+	$home_url_port   = wp_parse_url( home_url(), PHP_URL_PORT );
+	if ( is_int( $home_url_port ) ) {
+		$allowed_origins = array_map(
+			static function ( string $allowed_origin ) use ( $home_url_port ): string {
+				return $allowed_origin . ':' . (string) $home_url_port;
+			},
+			$allowed_origins
+		);
+	}
+	return in_array( $origin, $allowed_origins, true );
+}
+
+/**
  * Handles REST API request to store metrics.
  *
  * @since 0.1.0
@@ -102,7 +132,7 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
 function od_handle_rest_request( WP_REST_Request $request ) {
 	// Block cross-origin storage requests since by definition URL Metrics data can only be sourced from the frontend of the site.
 	$origin = $request->get_header( 'origin' );
-	if ( null === $origin || home_url() !== $origin ) {
+	if ( null === $origin || ! od_is_allowed_http_origin( $origin ) ) {
 		return new WP_Error(
 			'rest_cross_origin_forbidden',
 			__( 'Cross-origin requests are not allowed for this endpoint.', 'optimization-detective' ),

@@ -245,6 +245,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 *
 	 * @covers ::od_register_endpoint
 	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
 	 */
 	public function test_rest_request_without_origin(): void {
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
@@ -260,6 +261,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 *
 	 * @covers ::od_register_endpoint
 	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
 	 */
 	public function test_rest_request_cross_origin(): void {
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
@@ -269,6 +271,25 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertSame( 403, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
 		$this->assertSame( 'rest_cross_origin_forbidden', $response->get_data()['code'], 'Response: ' . wp_json_encode( $response ) );
 		$this->assertSame( 0, did_action( 'od_url_metric_stored' ) );
+	}
+
+	/**
+	 * Test REST API request when 'home_url' is filtered.
+	 *
+	 * @covers ::od_register_endpoint
+	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
+	 */
+	public function test_rest_request_origin_when_home_url_filtered(): void {
+		$request = $this->create_request( $this->get_valid_params() );
+		add_filter(
+			'home_url',
+			static function ( string $url ): string {
+				return trailingslashit( $url ) . 'home/en/?foo=bar#baz';
+			}
+		);
+		$response = rest_get_server()->dispatch( $request );
+		$this->assertSame( 200, $response->get_status() );
 	}
 
 	/**
