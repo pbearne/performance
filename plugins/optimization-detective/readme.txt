@@ -80,7 +80,7 @@ Refer to [Image Prioritizer](https://github.com/WordPress/performance/tree/trunk
 
 **Filter:** `od_breakpoint_max_widths` (default: `array(480, 600, 782)`)
 
-Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the two breakpoints defined, 480 and 782, then this means there will be three viewport groups of URL metrics, one for 0\<=480, another 481\<=782, and another \>782.
+Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the two breakpoints defined, 480 and 782, then this means there will be three viewport groups of URL metrics, one for 0\<=480 (i.e. mobile), another 481\<=782 (i.e. phablet/tablet), and another \>782 (i.e. desktop).
 
 These default breakpoints are reused from Gutenberg which appear to be used the most in media queries that affect frontend styles.
 
