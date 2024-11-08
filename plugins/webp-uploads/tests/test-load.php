@@ -45,7 +45,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 	 *
 	 * @dataProvider data_provider_supported_image_types_with_threshold
 	 */
-	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type, bool $apply_threshold = false ): void {
+	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type, bool $above_big_image_size = false ): void {
 		$mime_type = 'image/' . $image_type;
 		$this->set_image_output_type( $image_type );
 		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
@@ -53,7 +53,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 		}
 		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
 
-		if ( $apply_threshold ) {
+		if ( $above_big_image_size ) {
 			// Add threshold to create a `-scaled` output image for testing.
 			add_filter(
 				'big_image_size_threshold',
