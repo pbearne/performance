@@ -239,7 +239,6 @@ function extendElementData( xpath, properties ) {
  * @param {number}                 args.maxViewportAspectRatio     Maximum aspect ratio allowed for the viewport.
  * @param {boolean}                args.isDebug                    Whether to show debug messages.
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
- * @param {string}                 args.restApiNonce               Nonce for writing to the REST API.
  * @param {string}                 args.currentUrl                 Current URL.
  * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
  * @param {string}                 args.urlMetricNonce             Nonce for URL Metric storage.
@@ -256,7 +255,6 @@ export default async function detect( {
 	isDebug,
 	extensionModuleUrls,
 	restApiEndpoint,
-	restApiNonce,
 	currentUrl,
 	urlMetricSlug,
 	urlMetricNonce,
@@ -549,7 +547,6 @@ export default async function detect( {
 	}
 
 	const url = new URL( restApiEndpoint );
-	url.searchParams.set( '_wpnonce', restApiNonce );
 	url.searchParams.set( 'slug', urlMetricSlug );
 	url.searchParams.set( 'nonce', urlMetricNonce );
 	navigator.sendBeacon(
