@@ -287,49 +287,17 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test od_get_url_metrics_storage_nonce().
+	 * Test od_get_url_metrics_storage_hmac() and od_verify_url_metrics_storage_hmac().
 	 *
-	 * @covers ::od_get_url_metrics_storage_nonce
-	 * @covers ::od_verify_url_metrics_storage_nonce
+	 * @covers ::od_get_url_metrics_storage_hmac
+	 * @covers ::od_verify_url_metrics_storage_hmac
 	 */
-	public function test_od_get_url_metrics_storage_nonce_and_od_verify_url_metrics_storage_nonce(): void {
-		$user_id = self::factory()->user->create();
-
-		$nonce_life_actions = array();
-		add_filter(
-			'nonce_life',
-			static function ( int $life, string $action ) use ( &$nonce_life_actions ): int {
-				$nonce_life_actions[] = $action;
-				return $life;
-			},
-			10,
-			2
-		);
-
-		// Create first nonce for unauthenticated user.
-		$url    = home_url( '/' );
-		$slug   = od_get_url_metrics_slug( array() );
-		$nonce1 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertMatchesRegularExpression( '/^[0-9a-f]{10}$/', $nonce1 );
-		$this->assertTrue( od_verify_url_metrics_storage_nonce( $nonce1, $slug, $url ) );
-		$this->assertCount( 2, $nonce_life_actions );
-
-		// Create second nonce for unauthenticated user.
-		$nonce2 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertSame( $nonce1, $nonce2 );
-		$this->assertCount( 3, $nonce_life_actions );
-
-		// Create third nonce, this time for authenticated user.
-		wp_set_current_user( $user_id );
-		$nonce3 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertNotEquals( $nonce3, $nonce2 );
-		$this->assertFalse( od_verify_url_metrics_storage_nonce( $nonce1, $slug, $url ) );
-		$this->assertTrue( od_verify_url_metrics_storage_nonce( $nonce3, $slug, $url ) );
-		$this->assertCount( 6, $nonce_life_actions );
-
-		foreach ( $nonce_life_actions as $nonce_life_action ) {
-			$this->assertSame( "store_url_metrics:{$slug}:{$url}", $nonce_life_action );
-		}
+	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac(): void {
+		$url  = home_url( '/' );
+		$slug = od_get_url_metrics_slug( array() );
+		$hmac = od_get_url_metrics_storage_hmac( $slug, $url );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]+$/', $hmac );
+		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url ) );
 	}
 
 	/**

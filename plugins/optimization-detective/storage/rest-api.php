@@ -38,22 +38,22 @@ const OD_URL_METRICS_ROUTE = '/url-metrics:store';
 function od_register_endpoint(): void {
 
 	$args = array(
-		'slug'  => array(
+		'slug' => array(
 			'type'        => 'string',
 			'description' => __( 'An MD5 hash of the query args.', 'optimization-detective' ),
 			'required'    => true,
 			'pattern'     => '^[0-9a-f]{32}$',
-			// This is further validated via the validate_callback for the nonce argument, as it is provided as input
-			// with the 'url' argument to create the nonce by the server. which then is verified to match in the REST API request.
+			// This is further validated via the validate_callback for the 'hmac' parameter, as it is provided as input
+			// with the 'url' argument to create the HMAC by the server. which then is verified to match in the REST API request.
 		),
-		'nonce' => array(
+		'hmac' => array(
 			'type'              => 'string',
-			'description'       => __( 'Nonce originally computed by server required to authorize the request.', 'optimization-detective' ),
+			'description'       => __( 'HMAC originally computed by server required to authorize the request.', 'optimization-detective' ),
 			'required'          => true,
 			'pattern'           => '^[0-9a-f]+$',
-			'validate_callback' => static function ( string $nonce, WP_REST_Request $request ) {
-				if ( ! od_verify_url_metrics_storage_nonce( $nonce, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
-					return new WP_Error( 'invalid_nonce', __( 'URL Metrics nonce verification failure.', 'optimization-detective' ) );
+			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
+				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
+					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );
 				}
 				return true;
 			},

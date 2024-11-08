@@ -93,7 +93,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
 
 		$expected_data = $valid_params;
-		unset( $expected_data['nonce'], $expected_data['slug'] );
+		unset( $expected_data['hmac'], $expected_data['slug'] );
 		$this->assertSame(
 			$expected_data,
 			wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
@@ -122,11 +122,11 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				'bad_slug'                                 => array(
 					'slug' => '<script>document.write("evil")</script>',
 				),
-				'bad_nonce'                                => array(
-					'nonce' => 'not even a hash',
+				'bad_hmac'                                 => array(
+					'hmac' => 'not even a hash',
 				),
-				'invalid_nonce'                            => array(
-					'nonce' => od_get_url_metrics_storage_nonce( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
+				'invalid_hmac'                             => array(
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
 				),
 				'invalid_viewport_type'                    => array(
 					'viewport' => '640x480',
@@ -562,8 +562,8 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		unset( $data['timestamp'], $data['uuid'] ); // Since these are readonly.
 		$data = array_merge(
 			array(
-				'slug'  => $slug,
-				'nonce' => od_get_url_metrics_storage_nonce( $slug, $data['url'] ),
+				'slug' => $slug,
+				'hmac' => od_get_url_metrics_storage_hmac( $slug, $data['url'] ),
 			),
 			$data
 		);
@@ -611,9 +611,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		 */
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
 		$request->set_header( 'Content-Type', 'application/json' );
-		$request->set_query_params( wp_array_slice_assoc( $params, array( 'nonce', 'slug' ) ) );
+		$request->set_query_params( wp_array_slice_assoc( $params, array( 'hmac', 'slug' ) ) );
 		$request->set_header( 'Origin', home_url() );
-		unset( $params['nonce'], $params['slug'] );
+		unset( $params['hmac'], $params['slug'] );
 		$request->set_body( wp_json_encode( $params ) );
 		return $request;
 	}

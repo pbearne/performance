@@ -241,7 +241,7 @@ function extendElementData( xpath, properties ) {
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
  * @param {string}                 args.currentUrl                 Current URL.
  * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
- * @param {string}                 args.urlMetricNonce             Nonce for URL Metric storage.
+ * @param {string}                 args.urlMetricHMAC              HMAC for URL Metric storage.
  * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL Metric group statuses.
  * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL Metric storage lock.
  * @param {string}                 args.webVitalsLibrarySrc        The URL for the web-vitals library.
@@ -257,7 +257,7 @@ export default async function detect( {
 	restApiEndpoint,
 	currentUrl,
 	urlMetricSlug,
-	urlMetricNonce,
+	urlMetricHMAC,
 	urlMetricGroupStatuses,
 	storageLockTTL,
 	webVitalsLibrarySrc,
@@ -548,7 +548,7 @@ export default async function detect( {
 
 	const url = new URL( restApiEndpoint );
 	url.searchParams.set( 'slug', urlMetricSlug );
-	url.searchParams.set( 'nonce', urlMetricNonce );
+	url.searchParams.set( 'hmac', urlMetricHMAC );
 	navigator.sendBeacon(
 		url,
 		new Blob( [ JSON.stringify( urlMetric ) ], {
