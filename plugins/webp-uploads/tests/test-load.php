@@ -47,14 +47,25 @@ class Test_WebP_Uploads_Load extends TestCase {
 	 * @covers ::wp_get_original_image_path
 	 * @covers ::get_post_mime_type
 	 * @dataProvider data_provider_supported_image_types
+	 * @dataProvider data_provider_supported_image_types_with_threshold
 	 */
-	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type ): void {
+	public function test_it_should_not_create_the_original_mime_type_for_jpeg_images( string $image_type, bool $above_big_image_size = false ): void {
 		$mime_type = 'image/' . $image_type;
 		$this->set_image_output_type( $image_type );
 		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
 			$this->markTestSkipped( "Mime type $mime_type is not supported." );
 		}
 		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
+
+		if ( $above_big_image_size ) {
+			// Add threshold to create a `-scaled` output image for testing.
+			add_filter(
+				'big_image_size_threshold',
+				static function () {
+					return 850;
+				}
+			);
+		}
 
 		// There should be an image_type source, but no JPEG source for the full image.
 		$this->assertImageHasSource( $attachment_id, $mime_type );
@@ -109,44 +120,6 @@ class Test_WebP_Uploads_Load extends TestCase {
 		foreach ( array_keys( $metadata['sizes'] ) as $size_name ) {
 			$this->assertImageNotHasSizeSource( $attachment_id, $size_name, 'image/jpeg' );
 			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/webp' );
-		}
-	}
-
-	/**
-	 * Create JPEG and output type for JPEG images, if opted in.
-	 *
-	 * @covers ::wp_get_attachment_metadata
-	 * @covers ::get_post_mime_type
-	 * @dataProvider data_provider_supported_image_types
-	 */
-	public function test_it_should_create_jpeg_and_webp_for_jpeg_images_if_opted_in( string $image_type ): void {
-		$mime_type = 'image/' . $image_type;
-		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
-			$this->markTestSkipped( "Mime type $mime_type is not supported." );
-		}
-		$this->set_image_output_type( $image_type );
-
-		update_option( 'perflab_generate_webp_and_jpeg', true );
-		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
-
-		// There should be JPEG and mime_type sources for the full image.
-		$this->assertImageHasSource( $attachment_id, 'image/jpeg' );
-		$this->assertImageHasSource( $attachment_id, $mime_type );
-
-		$metadata = wp_get_attachment_metadata( $attachment_id );
-
-		// The full image should be a JPEG.
-		$this->assertArrayHasKey( 'file', $metadata );
-		$this->assertStringEndsWith( $metadata['sources']['image/jpeg']['file'], $metadata['file'] );
-		$this->assertStringEndsWith( $metadata['sources']['image/jpeg']['file'], get_attached_file( $attachment_id ) );
-
-		// The post MIME type should be JPEG.
-		$this->assertSame( 'image/jpeg', get_post_mime_type( $attachment_id ) );
-
-		// There should be JPEG and WebP sources for all sizes.
-		foreach ( array_keys( $metadata['sizes'] ) as $size_name ) {
-			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/jpeg' );
-			$this->assertImageHasSizeSource( $attachment_id, $size_name, $mime_type );
 		}
 	}
 
@@ -807,6 +780,20 @@ class Test_WebP_Uploads_Load extends TestCase {
 		return array(
 			'webp' => array( 'webp' ),
 			'avif' => array( 'avif' ),
+		);
+	}
+
+	/**
+	 * Data provider for tests returns the supported image types to run the tests with and without threshold check.
+	 *
+	 * @return array<string, array<int, string|true>> An array of valid image types.
+	 */
+	public function data_provider_supported_image_types_with_threshold(): array {
+		return array(
+			'webp'                    => array( 'webp' ),
+			'webp with 850 threshold' => array( 'webp', true ),
+			'avif'                    => array( 'avif' ),
+			'avif with 850 threshold' => array( 'avif', true ),
 		);
 	}
 

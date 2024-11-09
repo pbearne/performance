@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const OD_REST_API_NAMESPACE = 'optimization-detective/v1';
 
 /**
- * Route for storing a URL metric.
+ * Route for storing a URL Metric.
  *
  * Note the `:store` art of the endpoint follows Google's guidance in AIP-136 for the use of the POST method in a way
  * that does not strictly follow the standard usage. Namely, submitting a POST request to this endpoint will either
@@ -30,7 +30,7 @@ const OD_REST_API_NAMESPACE = 'optimization-detective/v1';
 const OD_URL_METRICS_ROUTE = '/url-metrics:store';
 
 /**
- * Registers endpoint for storage of URL metric.
+ * Registers endpoint for storage of URL Metric.
  *
  * @since 0.1.0
  * @access private
@@ -53,7 +53,7 @@ function od_register_endpoint(): void {
 			'pattern'           => '^[0-9a-f]+$',
 			'validate_callback' => static function ( string $nonce, WP_REST_Request $request ) {
 				if ( ! od_verify_url_metrics_storage_nonce( $nonce, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
-					return new WP_Error( 'invalid_nonce', __( 'URL metrics nonce verification failure.', 'optimization-detective' ) );
+					return new WP_Error( 'invalid_nonce', __( 'URL Metrics nonce verification failure.', 'optimization-detective' ) );
 				}
 				return true;
 			},
@@ -77,7 +77,7 @@ function od_register_endpoint(): void {
 				if ( OD_Storage_Lock::is_locked() ) {
 					return new WP_Error(
 						'url_metric_storage_locked',
-						__( 'URL metric storage is presently locked for the current IP.', 'optimization-detective' ),
+						__( 'URL Metric storage is presently locked for the current IP.', 'optimization-detective' ),
 						array( 'status' => 403 )
 					);
 				}
@@ -109,7 +109,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		od_get_url_metric_freshness_ttl()
 	);
 
-	// Block the request if URL metrics aren't needed for the provided viewport width.
+	// Block the request if URL Metrics aren't needed for the provided viewport width.
 	try {
 		$url_metric_group = $url_metric_group_collection->get_group_for_viewport_width(
 			$request->get_param( 'viewport' )['width']
@@ -120,7 +120,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 	if ( $url_metric_group->is_complete() ) {
 		return new WP_Error(
 			'url_metric_group_complete',
-			__( 'The URL metric group for the provided viewport is already complete.', 'optimization-detective' ),
+			__( 'The URL Metric group for the provided viewport is already complete.', 'optimization-detective' ),
 			array( 'status' => 403 )
 		);
 	}
@@ -153,7 +153,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 			'rest_invalid_param',
 			sprintf(
 				/* translators: %s is exception name */
-				__( 'Failed to validate URL metric: %s', 'optimization-detective' ),
+				__( 'Failed to validate URL Metric: %s', 'optimization-detective' ),
 				$e->getMessage()
 			),
 			array( 'status' => 400 )
