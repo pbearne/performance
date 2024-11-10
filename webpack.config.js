@@ -50,7 +50,7 @@ const optimizationDetective = ( env ) => {
 	const source = path.resolve( __dirname, 'node_modules/web-vitals' );
 	const destination = path.resolve(
 		__dirname,
-		'plugins/optimization-detective/build'
+		'plugins/optimization-detective'
 	);
 
 	return {
@@ -61,15 +61,19 @@ const optimizationDetective = ( env ) => {
 				patterns: [
 					{
 						from: `${ source }/dist/web-vitals.js`,
-						to: `${ destination }/web-vitals.js`,
+						to: `${ destination }/build/web-vitals.js`,
 					},
 					{
 						from: `${ source }/package.json`,
-						to: `${ destination }/web-vitals.asset.php`,
+						to: `${ destination }/build/web-vitals.asset.php`,
 						transform: {
 							transformer: assetDataTransformer,
 							cache: false,
 						},
+					},
+					{
+						from: `${ destination }/detect.js`,
+						to: `${ destination }/detect.min.js`,
 					},
 				],
 			} ),
