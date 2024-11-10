@@ -252,16 +252,28 @@ function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Stor
 		return;
 	}
 
-	// TODO: Should this instead call do_action() directly since we don't actually need to clear the object cache but just want to trigger page caches to flush the page caches?
+	// Fire actions that page caching plugins listen to flush caches.
 	switch ( $queried_object['type'] ) {
 		case 'post':
-			clean_post_cache( $queried_object['id'] );
+			$post = get_post( $queried_object['id'] );
+			if ( $post instanceof WP_Post ) {
+				/** This action is documented in wp-includes/post.php. */
+				do_action( 'clean_post_cache', $post->ID, $post );
+			}
 			break;
 		case 'term':
-			clean_term_cache( $queried_object['id'] );
+			$term = get_term( $queried_object['id'] );
+			if ( $term instanceof WP_Term ) {
+				/** This action is documented in wp-includes/taxonomy.php. */
+				do_action( 'clean_term_cache', array( $term->term_id ), $term->taxonomy, false );
+			}
 			break;
 		case 'user':
-			clean_user_cache( $queried_object['id'] );
+			$user = get_user_by( 'ID', $queried_object['id'] );
+			if ( $user instanceof WP_User ) {
+				/** This action is documented in wp-includes/user.php. */
+				do_action( 'clean_user_cache', $user->ID, $user );
+			}
 			break;
 	}
 }

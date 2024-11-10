@@ -29,24 +29,12 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 */
 	public function data_provider_to_test_rest_request_good_params(): array {
 		return array(
-			'not_extended'        => array(
+			'not_extended'             => array(
 				'set_up' => function () {
 					return $this->get_valid_params();
 				},
 			),
-			'with_queried_object' => array(
-				'set_up' => function () {
-					$post_id              = self::factory()->post->create();
-					$valid_params         = $this->get_valid_params();
-					$valid_params['hmac'] = od_get_url_metrics_storage_hmac( $valid_params['slug'], $valid_params['url'], 'post', $post_id );
-					$valid_params['queriedObject'] = array(
-						'type' => 'post',
-						'id'   => $post_id,
-					);
-					return $valid_params;
-				},
-			),
-			'extended'            => array(
+			'extended'                 => array(
 				'set_up' => function () {
 					add_filter(
 						'od_url_metric_schema_root_additional_properties',
@@ -63,6 +51,45 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					return $params;
 				},
 			),
+			'with_post_queried_object' => array(
+				'set_up' => function () {
+					$post_id              = self::factory()->post->create();
+					$valid_params         = $this->get_valid_params();
+					$valid_params['url']  = get_permalink( $post_id );
+					$valid_params['hmac'] = od_get_url_metrics_storage_hmac( $valid_params['slug'], $valid_params['url'], 'post', $post_id );
+					$valid_params['queriedObject'] = array(
+						'type' => 'post',
+						'id'   => $post_id,
+					);
+					return $valid_params;
+				},
+			),
+			'with_term_queried_object' => array(
+				'set_up' => function () {
+					$term_id              = self::factory()->term->create();
+					$valid_params         = $this->get_valid_params();
+					$valid_params['url']  = get_term_link( $term_id );
+					$valid_params['hmac'] = od_get_url_metrics_storage_hmac( $valid_params['slug'], $valid_params['url'], 'term', $term_id );
+					$valid_params['queriedObject'] = array(
+						'type' => 'term',
+						'id'   => $term_id,
+					);
+					return $valid_params;
+				},
+			),
+			'with_user_queried_object' => array(
+				'set_up' => function () {
+					$user_id              = self::factory()->user->create();
+					$valid_params         = $this->get_valid_params();
+					$valid_params['url']  = get_author_posts_url( $user_id );
+					$valid_params['hmac'] = od_get_url_metrics_storage_hmac( $valid_params['slug'], $valid_params['url'], 'user', $user_id );
+					$valid_params['queriedObject'] = array(
+						'type' => 'user',
+						'id'   => $user_id,
+					);
+					return $valid_params;
+				},
+			),
 		);
 	}
 
@@ -73,16 +100,49 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 *
 	 * @covers ::od_register_endpoint
 	 * @covers ::od_handle_rest_request
+	 * @covers ::od_clean_queried_object_cache_for_stored_url_metric
 	 */
 	public function test_rest_request_good_params( Closure $set_up ): void {
+		$clean_post_cache_callback_args = array();
+		add_action(
+			'clean_post_cache',
+			static function () use ( &$clean_post_cache_callback_args ): void {
+				$clean_post_cache_callback_args[] = func_get_args();
+			},
+			10,
+			PHP_INT_MAX
+		);
+
+		$clean_term_cache_callback_args = array();
+		add_action(
+			'clean_term_cache',
+			static function () use ( &$clean_term_cache_callback_args ): void {
+				$clean_term_cache_callback_args[] = func_get_args();
+			},
+			10,
+			PHP_INT_MAX
+		);
+
+		$clean_user_cache_callback_args = array();
+		add_action(
+			'clean_user_cache',
+			static function () use ( &$clean_user_cache_callback_args ): void {
+				$clean_user_cache_callback_args[] = func_get_args();
+			},
+			10,
+			PHP_INT_MAX
+		);
+
+		$stored_context = null;
 		add_action(
 			'od_url_metric_stored',
-			function ( OD_URL_Metric_Store_Request_Context $context ): void {
+			function ( OD_URL_Metric_Store_Request_Context $context ) use ( &$stored_context ): void {
 				$this->assertInstanceOf( OD_URL_Metric_Group_Collection::class, $context->url_metric_group_collection );
 				$this->assertInstanceOf( OD_URL_Metric_Group::class, $context->url_metric_group );
 				$this->assertInstanceOf( OD_URL_Metric::class, $context->url_metric );
 				$this->assertInstanceOf( WP_REST_Request::class, $context->request );
 				$this->assertIsInt( $context->post_id );
+				$stored_context = $context;
 			}
 		);
 
@@ -111,6 +171,49 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 			wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
 		);
 		$this->assertSame( 1, did_action( 'od_url_metric_stored' ) );
+
+		$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
+
+		// Now check that od_clean_queried_object_cache_for_stored_url_metric() cleaned caches as expected.
+		$this->assertSame( $url_metrics[0]->jsonSerialize(), $stored_context->url_metric->jsonSerialize() );
+		if ( null !== $stored_context->url_metric->get_queried_object() ) {
+			switch ( $stored_context->url_metric->get_queried_object()['type'] ) {
+				case 'post':
+					$found = false;
+					foreach ( $clean_post_cache_callback_args as $args ) {
+						if ( $args[0] === $stored_context->url_metric->get_queried_object()['id'] ) {
+							$this->assertInstanceOf( WP_Post::class, $args[1] );
+							$this->assertSame( $stored_context->url_metric->get_queried_object()['id'], $args[1]->ID );
+							$found = true;
+						}
+					}
+					$this->assertTrue( $found, 'Expected clean_post_cache to have been fired for the post queried object.' );
+					break;
+				case 'term':
+					$found = false;
+					foreach ( $clean_term_cache_callback_args as $args ) {
+						if ( array( $stored_context->url_metric->get_queried_object()['id'] ) === $args[0] ) {
+							$term = get_term( $stored_context->url_metric->get_queried_object()['id'] );
+							$this->assertInstanceOf( WP_Term::class, $term );
+							$this->assertSame( $term->taxonomy, $args[1] );
+							$found = true;
+						}
+					}
+					$this->assertTrue( $found, 'Expected clean_term_cache to have been fired for the term queried object.' );
+					break;
+				case 'user':
+					$found = false;
+					foreach ( $clean_user_cache_callback_args as $args ) {
+						if ( $args[0] === $stored_context->url_metric->get_queried_object()['id'] ) {
+							$this->assertInstanceOf( WP_User::class, $args[1] );
+							$this->assertSame( $stored_context->url_metric->get_queried_object()['id'], $args[1]->ID );
+							$found = true;
+						}
+					}
+					$this->assertTrue( $found, 'Expected clean_user_cache to have been fired for the user queried object.' );
+					break;
+			}
+		}
 	}
 
 	/**
