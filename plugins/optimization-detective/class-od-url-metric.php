@@ -232,7 +232,7 @@ class OD_URL_Metric implements JsonSerializable {
 					'additionalProperties' => false,
 				),
 				'timestamp' => array(
-					'description' => __( 'Timestamp at which the URL metric was captured.', 'optimization-detective' ),
+					'description' => __( 'Timestamp at which the URL Metric was captured.', 'optimization-detective' ),
 					'type'        => 'number',
 					'required'    => true,
 					'readonly'    => true, // Omit from REST API.
@@ -284,7 +284,7 @@ class OD_URL_Metric implements JsonSerializable {
 		);
 
 		/**
-		 * Filters additional schema properties which should be allowed at the root of a URL metric.
+		 * Filters additional schema properties which should be allowed at the root of a URL Metric.
 		 *
 		 * @since 0.6.0
 		 *
@@ -296,7 +296,7 @@ class OD_URL_Metric implements JsonSerializable {
 		}
 
 		/**
-		 * Filters additional schema properties which should be allowed for an element's item in a URL metric.
+		 * Filters additional schema properties which should be allowed for an element's item in a URL Metric.
 		 *
 		 * @since 0.6.0
 		 *

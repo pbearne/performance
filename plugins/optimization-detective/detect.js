@@ -497,7 +497,7 @@ export default async function detect( {
 	}
 
 	if ( isDebug ) {
-		log( 'Current URL metric:', urlMetric );
+		log( 'Current URL Metric:', urlMetric );
 	}
 
 	// Wait for the page to be hidden.
@@ -545,7 +545,7 @@ export default async function detect( {
 	setStorageLock( getCurrentTime() );
 
 	if ( isDebug ) {
-		log( 'Sending URL metric:', urlMetric );
+		log( 'Sending URL Metric:', urlMetric );
 	}
 
 	const url = new URL( restApiEndpoint );

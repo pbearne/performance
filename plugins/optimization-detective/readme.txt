@@ -80,7 +80,7 @@ Refer to [Image Prioritizer](https://github.com/WordPress/performance/tree/trunk
 
 **Filter:** `od_breakpoint_max_widths` (default: `array(480, 600, 782)`)
 
-Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the two breakpoints defined, 480 and 782, then this means there will be three viewport groups of URL metrics, one for 0\<=480 (i.e. mobile), another 481\<=782 (i.e. phablet/tablet), and another \>782 (i.e. desktop).
+Filters the breakpoint max widths to group URL Metrics for various viewports. Each number represents the maximum width (inclusive) for a given breakpoint. So if there is one number, 480, then this means there will be two viewport groupings, one for 0\<=480, and another \>480. If instead there are the two breakpoints defined, 480 and 782, then this means there will be three viewport groups of URL Metrics, one for 0\<=480 (i.e. mobile), another 481\<=782 (i.e. phablet/tablet), and another \>782 (i.e. desktop).
 
 These default breakpoints are reused from Gutenberg which appear to be used the most in media queries that affect frontend styles.
 
@@ -261,7 +261,7 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 **Enhancements**
 
-* Send gathered URL metric data when the page is hidden/unloaded as opposed to once the page has loaded; this enables the ability to track layout shifts and INP scores over the life of the page. ([1373](https://github.com/WordPress/performance/pull/1373))
+* Send gathered URL Metric data when the page is hidden/unloaded as opposed to once the page has loaded; this enables the ability to track layout shifts and INP scores over the life of the page. ([1373](https://github.com/WordPress/performance/pull/1373))
 * Introduce client-side extensions in the form of script modules which are loaded when the detection logic runs. ([1373](https://github.com/WordPress/performance/pull/1373))
 * Add an `od_init` action for extensions to load their code. ([1373](https://github.com/WordPress/performance/pull/1373))
 * Introduce `OD_Element` class and improve PHP API. ([1585](https://github.com/WordPress/performance/pull/1585))
@@ -276,9 +276,9 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 **Enhancements**
 
-* Allow URL metric schema to be extended. ([1492](https://github.com/WordPress/performance/pull/1492))
+* Allow URL Metric schema to be extended. ([1492](https://github.com/WordPress/performance/pull/1492))
 * Clarify docs around a tag visitor's boolean return value. ([1479](https://github.com/WordPress/performance/pull/1479))
-* Include UUID with each URL metric. ([1489](https://github.com/WordPress/performance/pull/1489))
+* Include UUID with each URL Metric. ([1489](https://github.com/WordPress/performance/pull/1489))
 * Introduce get_cursor_move_count() to use instead of get_seek_count() and get_next_token_count(). ([1478](https://github.com/WordPress/performance/pull/1478))
 
 **Bug Fixes**
@@ -320,11 +320,11 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 **Enhancements**
 
-* Log URL metrics group collection to console when debugging is enabled (`WP_DEBUG` is true). ([1295](https://github.com/WordPress/performance/pull/1295))
+* Log URL Metrics group collection to console when debugging is enabled (`WP_DEBUG` is true). ([1295](https://github.com/WordPress/performance/pull/1295))
 
 **Bug Fixes**
 
-* Include non-intersecting elements in URL metrics to fix lazy-load optimization. ([1293](https://github.com/WordPress/performance/pull/1293))
+* Include non-intersecting elements in URL Metrics to fix lazy-load optimization. ([1293](https://github.com/WordPress/performance/pull/1293))
 
 = 0.3.0 =
 
