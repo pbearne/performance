@@ -164,6 +164,7 @@ const buildPlugin = ( env ) => {
 					{
 						from,
 						to,
+						info: { minimized: true }, // Terser skip minimization
 						globOptions: {
 							dot: true,
 							ignore: [
