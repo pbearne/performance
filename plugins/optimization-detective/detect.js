@@ -2,6 +2,7 @@
  * @typedef {import("web-vitals").LCPMetric} LCPMetric
  * @typedef {import("./types.ts").ElementData} ElementData
  * @typedef {import("./types.ts").URLMetric} URLMetric
+ * @typedef {import("./types.ts").QueriedObject} QueriedObject
  * @typedef {import("./types.ts").URLMetricGroupStatus} URLMetricGroupStatus
  * @typedef {import("./types.ts").Extension} Extension
  * @typedef {import("./types.ts").ExtendedRootData} ExtendedRootData
@@ -239,6 +240,7 @@ function extendElementData( xpath, properties ) {
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
  * @param {string}                 args.currentUrl                 Current URL.
  * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
+ * @param {QueriedObject}          [args.queriedObject]            Queried object.
  * @param {string}                 args.urlMetricHMAC              HMAC for URL Metric storage.
  * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL Metric group statuses.
  * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL Metric storage lock.
@@ -253,6 +255,7 @@ export default async function detect( {
 	restApiEndpoint,
 	currentUrl,
 	urlMetricSlug,
+	queriedObject,
 	urlMetricHMAC,
 	urlMetricGroupStatuses,
 	storageLockTTL,
@@ -445,6 +448,10 @@ export default async function detect( {
 		},
 		elements: [],
 	};
+
+	if ( queriedObject ) {
+		urlMetric.queriedObject = queriedObject;
+	}
 
 	const lcpMetric = lcpMetricCandidates.at( -1 );
 

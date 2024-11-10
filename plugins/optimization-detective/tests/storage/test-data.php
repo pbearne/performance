@@ -287,17 +287,49 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed> Data.
+	 */
+	public function data_provider_to_test_hmac(): array {
+		return array(
+			'home' => array(
+				'url'  => static function () {
+					return home_url();
+				},
+				'slug' => od_get_url_metrics_slug( array() ),
+			),
+			'post' => array(
+				'url'                 => static function () {
+					wp_update_post(
+						array(
+							'ID'         => 1,
+							'post_type'  => 'post',
+							'post_title' => 'Hello!',
+						)
+					);
+					return get_permalink( 1 );
+				},
+				'slug'                => od_get_url_metrics_slug( array( 'p' => 1 ) ),
+				'queried_object_type' => 'post',
+				'queried_object_id'   => 1,
+			),
+		);
+	}
+
+	/**
 	 * Test od_get_url_metrics_storage_hmac() and od_verify_url_metrics_storage_hmac().
+	 *
+	 * @dataProvider data_provider_to_test_hmac
 	 *
 	 * @covers ::od_get_url_metrics_storage_hmac
 	 * @covers ::od_verify_url_metrics_storage_hmac
 	 */
-	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac(): void {
-		$url  = home_url( '/' );
-		$slug = od_get_url_metrics_slug( array() );
-		$hmac = od_get_url_metrics_storage_hmac( $slug, $url );
+	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac( Closure $get_url, string $slug, ?string $queried_object_type = null, ?int $queried_object_id = null ): void {
+		$url  = $get_url();
+		$hmac = od_get_url_metrics_storage_hmac( $slug, $url, $queried_object_type, $queried_object_id );
 		$this->assertMatchesRegularExpression( '/^[0-9a-f]+$/', $hmac );
-		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url ) );
+		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url, $queried_object_type, $queried_object_id ) );
 	}
 
 	/**

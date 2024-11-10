@@ -52,7 +52,7 @@ function od_register_endpoint(): void {
 			'required'          => true,
 			'pattern'           => '^[0-9a-f]+$',
 			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
-				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
+				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['url'], $request['queriedObject']['type'] ?? null, $request['queriedObject']['id'] ?? null ) ) {
 					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );
 				}
 				return true;
@@ -206,6 +206,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 	 * Fires whenever a URL Metric was successfully stored.
 	 *
 	 * @since 0.7.0
+	 * @todo Add this to the README as documentation.
 	 *
 	 * @param OD_URL_Metric_Store_Request_Context $context Context about the successful URL Metric collection.
 	 */
@@ -225,4 +226,42 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 			'success' => true,
 		)
 	);
+}
+
+/**
+ * Cleans the cache for the queried object when it has a new URL Metric stored.
+ *
+ * This is intended to flush any page cache for the URL after the new URL Metric was submitted so that the optimizations
+ * which depend on that URL Metric can start to take effect. Furthermore, when a submitted URL Metric results in a full
+ * sample of URL Metric groups, then flushing the page cache will allow the next request to omit the detection script
+ * module altogether. When a page cache holds onto a cached page for a long time (e.g. a week), this will result in
+ * the stored URL Metrics being stale if they have the default freshness TTL of 1 day. Nevertheless, if no changes have
+ * been applied to a cached page then those stale URL Metrics should continue to result in an optimized page.
+ *
+ * This assumes that a page caching plugin flushes the page cache for a queried object via `clean_post_cache`,
+ * `clean_term_cache`, and `clean_user_cache` actions. Other actions may make sense to trigger as well as can be seen in
+ * {@link https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552/README.md?plain=1#L314-L356}.
+ *
+ * @since n.e.x.t
+ *
+ * @param OD_URL_Metric_Store_Request_Context $context Context.
+ */
+function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Store_Request_Context $context ): void {
+	$queried_object = $context->url_metric->get_queried_object();
+	if ( ! is_array( $queried_object ) ) {
+		return;
+	}
+
+	// TODO: Should this instead call do_action() directly since we don't actually need to clear the object cache but just want to trigger page caches to flush the page caches?
+	switch ( $queried_object['type'] ) {
+		case 'post':
+			clean_post_cache( $queried_object['id'] );
+			break;
+		case 'term':
+			clean_term_cache( $queried_object['id'] );
+			break;
+		case 'user':
+			clean_user_cache( $queried_object['id'] );
+			break;
+	}
 }

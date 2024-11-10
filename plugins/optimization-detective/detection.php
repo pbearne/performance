@@ -32,6 +32,20 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 	 */
 	$extension_module_urls = (array) apply_filters( 'od_extension_module_urls', array() );
 
+	// Obtain the queried object so when a URL Metric is stored the endpoint will know which object's cache to clean.
+	// Note that WP_Post_Type is intentionally excluded here since there is no equivalent to clean_post_cache(), clean_term_cache(), and clean_user_cache().
+	$queried_object = get_queried_object();
+	if ( $queried_object instanceof WP_Post ) {
+		$queried_object_type = 'post';
+	} elseif ( $queried_object instanceof WP_Term ) {
+		$queried_object_type = 'term';
+	} elseif ( $queried_object instanceof WP_User ) {
+		$queried_object_type = 'user';
+	} else {
+		$queried_object_type = null;
+	}
+	$queried_object_id = null === $queried_object_type ? null : (int) get_queried_object_id();
+
 	$current_url = od_get_current_url();
 	$detect_args = array(
 		'minViewportAspectRatio' => od_get_minimum_viewport_aspect_ratio(),
@@ -41,7 +55,11 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 		'restApiEndpoint'        => rest_url( OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE ),
 		'currentUrl'             => $current_url,
 		'urlMetricSlug'          => $slug,
-		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_url ),
+		'queriedObject'          => null === $queried_object_type ? null : array(
+			'type' => $queried_object_type,
+			'id'   => $queried_object_id,
+		),
+		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_url, $queried_object_type, $queried_object_id ),
 		'urlMetricGroupStatuses' => array_map(
 			static function ( OD_URL_Metric_Group $group ): array {
 				return array(

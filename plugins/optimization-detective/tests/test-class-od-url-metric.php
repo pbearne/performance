@@ -48,6 +48,18 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 					),
 				),
 			),
+			'valid_with_queried_object'       => array(
+				'data' => array(
+					'url'           => home_url( '/' ),
+					'viewport'      => $viewport,
+					'timestamp'     => microtime( true ),
+					'elements'      => array(),
+					'queriedObject' => array(
+						'type' => 'post',
+						'id'   => 1,
+					),
+				),
+			),
 			// This tests that sanitization converts values into their expected PHP types.
 			'valid_but_props_are_strings'     => array(
 				'data' => array(
@@ -109,6 +121,19 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 					'elements'  => array(),
 				),
 				'error' => 'OD_URL_Metric[viewport][height] is not of type integer.',
+			),
+			'bad_queried_object'              => array(
+				'data'  => array(
+					'url'           => home_url( '/' ),
+					'viewport'      => $viewport,
+					'timestamp'     => microtime( true ),
+					'elements'      => array(),
+					'queriedObject' => array(
+						'type' => 'story',
+						'id'   => 1,
+					),
+				),
+				'error' => 'OD_URL_Metric[queriedObject][type] is not one of post, term, and user',
 			),
 			'viewport_aspect_ratio_too_small' => array(
 				'data'  => array(
@@ -715,14 +740,14 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 */
 	protected function check_schema_subset( array $schema, string $path, bool $extended = false ): void {
 		$this->assertArrayHasKey( 'required', $schema, $path );
-		if ( ! $extended ) {
+		if ( ! $extended && ! str_starts_with( $path, 'root/queriedObject' ) ) {
 			$this->assertTrue( $schema['required'], $path );
 		}
 		$this->assertArrayHasKey( 'type', $schema, $path );
 		if ( 'object' === $schema['type'] ) {
 			$this->assertArrayHasKey( 'properties', $schema, $path );
 			$this->assertArrayHasKey( 'additionalProperties', $schema, $path );
-			if ( 'root/viewport' === $path || 'root/elements/items/intersectionRect' === $path || 'root/elements/items/boundingClientRect' === $path ) {
+			if ( 'root/viewport' === $path || 'root/queriedObject' === $path || 'root/elements/items/intersectionRect' === $path || 'root/elements/items/boundingClientRect' === $path ) {
 				$this->assertFalse( $schema['additionalProperties'], "Path: $path" );
 			} else {
 				$this->assertTrue( $schema['additionalProperties'], "Path: $path" );

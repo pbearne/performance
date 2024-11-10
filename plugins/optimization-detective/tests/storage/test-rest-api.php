@@ -29,12 +29,24 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 */
 	public function data_provider_to_test_rest_request_good_params(): array {
 		return array(
-			'not_extended' => array(
+			'not_extended'        => array(
 				'set_up' => function () {
 					return $this->get_valid_params();
 				},
 			),
-			'extended'     => array(
+			'with_queried_object' => array(
+				'set_up' => function () {
+					$post_id              = self::factory()->post->create();
+					$valid_params         = $this->get_valid_params();
+					$valid_params['hmac'] = od_get_url_metrics_storage_hmac( $valid_params['slug'], $valid_params['url'], 'post', $post_id );
+					$valid_params['queriedObject'] = array(
+						'type' => 'post',
+						'id'   => $post_id,
+					);
+					return $valid_params;
+				},
+			),
+			'extended'            => array(
 				'set_up' => function () {
 					add_filter(
 						'od_url_metric_schema_root_additional_properties',
@@ -127,6 +139,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				),
 				'invalid_hmac'                             => array(
 					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
+				),
+				'invalid_hmac_with_queried_object'         => array(
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), home_url( '/' ), 'post', 1 ),
 				),
 				'invalid_viewport_type'                    => array(
 					'viewport' => '640x480',
