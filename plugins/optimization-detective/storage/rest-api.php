@@ -107,14 +107,20 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
 function od_is_allowed_http_origin( string $origin ): bool {
 	$allowed_origins = get_allowed_http_origins();
 	$home_url_port   = wp_parse_url( home_url(), PHP_URL_PORT );
+
+	// Append the home URL's port to the allowed origins if they lack a port number.
 	if ( is_int( $home_url_port ) ) {
 		$allowed_origins = array_map(
 			static function ( string $allowed_origin ) use ( $home_url_port ): string {
-				return $allowed_origin . ':' . (string) $home_url_port;
+				if ( null === wp_parse_url( $allowed_origin, PHP_URL_PORT ) ) {
+					$allowed_origin .= ':' . (string) $home_url_port;
+				}
+				return $allowed_origin;
 			},
 			$allowed_origins
 		);
 	}
+
 	return in_array( $origin, $allowed_origins, true );
 }
 
