@@ -481,7 +481,7 @@ function webp_uploads_get_mime_type_image( int $attachment_id, string $src, stri
  *
  * @param string $file          The path to the file.
  * @param int    $attachment_id The attachment ID.
- * @return string The MIME type of the file, or false if not found.
+ * @return string The MIME type of the file, or an empty string if not found.
  */
 function webp_uploads_get_file_mime_type( string $file, int $attachment_id ): string {
 	/*
