@@ -3,55 +3,53 @@
  */
 
 /* global perflabPluginActivateAjaxData */
-document.addEventListener( 'DOMContentLoaded', function () {
+/* global jQuery */
+// @ts-ignore
+jQuery( document ).ready( ( $ ) => {
 	// @ts-ignore
 	const { i18n, a11y } = wp;
 	const { __, _x } = i18n;
 
 	/**
-	 * Adds a click event listener to the document.
-	 *
-	 * This asynchronous function listens for click events on the document and executes
-	 * the provided callback function if triggered.
+	 * Adds a click event listener to the plugin activate buttons.
 	 *
 	 * @param {MouseEvent} event - The click event object that is triggered when the user clicks on the document.
 	 *
-	 * @return {Promise<void>} - The asynchronous function returns a promise that resolves to void.
+	 * @return {Promise<void>} - The asynchronous function returns a promise.
 	 */
-	document.addEventListener( 'click', async function ( event ) {
-		const target = /** @type {HTMLElement} */ ( event.target );
-
-		if ( target.classList.contains( 'perflab-install-active-plugin' ) ) {
+	$( document ).on(
+		'click',
+		'.perflab-install-active-plugin',
+		async function ( event ) {
 			// Prevent the default link behavior.
 			event.preventDefault();
 
-			target.classList.add( 'updating-message' );
-			target.textContent = __( 'Activating…', 'performance-lab' );
+			// Get the clicked element as a jQuery object.
+			const target = $( this );
+
+			target
+				.addClass( 'updating-message' )
+				.text( __( 'Activating…', 'performance-lab' ) );
 
 			a11y.speak( __( 'Activating…', 'performance-lab' ) );
 
-			const pluginSlug = target.getAttribute( 'data-plugin-slug' ).trim();
+			// Retrieve the plugin slug from the data attribute.
+			const pluginSlug = $.trim( target.attr( 'data-plugin-slug' ) );
 
 			try {
-				const response = await fetch(
+				// Send an AJAX POST request to activate the plugin.
+				const responseData = await $.post(
 					// @ts-ignore
 					perflabPluginActivateAjaxData.ajaxUrl,
 					{
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-						},
-						body: new URLSearchParams( {
-							action: 'perflab_install_activate_plugin',
-							slug: pluginSlug,
-							// @ts-ignore
-							_ajax_nonce: perflabPluginActivateAjaxData.nonce,
-						} ),
-					}
+						action: 'perflab_install_activate_plugin',
+						slug: pluginSlug,
+						// @ts-ignore
+						_ajax_nonce: perflabPluginActivateAjaxData.nonce,
+					},
+					null,
+					'json'
 				);
-
-				const responseData = await response.json();
 
 				if ( ! responseData.success ) {
 					showAdminNotice(
@@ -61,36 +59,40 @@ document.addEventListener( 'DOMContentLoaded', function () {
 						)
 					);
 
-					target.classList.remove( 'updating-message' );
-					target.textContent = __( 'Activate', 'performance-lab' );
+					target
+						.removeClass( 'updating-message' )
+						.text( __( 'Activate', 'performance-lab' ) );
 
 					return;
 				}
 
-				const newButton = document.createElement( 'button' );
-
-				newButton.type = 'button';
-				newButton.className = 'button button-disabled';
-				newButton.disabled = true;
-				newButton.textContent = __( 'Active', 'performance-lab' );
-
-				target.parentNode.replaceChild( newButton, target );
+				// Replace the 'Activate' button with a disabled 'Active' button.
+				target.replaceWith(
+					$( '<button>', {
+						type: 'button',
+						class: 'button button-disabled',
+						disabled: true,
+						text: __( 'Active', 'performance-lab' ),
+					} )
+				);
 
 				const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
 
-				const actionButtonList = document.querySelector(
-					'.plugin-card-' + pluginSlug + ' .plugin-action-buttons'
+				// Select the container for action buttons related to the plugin.
+				const actionButtonList = $(
+					`.plugin-card-${ pluginSlug } .plugin-action-buttons`
 				);
 
 				if ( pluginSettingsURL && actionButtonList ) {
-					const listItem = document.createElement( 'li' );
-					const anchor = document.createElement( 'a' );
-
-					anchor.setAttribute( 'href', pluginSettingsURL );
-					anchor.textContent = __( 'Settings', 'performance-lab' );
-
-					listItem.appendChild( anchor );
-					actionButtonList.appendChild( listItem );
+					// Append a 'Settings' link to the action buttons.
+					actionButtonList.append(
+						$( '<li>' ).append(
+							$( '<a>', {
+								href: pluginSettingsURL,
+								text: __( 'Settings', 'performance-lab' ),
+							} )
+						)
+					);
 				}
 
 				showAdminNotice(
@@ -106,88 +108,66 @@ document.addEventListener( 'DOMContentLoaded', function () {
 					)
 				);
 
-				target.classList.remove( 'updating-message' );
-				target.textContent = __( 'Activate', 'performance-lab' );
+				target
+					.removeClass( 'updating-message' )
+					.text( __( 'Activate', 'performance-lab' ) );
 			}
 		}
-	} );
+	);
 
+	/**
+	 * Displays an admin notice with the given message and type.
+	 *
+	 * @param {string} message             - The message to display in the notice.
+	 * @param {string} [type='error']      - The type of notice ('error', 'success', etc.).
+	 * @param {string} [pluginSettingsURL] - Optional URL for the plugin settings.
+	 */
 	function showAdminNotice(
 		message,
 		type = 'error',
 		pluginSettingsURL = undefined
 	) {
+		a11y.speak( message );
+
 		// Create the notice container elements.
-		const notice = document.createElement( 'div' );
-		const para = document.createElement( 'p' );
-
-		notice.className = 'notice is-dismissible notice-' + type;
-		para.textContent = message;
-
-		if ( pluginSettingsURL ) {
-			para.textContent = `${ para.textContent } ${ __(
-				'Review',
-				'performance-lab'
-			) } `;
-
-			const anchor = document.createElement( 'a' );
-			anchor.setAttribute( 'href', pluginSettingsURL );
-			anchor.textContent = __( 'settings', 'performance-lab' );
-
-			para.appendChild( anchor );
-			para.appendChild(
-				document.createTextNode(
-					_x( '.', 'Punctuation mark', 'performance-lab' )
-				)
-			);
-		}
-
-		notice.appendChild( para );
-
-		const dismissButton = document.createElement( 'button' );
-		const dismissButtonTextWrap = document.createElement( 'span' );
-
-		dismissButton.type = 'button';
-		dismissButton.className = 'notice-dismiss';
-
-		dismissButtonTextWrap.className = 'screen-reader-text';
-		dismissButtonTextWrap.textContent = __(
-			'Dismiss this notice.',
-			'performance-lab'
-		);
-
-		dismissButton.appendChild( dismissButtonTextWrap );
-
-		// Add event listener to remove the notice when dismissed.
-		dismissButton.addEventListener( 'click', () => {
-			notice.remove();
+		const notice = $( '<div>', {
+			class: `notice is-dismissible notice-${ type }`,
 		} );
 
-		notice.appendChild( dismissButton );
+		const para = $( '<p>' ).text( message );
 
-		// Insert the notice at the top of the admin notices area.
-		const noticeContainer =
-			document.querySelector( '.wrap.plugin-install-php' ) ||
-			document.body;
-
-		if ( ! noticeContainer ) {
-			// Fallback append to body if no suitable container is found.
-			document.body.prepend( notice );
-
-			return;
+		// If a plugin settings URL is provided, append a 'Review settings.' link.
+		if ( pluginSettingsURL ) {
+			para.append( ` ${ __( 'Review', 'performance-lab' ) } ` )
+				.append(
+					$( '<a>', {
+						href: pluginSettingsURL,
+						text: __( 'settings', 'performance-lab' ),
+					} )
+				)
+				.append( _x( '.', 'Punctuation mark', 'performance-lab' ) );
 		}
 
-		if ( noticeContainer.children.length >= 1 ) {
-			// Insert as the second child.
-			noticeContainer.insertBefore(
-				notice,
-				noticeContainer.children[ 1 ]
-			);
+		const dismissButton = $( '<button>', {
+			type: 'button',
+			class: 'notice-dismiss',
+			click: () => notice.remove(),
+		} ).append(
+			$( '<span>', {
+				class: 'screen-reader-text',
+				text: __( 'Dismiss this notice.', 'performance-lab' ),
+			} )
+		);
 
-			return;
+		notice.append( para, dismissButton );
+
+		const noticeContainer = $( '.wrap.plugin-install-php' );
+
+		if ( noticeContainer.length ) {
+			// If the container exists, insert the notice after the first child.
+			noticeContainer.children().eq( 0 ).after( notice );
+		} else {
+			$( 'body' ).prepend( notice );
 		}
-
-		// If there's only one child or none, append as the last child.
-		noticeContainer.appendChild( notice );
 	}
 } );

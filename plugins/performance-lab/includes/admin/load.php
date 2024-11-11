@@ -310,6 +310,8 @@ add_action( 'admin_action_perflab_install_activate_plugin', 'perflab_install_act
 
 /**
  * Callback for handling installation/activation of plugin using ajax.
+ *
+ * @since n.e.x.t
  */
 function perflab_install_activate_plugin_ajax_callback(): void {
 	check_ajax_referer( 'perflab_install_activate_plugin_ajax', '_ajax_nonce' );
