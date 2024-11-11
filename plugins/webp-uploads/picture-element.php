@@ -29,7 +29,7 @@ function webp_uploads_wrap_image_in_picture( string $image, string $context, int
 		return $image;
 	}
 
-	$original_file_mime_type = get_file_mime_type( $file, $attachment_id );
+	$original_file_mime_type = webp_uploads_get_file_mime_type( $file, $attachment_id );
 	if ( '' === $original_file_mime_type ) {
 		return $image;
 	}
