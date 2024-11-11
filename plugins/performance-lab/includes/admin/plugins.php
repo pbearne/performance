@@ -383,7 +383,6 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
  * This is adapted from `WP_Plugin_Install_List_Table::display_rows()` in core.
  *
  * @since 2.8.0
- * @since n.e.x.t Added data attribute `data-plugin-slug` in plugin activate link.
  *
  * @see WP_Plugin_Install_List_Table::display_rows()
  * @link https://github.com/WordPress/wordpress-develop/blob/0b8ca16ea3bd9722bd1a38f8ab68901506b1a0e7/src/wp-admin/includes/class-wp-plugin-install-list-table.php#L467-L830

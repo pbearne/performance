@@ -39,8 +39,6 @@ add_action( 'admin_menu', 'perflab_add_features_page' );
  * @since 1.0.0
  * @since 3.0.0 Renamed to perflab_load_features_page(), and the
  *              $module and $hook_suffix parameters were removed.
- * @since n.e.x.t Removed added action for perflab_print_plugin_progress_indicator_script
- *                as this function is removed.
  */
 function perflab_load_features_page(): void {
 	// Handle script enqueuing for settings page.
@@ -220,7 +218,6 @@ add_action( 'wp_ajax_dismiss-wp-pointer', 'perflab_dismiss_wp_pointer_wrapper', 
  *
  * @since 2.8.0
  * @since 3.0.0 Renamed to perflab_enqueue_features_page_scripts().
- * @since n.e.x.t Added enqueue plugin activate AJAX script.
  */
 function perflab_enqueue_features_page_scripts(): void {
 	// These assets are needed for the "Learn more" popover.

@@ -3,9 +3,7 @@
  */
 
 /* global perflabPluginActivateAjaxData */
-/* global jQuery */
-// @ts-ignore
-jQuery( document ).ready( ( $ ) => {
+( function ( $ ) {
 	// @ts-ignore
 	const { i18n, a11y } = wp;
 	const { __, _x } = i18n;
@@ -36,22 +34,71 @@ jQuery( document ).ready( ( $ ) => {
 			// Retrieve the plugin slug from the data attribute.
 			const pluginSlug = $.trim( target.attr( 'data-plugin-slug' ) );
 
-			try {
-				// Send an AJAX POST request to activate the plugin.
-				const responseData = await $.post(
+			// Send an AJAX POST request to activate the plugin.
+			$.ajax( {
+				// @ts-ignore
+				url: perflabPluginActivateAjaxData.ajaxUrl,
+				method: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'perflab_install_activate_plugin',
+					slug: pluginSlug,
 					// @ts-ignore
-					perflabPluginActivateAjaxData.ajaxUrl,
-					{
-						action: 'perflab_install_activate_plugin',
-						slug: pluginSlug,
-						// @ts-ignore
-						_ajax_nonce: perflabPluginActivateAjaxData.nonce,
-					},
-					null,
-					'json'
-				);
+					_ajax_nonce: perflabPluginActivateAjaxData.nonce,
+				},
+				success( responseData ) {
+					if ( ! responseData.success ) {
+						showAdminNotice(
+							__(
+								'There was an error activating the plugin. Please try again.',
+								'performance-lab'
+							)
+						);
 
-				if ( ! responseData.success ) {
+						target
+							.removeClass( 'updating-message' )
+							.text( __( 'Activate', 'performance-lab' ) );
+
+						return;
+					}
+
+					// Replace the 'Activate' button with a disabled 'Active' button.
+					target.replaceWith(
+						$( '<button>', {
+							type: 'button',
+							class: 'button button-disabled',
+							disabled: true,
+							text: __( 'Active', 'performance-lab' ),
+						} )
+					);
+
+					const pluginSettingsURL =
+						responseData?.data?.pluginSettingsURL;
+
+					// Select the container for action buttons related to the plugin.
+					const actionButtonList = $(
+						`.plugin-card-${ pluginSlug } .plugin-action-buttons`
+					);
+
+					if ( pluginSettingsURL && actionButtonList ) {
+						// Append a 'Settings' link to the action buttons.
+						actionButtonList.append(
+							$( '<li>' ).append(
+								$( '<a>', {
+									href: pluginSettingsURL,
+									text: __( 'Settings', 'performance-lab' ),
+								} )
+							)
+						);
+					}
+
+					showAdminNotice(
+						__( 'Feature activated.', 'performance-lab' ),
+						'success',
+						pluginSettingsURL
+					);
+				},
+				error() {
 					showAdminNotice(
 						__(
 							'There was an error activating the plugin. Please try again.',
@@ -62,56 +109,8 @@ jQuery( document ).ready( ( $ ) => {
 					target
 						.removeClass( 'updating-message' )
 						.text( __( 'Activate', 'performance-lab' ) );
-
-					return;
-				}
-
-				// Replace the 'Activate' button with a disabled 'Active' button.
-				target.replaceWith(
-					$( '<button>', {
-						type: 'button',
-						class: 'button button-disabled',
-						disabled: true,
-						text: __( 'Active', 'performance-lab' ),
-					} )
-				);
-
-				const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
-
-				// Select the container for action buttons related to the plugin.
-				const actionButtonList = $(
-					`.plugin-card-${ pluginSlug } .plugin-action-buttons`
-				);
-
-				if ( pluginSettingsURL && actionButtonList ) {
-					// Append a 'Settings' link to the action buttons.
-					actionButtonList.append(
-						$( '<li>' ).append(
-							$( '<a>', {
-								href: pluginSettingsURL,
-								text: __( 'Settings', 'performance-lab' ),
-							} )
-						)
-					);
-				}
-
-				showAdminNotice(
-					__( 'Feature activated.', 'performance-lab' ),
-					'success',
-					pluginSettingsURL
-				);
-			} catch ( error ) {
-				showAdminNotice(
-					__(
-						'There was an error activating the plugin. Please try again.',
-						'performance-lab'
-					)
-				);
-
-				target
-					.removeClass( 'updating-message' )
-					.text( __( 'Activate', 'performance-lab' ) );
-			}
+				},
+			} );
 		}
 	);
 
@@ -134,11 +133,12 @@ jQuery( document ).ready( ( $ ) => {
 			class: `notice is-dismissible notice-${ type }`,
 		} );
 
-		const para = $( '<p>' ).text( message );
+		const messageWrap = $( '<p>' ).text( message );
 
 		// If a plugin settings URL is provided, append a 'Review settings.' link.
 		if ( pluginSettingsURL ) {
-			para.append( ` ${ __( 'Review', 'performance-lab' ) } ` )
+			messageWrap
+				.append( ` ${ __( 'Review', 'performance-lab' ) } ` )
 				.append(
 					$( '<a>', {
 						href: pluginSettingsURL,
@@ -159,7 +159,7 @@ jQuery( document ).ready( ( $ ) => {
 			} )
 		);
 
-		notice.append( para, dismissButton );
+		notice.append( messageWrap, dismissButton );
 
 		const noticeContainer = $( '.wrap.plugin-install-php' );
 
@@ -170,4 +170,6 @@ jQuery( document ).ready( ( $ ) => {
 			$( 'body' ).prepend( notice );
 		}
 	}
-} );
+
+	// @ts-ignore
+} )( window.jQuery );
