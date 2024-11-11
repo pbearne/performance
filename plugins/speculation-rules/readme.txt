@@ -46,7 +46,7 @@ _This plugin was formerly known as Speculation Rules._
 
 = How can I prevent certain URLs from being prefetched and prerendered? =
 
-Not every URL can be reasonably prerendered. Prerendering static content is typically reliable, however prerendering interactive content, such as a logout URL, can lead to issues. For this reason, certain WordPress core URLs such as `/wp-login.php` and `/wp-admin/*` are excluded from prefetching and prerendering. Additionally, any URL generated with `wp_nonce_url()` (or which contains the `_wpnonce` query var) is also ignored. You can exclude additional URL patterns by using the `plsr_speculation_rules_href_exclude_paths` filter.
+Not every URL can be reasonably prerendered. Prerendering static content is typically reliable, however prerendering interactive content, such as a logout URL, can lead to issues. For this reason, certain WordPress core URLs such as `/wp-login.php` and `/wp-admin/*` are excluded from prefetching and prerendering. Additionally, any URLs generated with `wp_nonce_url()` (or which contains the `_wpnonce` query var) and `nofollow` links are also ignored. You can exclude additional URL patterns by using the `plsr_speculation_rules_href_exclude_paths` filter.
 
 The following example ensures that URLs like `https://example.com/cart/` or `https://example.com/cart/foo` are excluded from prefetching and prerendering:
 `
@@ -88,9 +88,9 @@ Prerendering can affect analytics and personalization.
 
 For client-side JavaScript, is recommended to delay these until the prerender is activated (for example by clicking on the link). Some solutions (like Google Analytics) already do this automatically, see [Impact on Analytics](https://developer.chrome.com/docs/web-platform/prerender-pages#impact-on-analytics). Additionally, cross-origin iframes are not loaded until activation which can further avoid issues here.
 
-Speculating with the default moderate eagerness increases the chance that the prerendered page will be visited by the user. In contrast, eager speculation increases the risk that prerendered pages will not be loaded. Alternatively, the plugin offers to only speculate on mouse/pointer down (conservative) which further reduces the risk and is an option for sites which are concerned about this, at the cost of having less of a lead time and so less of a performance gain.
+Speculating with the default `moderate` eagerness decreases the risk that the prerendered page will not be visited by the user and therefore will avoid any side effects of loading such a link in advance. In contrast, `eager` speculation increases the risk that prerendered pages may not be loaded. Alternatively, the plugin offers to only speculate on mouse/pointer down (conservative) which reduces the risk even further and is an option for sites which are concerned about this, at the cost of having less of a lead time and so less of a performance gain.
 
-A prerendered page is linked to the page that prerenders it, so personalisation may already be known by this point and changes (e.g. browsing other products, or logging in/out) may require a new page load, and hence a new prerender anyway, which will take these into account. But it definitely is something to be aware of and test!
+A prerendered page is linked to the page that prerenders it, so personalisation may already be known by this point and changes (e.g. browsing other products, or logging in/out) often require a new page load, and hence a new prerender, which will then take these into account. But it definitely is something to be aware of and test! Prerendered pages can be canceled by removing the speculation rules `<script>` element from the page using standard JavaScript DOM APIs should this be needed when state changes without a new page load.
 
 = Where can I submit my plugin feedback? =
 
