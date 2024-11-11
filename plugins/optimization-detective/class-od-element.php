@@ -67,7 +67,7 @@ class OD_Element implements ArrayAccess, JsonSerializable {
 	}
 
 	/**
-	 * Gets the group that this element's URL metric is a part of (which may not be any).
+	 * Gets the group that this element's URL Metric is a part of (which may not be any).
 	 *
 	 * @since 0.7.0
 	 *
