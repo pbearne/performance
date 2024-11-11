@@ -88,7 +88,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertInstanceOf( WP_Post::class, $post );
 
 		$url_metrics = OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post );
-		$this->assertCount( 1, $url_metrics, 'Expected number of URL metrics stored.' );
+		$this->assertCount( 1, $url_metrics, 'Expected number of URL Metrics stored.' );
 		$this->assertSame( $valid_params['elements'], $this->get_array_json_data( $url_metrics[0]->get( 'elements' ) ) );
 		$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
 
@@ -417,7 +417,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	public function test_rest_request_over_populate_wider_viewport_group(): void {
 		add_filter( 'od_url_metric_storage_lock_ttl', '__return_zero' );
 
-		// First establish a single breakpoint, so there are two groups of URL metrics
+		// First establish a single breakpoint, so there are two groups of URL Metrics
 		// with viewport widths 0-480 and >481.
 		$breakpoint_width = 480;
 		add_filter(
@@ -456,7 +456,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertCount( 0, $url_metric_groups[0], 'Expected first group to be empty.' );
 		$this->assertCount( $sample_size, end( $url_metric_groups ), 'Expected last group to be fully populated.' );
 
-		// Now attempt to store one more URL metric for the wider viewport group.
+		// Now attempt to store one more URL Metric for the wider viewport group.
 		// This should fail because the group is already fully populated to the sample size.
 		$request  = $this->create_request( $wider_viewport_params );
 		$response = rest_get_server()->dispatch( $request );
@@ -472,7 +472,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	public function test_rest_request_over_populate_narrower_viewport_group(): void {
 		add_filter( 'od_url_metric_storage_lock_ttl', '__return_zero' );
 
-		// First establish a single breakpoint, so there are two groups of URL metrics
+		// First establish a single breakpoint, so there are two groups of URL Metrics
 		// with viewport widths 0-480 and >481.
 		$breakpoint_width = 480;
 		add_filter(
@@ -490,7 +490,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 			$narrower_viewport_params
 		);
 
-		// Now attempt to store one more URL metric for the narrower viewport group.
+		// Now attempt to store one more URL Metric for the narrower viewport group.
 		// This should fail because the group is already fully populated to the sample size.
 		$request  = $this->create_request( $narrower_viewport_params );
 		$response = rest_get_server()->dispatch( $request );
@@ -498,10 +498,10 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Populate URL metrics.
+	 * Populate URL Metrics.
 	 *
-	 * @param int                  $count  Count of URL metrics to populate.
-	 * @param array<string, mixed> $params Params for URL metric.
+	 * @param int                  $count  Count of URL Metrics to populate.
+	 * @param array<string, mixed> $params Params for URL Metric.
 	 */
 	private function populate_url_metrics( int $count, array $params ): void {
 		for ( $i = 0; $i < $count; $i++ ) {
@@ -566,7 +566,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Creates a request to store a URL metric.
+	 * Creates a request to store a URL Metric.
 	 *
 	 * @param array<string, mixed> $params Params.
 	 * @return WP_REST_Request<array<string, mixed>> Request.
