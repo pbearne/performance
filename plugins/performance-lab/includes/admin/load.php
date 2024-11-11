@@ -39,6 +39,8 @@ add_action( 'admin_menu', 'perflab_add_features_page' );
  * @since 1.0.0
  * @since 3.0.0 Renamed to perflab_load_features_page(), and the
  *              $module and $hook_suffix parameters were removed.
+ * @since n.e.x.t Removed added action for perflab_print_plugin_progress_indicator_script
+ *                as this function is removed.
  */
 function perflab_load_features_page(): void {
 	// Handle script enqueuing for settings page.
@@ -49,9 +51,6 @@ function perflab_load_features_page(): void {
 
 	// Handle style for settings page.
 	add_action( 'admin_head', 'perflab_print_features_page_style' );
-
-	// Handle script for settings page.
-	add_action( 'admin_footer', 'perflab_print_plugin_progress_indicator_script' );
 }
 
 /**
@@ -221,6 +220,7 @@ add_action( 'wp_ajax_dismiss-wp-pointer', 'perflab_dismiss_wp_pointer_wrapper', 
  *
  * @since 2.8.0
  * @since 3.0.0 Renamed to perflab_enqueue_features_page_scripts().
+ * @since n.e.x.t Added enqueue plugin activate AJAX script.
  */
 function perflab_enqueue_features_page_scripts(): void {
 	// These assets are needed for the "Learn more" popover.
@@ -230,6 +230,24 @@ function perflab_enqueue_features_page_scripts(): void {
 
 	// Enqueue the a11y script.
 	wp_enqueue_script( 'wp-a11y' );
+
+	// Enqueue plugin activate AJAX script and localize script data.
+	wp_enqueue_script(
+		'perflab-plugin-activate-ajax',
+		PERFLAB_PLUGIN_DIR_URL . 'includes/admin/plugin-activate-ajax.js',
+		array( 'jquery', 'wp-i18n', 'wp-a11y' ),
+		(string) filemtime( PERFLAB_PLUGIN_DIR_PATH . 'includes/admin/plugin-activate-ajax.js' ),
+		true
+	);
+
+	wp_localize_script(
+		'perflab-plugin-activate-ajax',
+		'perflabPluginActivateAjaxData',
+		array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'perflab_install_activate_plugin_ajax' ),
+		)
+	);
 }
 
 /**
@@ -433,181 +451,6 @@ function perflab_plugin_admin_notices(): void {
 			)
 		);
 	}
-}
-
-/**
- * Callback function that print plugin progress indicator script.
- *
- * @since 3.1.0
- */
-function perflab_print_plugin_progress_indicator_script(): void {
-	$nonce = wp_create_nonce( 'perflab_install_activate_plugin_ajax' );
-
-	$script_data = array(
-		'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
-		'nonce'                 => $nonce,
-		'activatingText'        => __( 'Activating...', 'performance-lab' ),
-		'activateText'          => __( 'Activate', 'performance-lab' ),
-		'activatedText'         => __( 'Active', 'performance-lab' ),
-		'dismissText'           => __( 'Dismiss this notice.', 'performance-lab' ),
-		'successText'           => __( 'Feature activated.', 'performance-lab' ),
-		'reviewText'            => __( ' Review ', 'performance-lab' ),
-		'settingsPrimaryText'   => __( 'settings', 'performance-lab' ),
-		'settingsSecondaryText' => __( 'Settings', 'performance-lab' ),
-		'endText'               => _x( '.', 'Punctuation mark', 'performance-lab' ),
-		'errorText'             => __( 'There was an error activating the plugin. Please try again.', 'performance-lab' ),
-	);
-
-	$js_function = <<<JS
-		function addPluginProgressIndicator( data ) {
-			document.addEventListener( 'DOMContentLoaded', function () {
-				document.addEventListener( 'click', async function ( event ) {
-					if (
-						event.target.classList.contains(
-							'perflab-install-active-plugin'
-						)
-					) {
-						// Prevent the default link behavior.
-						event.preventDefault();
-
-						const target = event.target;
-						target.classList.add( 'updating-message' );
-						target.textContent = data.activatingText;
-
-						wp.a11y.speak( data.activatingText );
-
-						const pluginSlug = target.getAttribute( 'data-plugin-slug' ).trim();
-
-						try {
-							const response = await fetch( data.ajaxUrl, {
-								method: 'POST',
-								credentials: 'same-origin',
-								headers: {
-									'Content-Type': 'application/x-www-form-urlencoded',
-								},
-								body: new URLSearchParams( {
-									action: 'perflab_install_activate_plugin',
-									slug: pluginSlug,
-									_ajax_nonce: data.nonce,
-								} ),
-							} );
-
-							const responseData = await response.json();
-
-							if ( !responseData.success ) {
-								showAdminNotice( data.errorText );
-
-								target.classList.remove('updating-message');
-								target.textContent = data.activateText;
-
-								return;
-							}
-
-							const newButton = document.createElement( 'button' );
-
-							newButton.type = 'button';
-							newButton.className = 'button button-disabled';
-							newButton.disabled = true;
-							newButton.textContent = data.activatedText;
-
-							target.parentNode.replaceChild( newButton, target );
-
-							const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
-
-							const actionButtonList = document.querySelector( '.plugin-card-' + pluginSlug + ' .plugin-action-buttons' )
-
-							if ( pluginSettingsURL && actionButtonList ) {
-								const listItem = document.createElement( 'li' );
-								const anchor = document.createElement( 'a' );
-
-								anchor.setAttribute( 'href', pluginSettingsURL );
-								anchor.textContent = data.settingsSecondaryText;
-
-								listItem.appendChild( anchor );
-								actionButtonList.appendChild( listItem );
-							}
-							
-							showAdminNotice( data.successText, 'success', pluginSettingsURL );
-						} catch (error) {
-							showAdminNotice( data.errorText );
-
-							target.classList.remove( 'updating-message' );
-							target.textContent = data.activateText;
-						}
-					}
-				} );
-			} );
-
-			function showAdminNotice( message, type = 'error', pluginSettingsURL = undefined ) {
-				// Create the notice container elements.
-				const notice = document.createElement( 'div' );
-				const para = document.createElement( 'p' );
-				
-				notice.className = 'notice is-dismissible notice-' + type;
-				para.textContent = message;
-				
-				if ( pluginSettingsURL ) {
-					para.textContent = para.textContent + data.reviewText;
-					
-					const anchor = document.createElement( 'a' );
-					anchor.setAttribute( 'href', pluginSettingsURL );
-					anchor.textContent = data.settingsPrimaryText;
-					
-					para.appendChild( anchor );
-					para.appendChild( document.createTextNode( data.endText ) );
-				}
-				
-				notice.appendChild( para );
-				
-				const dismissButton = document.createElement( 'button' );
-				const dismissButtonTextWrap = document.createElement( 'span' );
-
-				dismissButton.type = 'button';
-				dismissButton.className = 'notice-dismiss';
-	
-				dismissButtonTextWrap.className = 'screen-reader-text';
-				dismissButtonTextWrap.textContent = data.dismissText;	
-
-				dismissButton.appendChild( dismissButtonTextWrap );
-
-				// Add event listener to remove the notice when dismissed.
-				dismissButton.addEventListener( 'click', () => {
-					notice.remove();
-				} );
-
-				notice.appendChild( dismissButton );
-	
-				// Insert the notice at the top of the admin notices area.
-				const noticeContainer = document.querySelector( '.wrap.plugin-install-php' ) || document.body;
-	
-				if ( !noticeContainer ) {
-					// Fallback append to body if no suitable container is found.
-					document.body.prepend( notice );
-
-					return;
-				} 
-
-				if ( noticeContainer.children.length >= 1 ) {
-					// Insert as the second child.
-					noticeContainer.insertBefore( notice, noticeContainer.children[1] );
-
-					return;
-				}
-
-				// If there's only one child or none, append as the last child.
-				noticeContainer.appendChild( notice );
-			}
-		}
-JS;
-
-	wp_print_inline_script_tag(
-		sprintf(
-			'( %s )( %s );',
-			$js_function,
-			wp_json_encode( $script_data )
-		),
-		array( 'type' => 'module' )
-	);
 }
 
 /**
