@@ -103,16 +103,6 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @covers ::od_clean_queried_object_cache_for_stored_url_metric
 	 */
 	public function test_rest_request_good_params( Closure $set_up ): void {
-		$all_hook_callback_args = array();
-		add_action(
-			'all',
-			static function ( string $hook, ...$args ) use ( &$all_hook_callback_args ): void {
-				$all_hook_callback_args[ $hook ][] = $args;
-			},
-			10,
-			PHP_INT_MAX
-		);
-
 		$stored_context = null;
 		add_action(
 			'od_url_metric_stored',
@@ -127,6 +117,17 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		);
 
 		$valid_params = $set_up();
+
+		$all_hook_callback_args = array();
+		add_action(
+			'all',
+			static function ( string $hook, ...$args ) use ( &$all_hook_callback_args ): void {
+				$all_hook_callback_args[ $hook ][] = $args;
+			},
+			10,
+			PHP_INT_MAX
+		);
+
 		$this->assertCount( 0, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
 		$request  = $this->create_request( $valid_params );
 		$response = rest_get_server()->dispatch( $request );
@@ -169,6 +170,18 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 						}
 					}
 					$this->assertTrue( $found, 'Expected clean_post_cache to have been fired for the post queried object.' );
+
+					$this->assertArrayHasKey( 'transition_post_status', $all_hook_callback_args );
+					$found = false;
+					foreach ( $all_hook_callback_args['transition_post_status'] as $args ) {
+						$this->assertInstanceOf( WP_Post::class, $args[2] );
+						if ( $args[2]->ID === $stored_context->url_metric->get_queried_object()['id'] ) {
+							$this->assertSame( $args[2]->post_status, $args[0] );
+							$this->assertSame( $args[2]->post_status, $args[1] );
+							$found = true;
+						}
+					}
+					$this->assertTrue( $found, 'Expected transition_post_status to have been fired for the post queried object.' );
 
 					$this->assertArrayHasKey( 'save_post', $all_hook_callback_args );
 					$found = false;

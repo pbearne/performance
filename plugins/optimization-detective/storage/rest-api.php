@@ -261,9 +261,18 @@ function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Stor
 				 * The clean_post_cache action is used to flush page caches by:
 				 * - Pantheon Advanced Cache <https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552b0cb9268d9b696cb200af56cc044920d9/pantheon-advanced-page-cache.php#L185>
 				 * - WP Super Cache <https://github.com/Automattic/wp-super-cache/blob/73b428d2fce397fd874b3056ad3120c343bc1a0c/wp-cache-phase2.php#L1615>
+				 * - Batcache <https://github.com/Automattic/batcache/blob/ed0e6b2d9bcbab3924c49a6c3247646fb87a0957/batcache.php#L18>
 				 */
 				/** This action is documented in wp-includes/post.php. */
 				do_action( 'clean_post_cache', $post->ID, $post );
+
+				/*
+				 * The transition_post_status action is used to flush page caches by:
+				 * - Jetpack Boost <https://github.com/Automattic/jetpack-boost-production/blob/4090a3f9414c2171cd52d8a397f00b0d1151475f/app/modules/optimizations/page-cache/pre-wordpress/Boost_Cache.php#L76>
+				 * - WP Super Cache <https://github.com/Automattic/wp-super-cache/blob/73b428d2fce397fd874b3056ad3120c343bc1a0c/wp-cache-phase2.php#L1616>
+				 */
+				/** This action is documented in wp-includes/post.php. */
+				do_action( 'transition_post_status', $post->post_status, $post->post_status, $post );
 
 				/*
 				 * The clean_post_cache action is used to flush page caches by:
