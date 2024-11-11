@@ -71,7 +71,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	$plugins            = array();
 	$standalone_plugins = array_merge(
 		array_flip( perflab_get_standalone_plugins() ),
-		array( 'optimization-detective' => array() ) // TODO: Programmatically discover the plugin dependencies and add them here.
+		array( 'optimization-detective' => array() ) // TODO: Programmatically discover the plugin dependencies and add them here. See <https://github.com/WordPress/performance/issues/1616>.
 	);
 	foreach ( $response->plugins as $plugin_data ) {
 		if ( ! isset( $standalone_plugins[ $plugin_data['slug'] ] ) ) {
@@ -322,6 +322,11 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 	$plugin_data = perflab_query_plugin_info( $plugin_slug );
 	if ( $plugin_data instanceof WP_Error ) {
 		return $plugin_data;
+	}
+
+	// Add recommended plugins (soft dependencies) to the list of plugins installed and activated.
+	if ( 'embed-optimizer' === $plugin_slug ) {
+		$plugin_data['requires_plugins'][] = 'optimization-detective';
 	}
 
 	// Install and activate plugin dependencies first.
