@@ -103,31 +103,11 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @covers ::od_clean_queried_object_cache_for_stored_url_metric
 	 */
 	public function test_rest_request_good_params( Closure $set_up ): void {
-		$clean_post_cache_callback_args = array();
+		$all_hook_callback_args = array();
 		add_action(
-			'clean_post_cache',
-			static function () use ( &$clean_post_cache_callback_args ): void {
-				$clean_post_cache_callback_args[] = func_get_args();
-			},
-			10,
-			PHP_INT_MAX
-		);
-
-		$clean_term_cache_callback_args = array();
-		add_action(
-			'clean_term_cache',
-			static function () use ( &$clean_term_cache_callback_args ): void {
-				$clean_term_cache_callback_args[] = func_get_args();
-			},
-			10,
-			PHP_INT_MAX
-		);
-
-		$clean_user_cache_callback_args = array();
-		add_action(
-			'clean_user_cache',
-			static function () use ( &$clean_user_cache_callback_args ): void {
-				$clean_user_cache_callback_args[] = func_get_args();
+			'all',
+			static function ( string $hook, ...$args ) use ( &$all_hook_callback_args ): void {
+				$all_hook_callback_args[ $hook ][] = $args;
 			},
 			10,
 			PHP_INT_MAX
@@ -179,8 +159,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		if ( null !== $stored_context->url_metric->get_queried_object() ) {
 			switch ( $stored_context->url_metric->get_queried_object()['type'] ) {
 				case 'post':
+					$this->assertArrayHasKey( 'clean_post_cache', $all_hook_callback_args );
 					$found = false;
-					foreach ( $clean_post_cache_callback_args as $args ) {
+					foreach ( $all_hook_callback_args['clean_post_cache'] as $args ) {
 						if ( $args[0] === $stored_context->url_metric->get_queried_object()['id'] ) {
 							$this->assertInstanceOf( WP_Post::class, $args[1] );
 							$this->assertSame( $stored_context->url_metric->get_queried_object()['id'], $args[1]->ID );
@@ -188,10 +169,22 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 						}
 					}
 					$this->assertTrue( $found, 'Expected clean_post_cache to have been fired for the post queried object.' );
+
+					$this->assertArrayHasKey( 'save_post', $all_hook_callback_args );
+					$found = false;
+					foreach ( $all_hook_callback_args['save_post'] as $args ) {
+						if ( $args[0] === $stored_context->url_metric->get_queried_object()['id'] ) {
+							$this->assertInstanceOf( WP_Post::class, $args[1] );
+							$this->assertSame( $stored_context->url_metric->get_queried_object()['id'], $args[1]->ID );
+							$found = true;
+						}
+					}
+					$this->assertTrue( $found, 'Expected save_post to have been fired for the post queried object.' );
 					break;
 				case 'term':
+					$this->assertArrayHasKey( 'clean_term_cache', $all_hook_callback_args );
 					$found = false;
-					foreach ( $clean_term_cache_callback_args as $args ) {
+					foreach ( $all_hook_callback_args['clean_term_cache'] as $args ) {
 						if ( array( $stored_context->url_metric->get_queried_object()['id'] ) === $args[0] ) {
 							$term = get_term( $stored_context->url_metric->get_queried_object()['id'] );
 							$this->assertInstanceOf( WP_Term::class, $term );
@@ -202,8 +195,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					$this->assertTrue( $found, 'Expected clean_term_cache to have been fired for the term queried object.' );
 					break;
 				case 'user':
+					$this->assertArrayHasKey( 'clean_user_cache', $all_hook_callback_args );
 					$found = false;
-					foreach ( $clean_user_cache_callback_args as $args ) {
+					foreach ( $all_hook_callback_args['clean_user_cache'] as $args ) {
 						if ( $args[0] === $stored_context->url_metric->get_queried_object()['id'] ) {
 							$this->assertInstanceOf( WP_User::class, $args[1] );
 							$this->assertSame( $stored_context->url_metric->get_queried_object()['id'], $args[1]->ID );

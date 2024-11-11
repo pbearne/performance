@@ -257,20 +257,41 @@ function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Stor
 		case 'post':
 			$post = get_post( $queried_object['id'] );
 			if ( $post instanceof WP_Post ) {
+				/*
+				 * The clean_post_cache action is used to flush page caches by:
+				 * - Pantheon Advanced Cache <https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552b0cb9268d9b696cb200af56cc044920d9/pantheon-advanced-page-cache.php#L185>
+				 * - WP Super Cache <https://github.com/Automattic/wp-super-cache/blob/73b428d2fce397fd874b3056ad3120c343bc1a0c/wp-cache-phase2.php#L1615>
+				 */
 				/** This action is documented in wp-includes/post.php. */
 				do_action( 'clean_post_cache', $post->ID, $post );
+
+				/*
+				 * The clean_post_cache action is used to flush page caches by:
+				 * - W3 Total Cache <https://github.com/BoldGrid/w3-total-cache/blob/ab08f104294c6a8dcb00f1c66aaacd0615c42850/Util_AttachToActions.php#L32>
+				 * - WP Rocket <https://github.com/wp-media/wp-rocket/blob/e5bca6673a3669827f3998edebc0c785210fe561/inc/common/purge.php#L283>
+				 */
+				/** This action is documented in wp-includes/post.php. */
+				do_action( 'save_post', $post->ID, $post, /* $update */ true );
 			}
 			break;
 		case 'term':
 			$term = get_term( $queried_object['id'] );
 			if ( $term instanceof WP_Term ) {
+				/*
+				 * The clean_term_cache action is used to flush page caches by:
+				 * - Pantheon Advanced Cache <https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552b0cb9268d9b696cb200af56cc044920d9/pantheon-advanced-page-cache.php#L189>
+				 */
 				/** This action is documented in wp-includes/taxonomy.php. */
-				do_action( 'clean_term_cache', array( $term->term_id ), $term->taxonomy, false );
+				do_action( 'clean_term_cache', array( $term->term_id ), $term->taxonomy, /* $clean_taxonomy */ false );
 			}
 			break;
 		case 'user':
 			$user = get_user_by( 'ID', $queried_object['id'] );
 			if ( $user instanceof WP_User ) {
+				/*
+				 * The clean_post_cache action is used to flush page caches by:
+				 * - Pantheon Advanced Cache <https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552b0cb9268d9b696cb200af56cc044920d9/pantheon-advanced-page-cache.php#L193>
+				 */
 				/** This action is documented in wp-includes/user.php. */
 				do_action( 'clean_user_cache', $user->ID, $user );
 			}
