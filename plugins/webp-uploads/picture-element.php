@@ -22,9 +22,21 @@ function webp_uploads_wrap_image_in_picture( string $image, string $context, int
 	if ( 'the_content' !== $context ) {
 		return $image;
 	}
-	$image_meta              = wp_get_attachment_metadata( $attachment_id );
-	$original_file_mime_type = get_post_mime_type( $attachment_id );
-	if ( false === $original_file_mime_type || ! isset( $image_meta['sizes'] ) ) {
+
+	$file = get_attached_file( $attachment_id, true );
+	// File does not exist.
+	if ( false === $file || ! file_exists( $file ) ) {
+		return $image;
+	}
+
+	$original_file_mime_type = get_file_mime_type( $file, $attachment_id );
+	if ( '' === $original_file_mime_type ) {
+		return $image;
+	}
+
+	$image_meta = wp_get_attachment_metadata( $attachment_id );
+
+	if ( ! isset( $image_meta['sizes'] ) ) {
 		return $image;
 	}
 

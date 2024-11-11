@@ -58,13 +58,8 @@ function webp_uploads_create_sources_property( array $metadata, int $attachment_
 		return $metadata;
 	}
 
-	/*
-	 * We need to get the MIME type ideally from the file, as WordPress Core may have already altered it.
-	 * The post MIME type is typically not updated during that process.
-	 */
-	$filetype  = wp_check_filetype( $file );
-	$mime_type = $filetype['type'] ?? get_post_mime_type( $attachment_id );
-	if ( ! is_string( $mime_type ) ) {
+	$mime_type = get_file_mime_type( $file, $attachment_id );
+	if ( '' === $mime_type ) {
 		return $metadata;
 	}
 

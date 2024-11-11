@@ -468,3 +468,27 @@ function webp_uploads_get_mime_type_image( int $attachment_id, string $src, stri
 
 	return null;
 }
+
+/**
+ * Retrieves the MIME type of a file, checking the file directly if possible,
+ * and falling back to the attachment's MIME type if needed.
+ *
+ * The function attempts to determine the MIME type directly from the file.
+ * If that information is unavailable, it uses the MIME type from the attachment metadata.
+ * If neither is available, it defaults to an empty string.
+ *
+ * @since n.e.x.t
+ *
+ * @param string $file          The path to the file.
+ * @param int    $attachment_id The attachment ID.
+ * @return string The MIME type of the file, or false if not found.
+ */
+function get_file_mime_type( string $file, int $attachment_id ): string {
+	/*
+	 * We need to get the MIME type ideally from the file, as WordPress Core may have already altered it.
+	 * The post MIME type is typically not updated during that process.
+	 */
+	$filetype  = wp_check_filetype( $file );
+	$mime_type = $filetype['type'] ?? get_post_mime_type( $attachment_id );
+	return is_string( $mime_type ) ? $mime_type : '';
+}
