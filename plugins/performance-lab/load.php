@@ -83,7 +83,7 @@ add_action( 'wp_head', 'perflab_render_generator' );
  *
  * @since 3.0.0
  *
- * @return array<string, array{'constant': string, 'experimental'?: bool, 'suggest'?: string[]}> Associative array of $plugin_slug => $plugin_data pairs.
+ * @return array<string, array{'constant': string, 'experimental'?: bool}> Associative array of $plugin_slug => $plugin_data pairs.
  */
 function perflab_get_standalone_plugin_data(): array {
 	/*
@@ -91,7 +91,6 @@ function perflab_get_standalone_plugin_data(): array {
 	 * Supported keys per plugin are:
 	 * - 'constant' (string, required)
 	 * - 'experimental' (boolean, optional)
-	 * - 'suggest' (string[], optional)
 	 */
 	return array(
 		'auto-sizes'              => array(
@@ -104,7 +103,6 @@ function perflab_get_standalone_plugin_data(): array {
 		'embed-optimizer'         => array(
 			'constant'     => 'EMBED_OPTIMIZER_VERSION',
 			'experimental' => true,
-			'suggest'      => array( 'optimization-detective' ),
 		),
 		'image-prioritizer'       => array(
 			'constant'     => 'IMAGE_PRIORITIZER_VERSION',

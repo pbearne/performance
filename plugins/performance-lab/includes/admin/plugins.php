@@ -325,12 +325,8 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 	}
 
 	// Add recommended plugins (soft dependencies) to the list of plugins installed and activated.
-	$standalone_plugin_data = perflab_get_standalone_plugin_data();
-	if ( isset( $standalone_plugin_data[ $plugin_slug ]['suggest'] ) ) {
-		$plugin_data['requires_plugins'] = array_merge(
-			$plugin_data['requires_plugins'],
-			$standalone_plugin_data[ $plugin_slug ]['suggest']
-		);
+	if ( 'embed-optimizer' === $plugin_slug ) {
+		$plugin_data['requires_plugins'][] = 'optimization-detective';
 	}
 
 	// Install and activate plugin dependencies first.
