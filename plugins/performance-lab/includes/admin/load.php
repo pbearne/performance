@@ -444,17 +444,18 @@ function perflab_print_plugin_progress_indicator_script(): void {
 	$nonce = wp_create_nonce( 'perflab_install_activate_plugin_ajax' );
 
 	$script_data = array(
-		'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
-		'nonce'          => $nonce,
-		'activatingText' => __( 'Activating...', 'performance-lab' ),
-		'activateText'   => __( 'Activate', 'performance-lab' ),
-		'activatedText'  => __( 'Active', 'performance-lab' ),
-		'dismissText'    => __( 'Dismiss this notice.', 'performance-lab' ),
-		'successText'    => __( 'Feature activated.', 'performance-lab' ),
-		'reviewText'     => __( ' Review ', 'performance-lab' ),
-		'settingsText'   => __( 'settings', 'performance-lab' ),
-		'endText'        => _x( '.', 'Punctuation mark', 'performance-lab' ),
-		'errorText'      => __( 'There was an error activating the plugin. Please try again.', 'performance-lab' ),
+		'ajaxUrl'               => admin_url( 'admin-ajax.php' ),
+		'nonce'                 => $nonce,
+		'activatingText'        => __( 'Activating...', 'performance-lab' ),
+		'activateText'          => __( 'Activate', 'performance-lab' ),
+		'activatedText'         => __( 'Active', 'performance-lab' ),
+		'dismissText'           => __( 'Dismiss this notice.', 'performance-lab' ),
+		'successText'           => __( 'Feature activated.', 'performance-lab' ),
+		'reviewText'            => __( ' Review ', 'performance-lab' ),
+		'settingsPrimaryText'   => __( 'settings', 'performance-lab' ),
+		'settingsSecondaryText' => __( 'Settings', 'performance-lab' ),
+		'endText'               => _x( '.', 'Punctuation mark', 'performance-lab' ),
+		'errorText'             => __( 'There was an error activating the plugin. Please try again.', 'performance-lab' ),
 	);
 
 	$js_function = <<<JS
@@ -475,7 +476,7 @@ function perflab_print_plugin_progress_indicator_script(): void {
 
 						wp.a11y.speak( data.activatingText );
 
-						const pluginSlug = target.getAttribute( 'data-plugin-slug' );
+						const pluginSlug = target.getAttribute( 'data-plugin-slug' ).trim();
 
 						try {
 							const response = await fetch( data.ajaxUrl, {
@@ -510,8 +511,23 @@ function perflab_print_plugin_progress_indicator_script(): void {
 							newButton.textContent = data.activatedText;
 
 							target.parentNode.replaceChild( newButton, target );
-							console.log(responseData)
-							showAdminNotice( data.successText, 'success', responseData?.data?.pluginSettingsURL );
+
+							const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
+
+							const actionButtonList = document.querySelector( '.plugin-card-' + pluginSlug + ' .plugin-action-buttons' )
+
+							if ( pluginSettingsURL && actionButtonList ) {
+								const listItem = document.createElement( 'li' );
+								const anchor = document.createElement( 'a' );
+
+								anchor.setAttribute( 'href', pluginSettingsURL );
+								anchor.textContent = data.settingsSecondaryText;
+
+								listItem.appendChild( anchor );
+								actionButtonList.appendChild( listItem );
+							}
+							
+							showAdminNotice( data.successText, 'success', pluginSettingsURL );
 						} catch (error) {
 							showAdminNotice( data.errorText );
 
@@ -535,7 +551,7 @@ function perflab_print_plugin_progress_indicator_script(): void {
 					
 					const anchor = document.createElement( 'a' );
 					anchor.setAttribute( 'href', pluginSettingsURL );
-					anchor.textContent = data.settingsText;
+					anchor.textContent = data.settingsPrimaryText;
 					
 					para.appendChild( anchor );
 					para.appendChild( document.createTextNode( data.endText ) );
