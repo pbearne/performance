@@ -3,96 +3,98 @@
  */
 
 /* global perflabPluginActivateAjaxData */
-( function ( $ ) {
+( function () {
 	// @ts-ignore
 	const { i18n, a11y } = wp;
 	const { __ } = i18n;
 
-	$( document ).on(
-		'click',
-		'.perflab-install-active-plugin',
-		/**
-		 * Adds a click event listener to the plugin activate buttons.
-		 *
-		 * @param {MouseEvent} event - The click event object that is triggered when the user clicks on the document.
-		 *
-		 * @return {Promise<void>} - The asynchronous function returns a promise.
-		 */
-		async function ( event ) {
-			// Prevent the default link behavior.
-			event.preventDefault();
+	/**
+	 * Handles click events on elements with the class 'perflab-install-active-plugin'.
+	 *
+	 * This asynchronous function listens for click events on the document and executes
+	 * the provided callback function if triggered.
+	 *
+	 * @param {MouseEvent} event - The click event object that is triggered when the user clicks on the document.
+	 *
+	 * @return {Promise<void>} - The asynchronous function returns a promise that resolves to void.
+	 */
+	async function handlePluginActivationClick( event ) {
+		const target = /** @type {HTMLElement} */ ( event.target );
 
-			// Get the clicked element as a jQuery object.
-			const target = $( this );
-
-			target
-				.addClass( 'updating-message' )
-				.text( __( 'Activating…', 'performance-lab' ) );
-
-			a11y.speak( __( 'Activating…', 'performance-lab' ) );
-
-			// Retrieve the plugin slug from the data attribute.
-			const pluginSlug = $.trim( target.attr( 'data-plugin-slug' ) );
-
-			// Send an AJAX POST request to activate the plugin.
-			$.ajax( {
-				// @ts-ignore
-				url: perflabPluginActivateAjaxData.ajaxUrl,
-				method: 'POST',
-				dataType: 'json',
-				data: {
-					action: 'perflab_install_activate_plugin',
-					slug: pluginSlug,
-					// @ts-ignore
-					_ajax_nonce: perflabPluginActivateAjaxData.nonce,
-				},
-				success( responseData ) {
-					if ( ! responseData.success ) {
-						target
-							.removeClass( 'updating-message' )
-							.text( __( 'Activate', 'performance-lab' ) );
-
-						return;
-					}
-
-					// Replace the 'Activate' button with a disabled 'Active' button.
-					target.replaceWith(
-						$( '<button>', {
-							type: 'button',
-							class: 'button button-disabled',
-							disabled: true,
-							text: __( 'Active', 'performance-lab' ),
-						} )
-					);
-
-					const pluginSettingsURL =
-						responseData?.data?.pluginSettingsURL;
-
-					// Select the container for action buttons related to the plugin.
-					const actionButtonList = $(
-						`.plugin-card-${ pluginSlug } .plugin-action-buttons`
-					);
-
-					if ( pluginSettingsURL && actionButtonList ) {
-						// Append a 'Settings' link to the action buttons.
-						actionButtonList.append(
-							$( '<li>' ).append(
-								$( '<a>', {
-									href: pluginSettingsURL,
-									text: __( 'Settings', 'performance-lab' ),
-								} )
-							)
-						);
-					}
-				},
-				error() {
-					target
-						.removeClass( 'updating-message' )
-						.text( __( 'Activate', 'performance-lab' ) );
-				},
-			} );
+		if ( ! target.classList.contains( 'perflab-install-active-plugin' ) ) {
+			return;
 		}
-	);
 
-	// @ts-ignore
-} )( window.jQuery );
+		// Prevent the default link behavior.
+		event.preventDefault();
+
+		target.classList.add( 'updating-message' );
+		target.textContent = __( 'Activating…', 'performance-lab' );
+
+		a11y.speak( __( 'Activating…', 'performance-lab' ) );
+
+		const pluginSlug = target.getAttribute( 'data-plugin-slug' ).trim();
+
+		// Send an AJAX POST request to activate the plugin.
+		try {
+			const response = await fetch(
+				// @ts-ignore
+				perflabPluginActivateAjaxData.ajaxUrl,
+				{
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body: new URLSearchParams( {
+						action: 'perflab_install_activate_plugin',
+						slug: pluginSlug,
+						// @ts-ignore
+						_ajax_nonce: perflabPluginActivateAjaxData.nonce,
+					} ),
+				}
+			);
+
+			const responseData = await response.json();
+
+			if ( ! responseData.success ) {
+				target.classList.remove( 'updating-message' );
+				target.textContent = __( 'Activate', 'performance-lab' );
+
+				return;
+			}
+
+			const newButton = document.createElement( 'button' );
+
+			newButton.type = 'button';
+			newButton.className = 'button button-disabled';
+			newButton.disabled = true;
+			newButton.textContent = __( 'Active', 'performance-lab' );
+
+			target.parentNode.replaceChild( newButton, target );
+
+			const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
+
+			const actionButtonList = document.querySelector(
+				`.plugin-card-${ pluginSlug } .plugin-action-buttons`
+			);
+
+			if ( pluginSettingsURL && actionButtonList ) {
+				const listItem = document.createElement( 'li' );
+				const anchor = document.createElement( 'a' );
+
+				anchor.setAttribute( 'href', pluginSettingsURL );
+				anchor.textContent = __( 'Settings', 'performance-lab' );
+
+				listItem.appendChild( anchor );
+				actionButtonList.appendChild( listItem );
+			}
+		} catch ( error ) {
+			target.classList.remove( 'updating-message' );
+			target.textContent = __( 'Activate', 'performance-lab' );
+		}
+	}
+
+	// Attach the event listener.
+	document.addEventListener( 'click', handlePluginActivationClick );
+} )();

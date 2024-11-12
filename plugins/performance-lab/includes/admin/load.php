@@ -232,7 +232,7 @@ function perflab_enqueue_features_page_scripts(): void {
 	wp_enqueue_script(
 		'perflab-plugin-activate-ajax',
 		plugins_url( 'includes/admin/plugin-activate-ajax.js', PERFLAB_MAIN_FILE ),
-		array( 'jquery', 'wp-i18n', 'wp-a11y' ),
+		array( 'wp-i18n', 'wp-a11y' ),
 		PERFLAB_VERSION,
 		true
 	);
