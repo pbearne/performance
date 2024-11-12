@@ -34,7 +34,48 @@ const sharedConfig = {
 };
 
 // Store plugins that require build process.
-const pluginsWithBuild = [ 'optimization-detective', 'web-worker-offloading' ];
+const pluginsWithBuild = [
+	'embed-optimizer',
+	'optimization-detective',
+	'web-worker-offloading',
+];
+
+/**
+ * Webpack Config: Embed Optimizer
+ *
+ * @param {*} env Webpack environment
+ * @return {Object} Webpack configuration
+ */
+const embedOptimizer = ( env ) => {
+	if ( env.plugin && env.plugin !== 'embed-optimizer' ) {
+		return defaultBuildConfig;
+	}
+
+	const pluginDir = path.resolve( __dirname, 'plugins/embed-optimizer' );
+
+	return {
+		...sharedConfig,
+		name: 'embed-optimizer',
+		plugins: [
+			new CopyWebpackPlugin( {
+				patterns: [
+					{
+						from: `${ pluginDir }/detect.js`,
+						to: `${ pluginDir }/detect.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load.js`,
+						to: `${ pluginDir }/lazy-load.min.js`,
+					},
+				],
+			} ),
+			new WebpackBar( {
+				name: 'Building Embed Optimizer Assets',
+				color: '#2196f3',
+			} ),
+		],
+	};
+};
 
 /**
  * Webpack Config: Optimization Detective
@@ -210,4 +251,9 @@ const buildPlugin = ( env ) => {
 	};
 };
 
-module.exports = [ optimizationDetective, webWorkerOffloading, buildPlugin ];
+module.exports = [
+	embedOptimizer,
+	optimizationDetective,
+	webWorkerOffloading,
+	buildPlugin,
+];
