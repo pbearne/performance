@@ -359,7 +359,7 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 		}
 
 		$plugins = get_plugins( '/' . $plugin_slug );
-		if ( empty( $plugins ) ) {
+		if ( count( $plugins ) === 0 ) {
 			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
 		}
 
