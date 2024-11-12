@@ -29,7 +29,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 	 * @param Closure $load            Callback that loads the plugin.
 	 */
 	static function ( string $global_var_name, string $version, Closure $load ): void {
-		if ( ! isset( $GLOBALS[ $global_var_name ] ) ) {
+		$needs_bootstrap = ! isset( $GLOBALS[ $global_var_name ] );
+
+		// Register this copy of the plugin.
+		if (
+			// Register this copy if none has been registered yet.
+			! isset( $GLOBALS[ $global_var_name ]['version'] )
+			||
+			// Or register this copy if the version greater than what is currently registered.
+			version_compare( $version, $GLOBALS[ $global_var_name ]['version'], '>' )
+			||
+			// Otherwise, register this copy if it is actually the one installed in the directory for plugins.
+			rtrim( WP_PLUGIN_DIR, '/' ) === dirname( __DIR__ )
+		) {
+			$GLOBALS[ $global_var_name ]['version'] = $version;
+			$GLOBALS[ $global_var_name ]['load']    = $load;
+		}
+
+		if ( $needs_bootstrap ) {
 			$bootstrap = static function () use ( $global_var_name ): void {
 				if (
 					isset( $GLOBALS[ $global_var_name ]['load'], $GLOBALS[ $global_var_name ]['version'] )
@@ -45,22 +62,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			// Wait until after the plugins have loaded and the theme has loaded. The after_setup_theme action is used
 			// because it is the first action that fires once the theme is loaded.
-			add_action( 'after_setup_theme', $bootstrap, PHP_INT_MIN );
-		}
-
-		// Register this copy of the plugin.
-		if (
-			// Register this copy if none has been registered yet.
-			! isset( $GLOBALS[ $global_var_name ]['version'] )
-			||
-			// Or register this copy if the version greater than what is currently registered.
-			version_compare( $version, $GLOBALS[ $global_var_name ]['version'], '>' )
-			||
-			// Otherwise, register this copy if it is actually the one installed in the directory for plugins.
-			rtrim( WP_PLUGIN_DIR, '/' ) === dirname( __DIR__ )
-		) {
-			$GLOBALS[ $global_var_name ]['version'] = $version;
-			$GLOBALS[ $global_var_name ]['load']    = $load;
+			if ( (bool) did_action( 'after_setup_theme' ) ) {
+				$bootstrap();
+			} else {
+				add_action( 'after_setup_theme', $bootstrap, PHP_INT_MIN );
+			}
 		}
 	}
 )(

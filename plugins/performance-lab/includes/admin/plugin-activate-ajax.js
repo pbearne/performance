@@ -30,6 +30,8 @@
 
 		target.classList.add( 'updating-message' );
 		target.textContent = __( 'Activating…', 'performance-lab' );
+		target.style.pointerEvents = 'none';
+		target.parentElement.style.cursor = 'not-allowed';
 
 		a11y.speak( __( 'Activating…', 'performance-lab' ) );
 
@@ -60,6 +62,8 @@
 			if ( ! responseData.success ) {
 				target.classList.remove( 'updating-message' );
 				target.textContent = __( 'Activate', 'performance-lab' );
+				target.style.pointerEvents = '';
+				target.parentElement.style.cursor = '';
 
 				return;
 			}
@@ -70,6 +74,7 @@
 			newButton.className = 'button button-disabled';
 			newButton.disabled = true;
 			newButton.textContent = __( 'Active', 'performance-lab' );
+			target.parentElement.style.cursor = '';
 
 			target.parentNode.replaceChild( newButton, target );
 
@@ -92,6 +97,8 @@
 		} catch ( error ) {
 			target.classList.remove( 'updating-message' );
 			target.textContent = __( 'Activate', 'performance-lab' );
+			target.style.pointerEvents = '';
+			target.parentElement.style.cursor = '';
 		}
 	}
 
