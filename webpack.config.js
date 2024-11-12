@@ -62,6 +62,7 @@ const optimizationDetective = ( env ) => {
 					{
 						from: `${ source }/dist/web-vitals.js`,
 						to: `${ destination }/build/web-vitals.js`,
+						info: { minimized: true },
 					},
 					{
 						from: `${ source }/package.json`,
