@@ -115,6 +115,7 @@ const webWorkerOffloading = ( env ) => {
 					{
 						from: `${ source }/lib/`,
 						to: `${ destination }`,
+						info: { minimized: true },
 					},
 					{
 						from: `${ source }/package.json`,
