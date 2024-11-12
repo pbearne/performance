@@ -22,7 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'PERFLAB_VERSION', '3.5.1' );
 define( 'PERFLAB_MAIN_FILE', __FILE__ );
 define( 'PERFLAB_PLUGIN_DIR_PATH', plugin_dir_path( PERFLAB_MAIN_FILE ) );
-define( 'PERFLAB_PLUGIN_DIR_URL', plugin_dir_url( PERFLAB_MAIN_FILE ) );
 define( 'PERFLAB_SCREEN', 'performance-lab' );
 
 // If the constant isn't defined yet, it means the Performance Lab object cache file is not loaded.

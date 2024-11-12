@@ -231,9 +231,9 @@ function perflab_enqueue_features_page_scripts(): void {
 	// Enqueue plugin activate AJAX script and localize script data.
 	wp_enqueue_script(
 		'perflab-plugin-activate-ajax',
-		PERFLAB_PLUGIN_DIR_URL . 'includes/admin/plugin-activate-ajax.js',
+		plugins_url( 'includes/admin/plugin-activate-ajax.js', PERFLAB_MAIN_FILE ),
 		array( 'jquery', 'wp-i18n', 'wp-a11y' ),
-		(string) filemtime( PERFLAB_PLUGIN_DIR_PATH . 'includes/admin/plugin-activate-ajax.js' ),
+		PERFLAB_VERSION,
 		true
 	);
 
@@ -337,7 +337,7 @@ function perflab_install_activate_plugin_ajax_callback(): void {
 	if ( null !== $plugin_settings_url ) {
 		wp_send_json_success(
 			array(
-				'pluginSettingsURL' => esc_url( $plugin_settings_url ),
+				'pluginSettingsURL' => esc_url_raw( $plugin_settings_url ),
 			)
 		);
 	}
