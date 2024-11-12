@@ -36,6 +36,7 @@ const sharedConfig = {
 // Store plugins that require build process.
 const pluginsWithBuild = [
 	'embed-optimizer',
+	'image-prioritizer',
 	'optimization-detective',
 	'web-worker-offloading',
 ];
@@ -71,6 +72,39 @@ const embedOptimizer = ( env ) => {
 			} ),
 			new WebpackBar( {
 				name: 'Building Embed Optimizer Assets',
+				color: '#2196f3',
+			} ),
+		],
+	};
+};
+
+/**
+ * Webpack Config: Image Prioritizer
+ *
+ * @param {*} env Webpack environment
+ * @return {Object} Webpack configuration
+ */
+const imagePrioritizer = ( env ) => {
+	if ( env.plugin && env.plugin !== 'image-prioritizer' ) {
+		return defaultBuildConfig;
+	}
+
+	const pluginDir = path.resolve( __dirname, 'plugins/image-prioritizer' );
+
+	return {
+		...sharedConfig,
+		name: 'image-prioritizer',
+		plugins: [
+			new CopyWebpackPlugin( {
+				patterns: [
+					{
+						from: `${ pluginDir }/lazy-load.js`,
+						to: `${ pluginDir }/lazy-load.min.js`,
+					},
+				],
+			} ),
+			new WebpackBar( {
+				name: 'Building Image Prioritizer Assets',
 				color: '#2196f3',
 			} ),
 		],
@@ -253,6 +287,7 @@ const buildPlugin = ( env ) => {
 
 module.exports = [
 	embedOptimizer,
+	imagePrioritizer,
 	optimizationDetective,
 	webWorkerOffloading,
 	buildPlugin,
