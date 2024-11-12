@@ -270,6 +270,7 @@ function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Stor
 				 * The transition_post_status action is used to flush page caches by:
 				 * - Jetpack Boost <https://github.com/Automattic/jetpack-boost-production/blob/4090a3f9414c2171cd52d8a397f00b0d1151475f/app/modules/optimizations/page-cache/pre-wordpress/Boost_Cache.php#L76>
 				 * - WP Super Cache <https://github.com/Automattic/wp-super-cache/blob/73b428d2fce397fd874b3056ad3120c343bc1a0c/wp-cache-phase2.php#L1616>
+				 * - LightSpeed Cache <https://github.com/litespeedtech/lscache_wp/blob/7c707469b3c88b4f45d9955593b92f9aeaed54c3/src/purge.cls.php#L68>
 				 */
 				/** This action is documented in wp-includes/post.php. */
 				do_action( 'transition_post_status', $post->post_status, $post->post_status, $post );
