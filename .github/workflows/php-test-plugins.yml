@@ -51,7 +51,7 @@ jobs:
             wp: 'trunk'
           - php: '8.2'
             wp: 'latest'
-            coverage: true
+            # coverage: true # TODO: Uncomment once coverage reports are fixed. See <https://github.com/WordPress/performance/pull/1586#issuecomment-2474498387>.
     env:
       WP_ENV_PHP_VERSION: ${{ matrix.php }}
       WP_ENV_CORE: ${{ matrix.wp == 'trunk' && 'WordPress/WordPress' || format( 'https://wordpress.org/wordpress-{0}.zip', matrix.wp ) }}
