@@ -25,7 +25,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	if ( is_array( $plugins ) ) {
 		// If the specific plugin_slug is not in the cache, return an error.
 		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'performance-lab' ) );
+			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
 		}
 		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 	}
@@ -83,7 +83,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
 	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-		return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'performance-lab' ) );
+		return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
 	}
 
 	/**
