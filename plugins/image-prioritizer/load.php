@@ -77,6 +77,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 			return;
 		}
 
+		if (
+			( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) &&
+			! file_exists( __DIR__ . '/lazy-load.min.js' )
+		) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
+			trigger_error(
+				esc_html(
+					sprintf(
+						/* translators: 1: File path. 2: CLI command. */
+						'[Image Prioritizer] ' . __( 'Unable to load %1$s. Please make sure you have run %2$s.', 'image-prioritizer' ),
+						'lazy-load.min.js',
+						'`npm install && npm run build:plugin:image-prioritizer`'
+					)
+				),
+				E_USER_ERROR
+			);
+		}
+
 		define( 'IMAGE_PRIORITIZER_VERSION', $version );
 
 		require_once __DIR__ . '/helper.php';
