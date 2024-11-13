@@ -225,9 +225,6 @@ function perflab_enqueue_features_page_scripts(): void {
 	wp_enqueue_style( 'thickbox' );
 	wp_enqueue_script( 'plugin-install' );
 
-	// Enqueue the a11y script.
-	wp_enqueue_script( 'wp-a11y' );
-
 	// Enqueue plugin activate AJAX script and localize script data.
 	wp_enqueue_script(
 		'perflab-plugin-activate-ajax',

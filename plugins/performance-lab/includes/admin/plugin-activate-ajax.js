@@ -28,14 +28,19 @@
 		// Prevent the default link behavior.
 		event.preventDefault();
 
+		if (
+			target.classList.contains( 'updating-message' ) ||
+			target.classList.contains( 'disabled' )
+		) {
+			return;
+		}
+
 		target.classList.add( 'updating-message' );
 		target.textContent = __( 'Activating…', 'performance-lab' );
-		target.style.pointerEvents = 'none';
-		target.parentElement.style.cursor = 'not-allowed';
 
 		a11y.speak( __( 'Activating…', 'performance-lab' ) );
 
-		const pluginSlug = target.getAttribute( 'data-plugin-slug' ).trim();
+		const pluginSlug = target.dataset.pluginSlug;
 
 		// Send an AJAX POST request to activate the plugin.
 		try {
@@ -60,23 +65,14 @@
 			const responseData = await response.json();
 
 			if ( ! responseData.success ) {
-				target.classList.remove( 'updating-message' );
-				target.textContent = __( 'Activate', 'performance-lab' );
-				target.style.pointerEvents = '';
-				target.parentElement.style.cursor = '';
-
-				return;
+				throw Error();
 			}
 
-			const newButton = document.createElement( 'button' );
+			a11y.speak( __( 'Plugin activated.', 'performance-lab' ) );
 
-			newButton.type = 'button';
-			newButton.className = 'button button-disabled';
-			newButton.disabled = true;
-			newButton.textContent = __( 'Active', 'performance-lab' );
-			target.parentElement.style.cursor = '';
-
-			target.parentNode.replaceChild( newButton, target );
+			target.textContent = __( 'Active', 'performance-lab' );
+			target.classList.remove( 'updating-message' );
+			target.classList.add( 'disabled' );
 
 			const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
 
@@ -88,17 +84,17 @@
 				const listItem = document.createElement( 'li' );
 				const anchor = document.createElement( 'a' );
 
-				anchor.setAttribute( 'href', pluginSettingsURL );
+				anchor.href = pluginSettingsURL;
 				anchor.textContent = __( 'Settings', 'performance-lab' );
 
 				listItem.appendChild( anchor );
 				actionButtonList.appendChild( listItem );
 			}
 		} catch ( error ) {
+			a11y.speak( __( 'Plugin failed to activate.', 'performance-lab' ) );
+
 			target.classList.remove( 'updating-message' );
 			target.textContent = __( 'Activate', 'performance-lab' );
-			target.style.pointerEvents = '';
-			target.parentElement.style.cursor = '';
 		}
 	}
 
