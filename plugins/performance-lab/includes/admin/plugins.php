@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}|WP_Error Array of plugin data or WP_Error if failed.
  */
 function perflab_query_plugin_info( string $plugin_slug ) {
-	$transient_key = 'perflab_plugins_info-v2';
+	$transient_key = 'perflab_plugins_info';
 	$plugins       = get_transient( $transient_key );
 
 	if ( is_array( $plugins ) ) {
