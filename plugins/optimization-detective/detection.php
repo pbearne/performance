@@ -20,21 +20,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param OD_URL_Metric_Group_Collection $group_collection URL Metric group collection.
  */
 function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $group_collection ): string {
-	/**
-	 * Filters the time window between serve time and run time in which loading detection is allowed to run.
-	 *
-	 * This is the allowance of milliseconds between when the page was first generated (and perhaps cached) and when the
-	 * detect function on the page is allowed to perform its detection logic and submit the request to store the results.
-	 * This avoids situations in which there is missing URL Metrics in which case a site with page caching which
-	 * also has a lot of traffic could result in a cache stampede.
-	 *
-	 * @since 0.1.0
-	 * @todo The value should probably be something like the 99th percentile of Time To Last Byte (TTLB) for WordPress sites in CrUX.
-	 *
-	 * @param int $detection_time_window Detection time window in milliseconds.
-	 */
-	$detection_time_window = apply_filters( 'od_detection_time_window', 5000 );
-
 	$web_vitals_lib_data = require __DIR__ . '/build/web-vitals.asset.php';
 	$web_vitals_lib_src  = add_query_arg( 'ver', $web_vitals_lib_data['version'], plugin_dir_url( __FILE__ ) . 'build/web-vitals.js' );
 
@@ -49,8 +34,6 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 
 	$current_url = od_get_current_url();
 	$detect_args = array(
-		'serveTime'              => microtime( true ) * 1000, // In milliseconds for comparison with `Date.now()` in JavaScript.
-		'detectionTimeWindow'    => $detection_time_window,
 		'minViewportAspectRatio' => od_get_minimum_viewport_aspect_ratio(),
 		'maxViewportAspectRatio' => od_get_maximum_viewport_aspect_ratio(),
 		'isDebug'                => WP_DEBUG,

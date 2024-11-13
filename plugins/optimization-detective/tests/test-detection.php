@@ -17,19 +17,12 @@ class Test_OD_Detection extends WP_UnitTestCase {
 			'unfiltered' => array(
 				'set_up'           => static function (): void {},
 				'expected_exports' => array(
-					'detectionTimeWindow' => 5000,
 					'storageLockTTL'      => MINUTE_IN_SECONDS,
 					'extensionModuleUrls' => array(),
 				),
 			),
 			'filtered'   => array(
 				'set_up'           => static function (): void {
-					add_filter(
-						'od_detection_time_window',
-						static function (): int {
-							return 2500;
-						}
-					);
 					add_filter(
 						'od_url_metric_storage_lock_ttl',
 						static function (): int {
@@ -45,7 +38,6 @@ class Test_OD_Detection extends WP_UnitTestCase {
 					);
 				},
 				'expected_exports' => array(
-					'detectionTimeWindow' => 2500,
 					'storageLockTTL'      => HOUR_IN_SECONDS,
 					'extensionModuleUrls' => array( home_url( '/my-extension.js', 'https' ) ),
 				),
