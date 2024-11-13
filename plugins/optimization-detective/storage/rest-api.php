@@ -98,30 +98,15 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
  * @since n.e.x.t
  * @access private
  *
- * @see get_allowed_http_origins()
  * @see is_allowed_http_origin()
  *
  * @param string $origin Origin to check.
  * @return bool Whether the origin is allowed.
  */
 function od_is_allowed_http_origin( string $origin ): bool {
-	$allowed_origins = get_allowed_http_origins();
-	$home_url_port   = wp_parse_url( home_url(), PHP_URL_PORT );
-
-	// Append the home URL's port to the allowed origins if they lack a port number.
-	if ( is_int( $home_url_port ) ) {
-		$allowed_origins = array_map(
-			static function ( string $allowed_origin ) use ( $home_url_port ): string {
-				if ( null === wp_parse_url( $allowed_origin, PHP_URL_PORT ) ) {
-					$allowed_origin .= ':' . (string) $home_url_port;
-				}
-				return $allowed_origin;
-			},
-			$allowed_origins
-		);
-	}
-
-	return in_array( $origin, $allowed_origins, true );
+	// Strip out the port number since core does not account for it yet as noted in get_allowed_http_origins().
+	$origin = preg_replace( '/:\d+$/', '', $origin );
+	return '' !== is_allowed_http_origin( $origin );
 }
 
 /**
