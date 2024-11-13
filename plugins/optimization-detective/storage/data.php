@@ -145,8 +145,7 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
- * @since 0.1.0
- * @since n.e.x.t Renamed from od_get_url_metrics_storage_nonce().
+ * @since n.e.x.t
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
@@ -165,8 +164,7 @@ function od_get_url_metrics_storage_hmac( string $slug, string $url ): string {
 /**
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
- * @since 0.1.0
- * @since n.e.x.t Renamed from od_verify_url_metrics_storage_nonce().
+ * @since n.e.x.t
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()
