@@ -25,7 +25,12 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	if ( is_array( $plugins ) ) {
 		// If the specific plugin_slug is not in the cache, return an error.
 		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found.', 'default' ) . ' ' .
+				/* translators: %s is error code */
+				sprintf( '(Error code: %d)', __LINE__ )
+			);
 		}
 		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 	}
@@ -83,7 +88,12 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
 	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-		return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
+		return new WP_Error(
+			'plugin_not_found',
+			__( 'Plugin not found.', 'default' ) . ' ' .
+			/* translators: %s is error code */
+			sprintf( '(Error code: %d)', __LINE__ )
+		);
 	}
 
 	/**
@@ -360,7 +370,12 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 
 		$plugins = get_plugins( '/' . $plugin_slug );
 		if ( count( $plugins ) === 0 ) {
-			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found.', 'default' ) . ' ' .
+				/* translators: %s is error code */
+				sprintf( '(Error code: %d)', __LINE__ )
+			);
 		}
 
 		$plugin_file_names = array_keys( $plugins );
