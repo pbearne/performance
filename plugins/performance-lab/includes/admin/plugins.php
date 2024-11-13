@@ -29,7 +29,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 				'plugin_not_found',
 				__( 'Plugin not found.', 'default' ) . ' ' .
 				/* translators: %s is error code */
-				sprintf( '(Error code: %d)', __LINE__ )
+				sprintf( '(Error line: %d)', __LINE__ )
 			);
 		}
 		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
@@ -92,7 +92,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 			'plugin_not_found',
 			__( 'Plugin not found.', 'default' ) . ' ' .
 			/* translators: %s is error code */
-			sprintf( '(Error code: %d)', __LINE__ )
+			sprintf( '(Error line: %d)', __LINE__ )
 		);
 	}
 
@@ -374,7 +374,7 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 				'plugin_not_found',
 				__( 'Plugin not found.', 'default' ) . ' ' .
 				/* translators: %s is error code */
-				sprintf( '(Error code: %d)', __LINE__ )
+				sprintf( '(Error line: %d)', __LINE__ )
 			);
 		}
 
