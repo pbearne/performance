@@ -27,9 +27,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
 			return new WP_Error(
 				'plugin_not_found',
-				__( 'Plugin not found.', 'default' ) . ' ' .
-				/* translators: %s is error code */
-				sprintf( '(Error line: %d)', __LINE__ )
+				__( 'Plugin not found in cached API response.', 'performance-lab' )
 			);
 		}
 		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
@@ -90,9 +88,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
 		return new WP_Error(
 			'plugin_not_found',
-			__( 'Plugin not found.', 'default' ) . ' ' .
-			/* translators: %s is error code */
-			sprintf( '(Error line: %d)', __LINE__ )
+			__( 'Plugin not found in API response.', 'performance-lab' )
 		);
 	}
 
@@ -372,9 +368,7 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 		if ( count( $plugins ) === 0 ) {
 			return new WP_Error(
 				'plugin_not_found',
-				__( 'Plugin not found.', 'default' ) . ' ' .
-				/* translators: %s is error code */
-				sprintf( '(Error line: %d)', __LINE__ )
+				__( 'Plugin not found among installed plugins.', 'performance-lab' )
 			);
 		}
 
