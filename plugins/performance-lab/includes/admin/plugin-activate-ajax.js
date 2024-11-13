@@ -2,10 +2,9 @@
  * Handles activation of Performance Features (Plugins) using AJAX.
  */
 
-/* global perflabPluginActivateAjaxData */
 ( function () {
 	// @ts-ignore
-	const { i18n, a11y } = wp;
+	const { i18n, a11y, apiFetch } = wp;
 	const { __ } = i18n;
 
 	/**
@@ -42,31 +41,20 @@
 
 		const pluginSlug = target.dataset.pluginSlug;
 
-		// Send an AJAX POST request to activate the plugin.
 		try {
-			const response = await fetch(
-				// @ts-ignore
-				perflabPluginActivateAjaxData.ajaxUrl,
-				{
-					method: 'POST',
-					credentials: 'same-origin',
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-					body: new URLSearchParams( {
-						action: 'perflab_install_activate_plugin',
-						slug: pluginSlug,
-						// @ts-ignore
-						_ajax_nonce: perflabPluginActivateAjaxData.nonce,
-					} ),
-				}
-			);
+			// Activate the plugin via the REST API.
+			await apiFetch( {
+				path: '/performance-lab/v1/activate-plugin',
+				method: 'POST',
+				data: { slug: pluginSlug },
+			} );
 
-			const responseData = await response.json();
-
-			if ( ! responseData.success ) {
-				throw Error();
-			}
+			// Fetch the plugin settings URL via the REST API.
+			const settingsResponse = await apiFetch( {
+				path: '/performance-lab/v1/plugin-settings-url',
+				method: 'POST',
+				data: { slug: pluginSlug },
+			} );
 
 			a11y.speak( __( 'Plugin activated.', 'performance-lab' ) );
 
@@ -74,17 +62,15 @@
 			target.classList.remove( 'updating-message' );
 			target.classList.add( 'disabled' );
 
-			const pluginSettingsURL = responseData?.data?.pluginSettingsURL;
-
 			const actionButtonList = document.querySelector(
 				`.plugin-card-${ pluginSlug } .plugin-action-buttons`
 			);
 
-			if ( pluginSettingsURL && actionButtonList ) {
+			if ( settingsResponse?.pluginSettingsURL && actionButtonList ) {
 				const listItem = document.createElement( 'li' );
 				const anchor = document.createElement( 'a' );
 
-				anchor.href = pluginSettingsURL;
+				anchor.href = settingsResponse?.pluginSettingsURL;
 				anchor.textContent = __( 'Settings', 'performance-lab' );
 
 				listItem.appendChild( anchor );

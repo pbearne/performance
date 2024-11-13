@@ -229,18 +229,9 @@ function perflab_enqueue_features_page_scripts(): void {
 	wp_enqueue_script(
 		'perflab-plugin-activate-ajax',
 		plugins_url( 'includes/admin/plugin-activate-ajax.js', PERFLAB_MAIN_FILE ),
-		array( 'wp-i18n', 'wp-a11y' ),
+		array( 'wp-i18n', 'wp-a11y', 'wp-api-fetch' ),
 		PERFLAB_VERSION,
 		true
-	);
-
-	wp_localize_script(
-		'perflab-plugin-activate-ajax',
-		'perflabPluginActivateAjaxData',
-		array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'perflab_install_activate_plugin_ajax' ),
-		)
 	);
 }
 
@@ -301,47 +292,6 @@ function perflab_install_activate_plugin_callback(): void {
 	}
 }
 add_action( 'admin_action_perflab_install_activate_plugin', 'perflab_install_activate_plugin_callback' );
-
-/**
- * Callback for handling installation/activation of plugin using ajax.
- *
- * @since n.e.x.t
- */
-function perflab_install_activate_plugin_ajax_callback(): void {
-	check_ajax_referer( 'perflab_install_activate_plugin_ajax', '_ajax_nonce' );
-
-	require_once ABSPATH . 'wp-admin/includes/plugin.php';
-	require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
-	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-	require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
-
-	if ( ! isset( $_POST['slug'] ) ) {
-		wp_send_json_error( __( 'Missing required parameter.', 'performance-lab' ), 400 );
-	}
-
-	$plugin_slug = perflab_sanitize_plugin_slug( wp_unslash( $_POST['slug'] ) );
-	if ( null === $plugin_slug ) {
-		wp_send_json_error( __( 'Invalid plugin.', 'performance-lab' ), 400 );
-	}
-
-	// Install and activate the plugin and its dependencies.
-	$result = perflab_install_and_activate_plugin( $plugin_slug );
-	if ( $result instanceof WP_Error ) {
-		wp_send_json_error( $result->get_error_message() );
-	}
-
-	$plugin_settings_url = perflab_get_plugin_settings_url( $plugin_slug );
-	if ( null !== $plugin_settings_url ) {
-		wp_send_json_success(
-			array(
-				'pluginSettingsURL' => esc_url_raw( $plugin_settings_url ),
-			)
-		);
-	}
-
-	wp_send_json_success();
-}
-add_action( 'wp_ajax_perflab_install_activate_plugin', 'perflab_install_activate_plugin_ajax_callback' );
 
 /**
  * Callback function to handle admin inline style.
