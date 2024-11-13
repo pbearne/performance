@@ -19,13 +19,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}|WP_Error Array of plugin data or WP_Error if failed.
  */
 function perflab_query_plugin_info( string $plugin_slug ) {
-	$transient_key = 'perflab_plugins_info-v2';
+	$transient_key = 'perflab_plugins_info';
 	$plugins       = get_transient( $transient_key );
 
 	if ( is_array( $plugins ) ) {
 		// If the specific plugin_slug is not in the cache, return an error.
 		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'performance-lab' ) );
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found in cached API response.', 'performance-lab' )
+			);
 		}
 		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 	}
@@ -83,7 +86,10 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
 	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-		return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'performance-lab' ) );
+		return new WP_Error(
+			'plugin_not_found',
+			__( 'Plugin not found in API response.', 'performance-lab' )
+		);
 	}
 
 	/**
@@ -359,8 +365,11 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 		}
 
 		$plugins = get_plugins( '/' . $plugin_slug );
-		if ( empty( $plugins ) ) {
-			return new WP_Error( 'plugin_not_found', __( 'Plugin not found.', 'default' ) );
+		if ( count( $plugins ) === 0 ) {
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found among installed plugins.', 'performance-lab' )
+			);
 		}
 
 		$plugin_file_names = array_keys( $plugins );
