@@ -141,42 +141,43 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
- * Computes nonce for storing URL Metrics for a specific slug.
+ * Computes HMAC for storing URL Metrics for a specific slug.
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
- * @since 0.1.0
+ * @since n.e.x.t
  * @access private
  *
- * @see wp_create_nonce()
- * @see od_verify_url_metrics_storage_nonce()
+ * @see od_verify_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
  * @param string $slug Slug (hash of normalized query vars).
  * @param string $url  URL.
- * @return string Nonce.
+ *
+ * @return string HMAC.
  */
-function od_get_url_metrics_storage_nonce( string $slug, string $url ): string {
-	return wp_create_nonce( "store_url_metrics:$slug:$url" );
+function od_get_url_metrics_storage_hmac( string $slug, string $url ): string {
+	$action = "store_url_metric:$slug:$url";
+	return wp_hash( $action, 'nonce' );
 }
 
 /**
- * Verifies nonce for storing URL Metrics for a specific slug.
+ * Verifies HMAC for storing URL Metrics for a specific slug.
  *
- * @since 0.1.0
+ * @since n.e.x.t
  * @access private
  *
- * @see wp_verify_nonce()
- * @see od_get_url_metrics_storage_nonce()
+ * @see od_get_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
- * @param string $nonce Nonce.
- * @param string $slug  Slug (hash of normalized query vars).
- * @param String $url   URL.
- * @return bool Whether the nonce is valid.
+ * @param string $hmac HMAC.
+ * @param string $slug Slug (hash of normalized query vars).
+ * @param String $url  URL.
+ *
+ * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_nonce( string $nonce, string $slug, string $url ): bool {
-	return (bool) wp_verify_nonce( $nonce, "store_url_metrics:$slug:$url" );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url ), $hmac );
 }
 
 /**
