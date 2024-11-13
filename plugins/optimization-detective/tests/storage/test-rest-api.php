@@ -93,7 +93,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
 
 		$expected_data = $valid_params;
-		unset( $expected_data['nonce'], $expected_data['slug'] );
+		unset( $expected_data['hmac'], $expected_data['slug'] );
 		$this->assertSame(
 			$expected_data,
 			wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
@@ -122,11 +122,11 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				'bad_slug'                                 => array(
 					'slug' => '<script>document.write("evil")</script>',
 				),
-				'bad_nonce'                                => array(
-					'nonce' => 'not even a hash',
+				'bad_hmac'                                 => array(
+					'hmac' => 'not even a hash',
 				),
-				'invalid_nonce'                            => array(
-					'nonce' => od_get_url_metrics_storage_nonce( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
+				'invalid_hmac'                             => array(
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
 				),
 				'invalid_viewport_type'                    => array(
 					'viewport' => '640x480',
@@ -241,6 +241,58 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test sending data when no Origin request header is sent.
+	 *
+	 * @covers ::od_register_endpoint
+	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
+	 */
+	public function test_rest_request_without_origin(): void {
+		$request = new WP_REST_Request( 'POST', self::ROUTE );
+		$request->set_body_params( $this->get_valid_params() ); // Valid and yet set as POST params and not as JSON body, so this is why it fails.
+		$response = rest_get_server()->dispatch( $request );
+		$this->assertSame( 403, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
+		$this->assertSame( 'rest_cross_origin_forbidden', $response->get_data()['code'], 'Response: ' . wp_json_encode( $response ) );
+		$this->assertSame( 0, did_action( 'od_url_metric_stored' ) );
+	}
+
+	/**
+	 * Test sending data when a cross-domain Origin request header is sent.
+	 *
+	 * @covers ::od_register_endpoint
+	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
+	 */
+	public function test_rest_request_cross_origin(): void {
+		$request = new WP_REST_Request( 'POST', self::ROUTE );
+		$request->set_header( 'Origin', 'https://cross-origin.example.com' );
+		$request->set_body_params( $this->get_valid_params() ); // Valid and yet set as POST params and not as JSON body, so this is why it fails.
+		$response = rest_get_server()->dispatch( $request );
+		$this->assertSame( 403, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
+		$this->assertSame( 'rest_cross_origin_forbidden', $response->get_data()['code'], 'Response: ' . wp_json_encode( $response ) );
+		$this->assertSame( 0, did_action( 'od_url_metric_stored' ) );
+	}
+
+	/**
+	 * Test REST API request when 'home_url' is filtered.
+	 *
+	 * @covers ::od_register_endpoint
+	 * @covers ::od_handle_rest_request
+	 * @covers ::od_is_allowed_http_origin
+	 */
+	public function test_rest_request_origin_when_home_url_filtered(): void {
+		$request = $this->create_request( $this->get_valid_params() );
+		add_filter(
+			'home_url',
+			static function ( string $url ): string {
+				return trailingslashit( $url ) . 'home/en/?foo=bar#baz';
+			}
+		);
+		$response = rest_get_server()->dispatch( $request );
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	/**
 	 * Test not sending JSON data.
 	 *
 	 * @covers ::od_register_endpoint
@@ -248,6 +300,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 */
 	public function test_rest_request_not_json_data(): void {
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
+		$request->set_header( 'Origin', home_url() );
 		$request->set_body_params( $this->get_valid_params() ); // Valid and yet set as POST params and not as JSON body, so this is why it fails.
 		$response = rest_get_server()->dispatch( $request );
 		$this->assertSame( 400, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
@@ -530,8 +583,8 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		unset( $data['timestamp'], $data['uuid'] ); // Since these are readonly.
 		$data = array_merge(
 			array(
-				'slug'  => $slug,
-				'nonce' => od_get_url_metrics_storage_nonce( $slug, $data['url'] ),
+				'slug' => $slug,
+				'hmac' => od_get_url_metrics_storage_hmac( $slug, $data['url'] ),
 			),
 			$data
 		);
@@ -579,8 +632,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		 */
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
 		$request->set_header( 'Content-Type', 'application/json' );
-		$request->set_query_params( wp_array_slice_assoc( $params, array( 'nonce', 'slug' ) ) );
-		unset( $params['nonce'], $params['slug'] );
+		$request->set_query_params( wp_array_slice_assoc( $params, array( 'hmac', 'slug' ) ) );
+		$request->set_header( 'Origin', home_url() );
+		unset( $params['hmac'], $params['slug'] );
 		$request->set_body( wp_json_encode( $params ) );
 		return $request;
 	}

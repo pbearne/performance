@@ -38,22 +38,22 @@ const OD_URL_METRICS_ROUTE = '/url-metrics:store';
 function od_register_endpoint(): void {
 
 	$args = array(
-		'slug'  => array(
+		'slug' => array(
 			'type'        => 'string',
 			'description' => __( 'An MD5 hash of the query args.', 'optimization-detective' ),
 			'required'    => true,
 			'pattern'     => '^[0-9a-f]{32}$',
-			// This is further validated via the validate_callback for the nonce argument, as it is provided as input
-			// with the 'url' argument to create the nonce by the server. which then is verified to match in the REST API request.
+			// This is further validated via the validate_callback for the 'hmac' parameter, as it is provided as input
+			// with the 'url' argument to create the HMAC by the server. which then is verified to match in the REST API request.
 		),
-		'nonce' => array(
+		'hmac' => array(
 			'type'              => 'string',
-			'description'       => __( 'Nonce originally computed by server required to authorize the request.', 'optimization-detective' ),
+			'description'       => __( 'HMAC originally computed by server required to authorize the request.', 'optimization-detective' ),
 			'required'          => true,
 			'pattern'           => '^[0-9a-f]+$',
-			'validate_callback' => static function ( string $nonce, WP_REST_Request $request ) {
-				if ( ! od_verify_url_metrics_storage_nonce( $nonce, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
-					return new WP_Error( 'invalid_nonce', __( 'URL Metrics nonce verification failure.', 'optimization-detective' ) );
+			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
+				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request->get_param( 'slug' ), $request->get_param( 'url' ) ) ) {
+					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );
 				}
 				return true;
 			},
@@ -89,6 +89,27 @@ function od_register_endpoint(): void {
 add_action( 'rest_api_init', 'od_register_endpoint' );
 
 /**
+ * Determines if the HTTP origin is an authorized one.
+ *
+ * Note that `is_allowed_http_origin()` is not used directly because the underlying `get_allowed_http_origins()` does
+ * not account for the URL port (although there is a to-do comment committed in core to address this). Additionally,
+ * the `is_allowed_http_origin()` function in core for some reason returns a string rather than a boolean.
+ *
+ * @since n.e.x.t
+ * @access private
+ *
+ * @see is_allowed_http_origin()
+ *
+ * @param string $origin Origin to check.
+ * @return bool Whether the origin is allowed.
+ */
+function od_is_allowed_http_origin( string $origin ): bool {
+	// Strip out the port number since core does not account for it yet as noted in get_allowed_http_origins().
+	$origin = preg_replace( '/:\d+$/', '', $origin );
+	return '' !== is_allowed_http_origin( $origin );
+}
+
+/**
  * Handles REST API request to store metrics.
  *
  * @since 0.1.0
@@ -100,6 +121,16 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
  * @return WP_REST_Response|WP_Error Response.
  */
 function od_handle_rest_request( WP_REST_Request $request ) {
+	// Block cross-origin storage requests since by definition URL Metrics data can only be sourced from the frontend of the site.
+	$origin = $request->get_header( 'origin' );
+	if ( null === $origin || ! od_is_allowed_http_origin( $origin ) ) {
+		return new WP_Error(
+			'rest_cross_origin_forbidden',
+			__( 'Cross-origin requests are not allowed for this endpoint.', 'optimization-detective' ),
+			array( 'status' => 403 )
+		);
+	}
+
 	$post = OD_URL_Metrics_Post_Type::get_post( $request->get_param( 'slug' ) );
 
 	$url_metric_group_collection = new OD_URL_Metric_Group_Collection(
