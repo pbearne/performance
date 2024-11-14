@@ -459,16 +459,21 @@ export default async function detect( {
 			continue;
 		}
 
-		const isLCP =
-			elementIntersection.target === lcpMetric?.entries[ 0 ]?.element;
+		const element = /** @type {Element|null} */ (
+			lcpMetric?.entries[ 0 ]?.element
+		);
+		const isLCP = elementIntersection.target === element;
 
 		/** @type {ElementData} */
 		const elementData = {
 			isLCP,
 			isLCPCandidate: !! lcpMetricCandidates.find(
-				( lcpMetricCandidate ) =>
-					lcpMetricCandidate.entries[ 0 ]?.element ===
-					elementIntersection.target
+				( lcpMetricCandidate ) => {
+					const candidateElement = /** @type {Element|null} */ (
+						lcpMetricCandidate.entries[ 0 ]?.element
+					);
+					return candidateElement === elementIntersection.target;
+				}
 			),
 			xpath,
 			intersectionRatio: elementIntersection.intersectionRatio,
