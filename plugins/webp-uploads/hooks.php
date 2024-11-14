@@ -719,7 +719,13 @@ function webp_uploads_get_image_sizes_additional_mime_type_support(): array {
 	);
 
 	foreach ( $additional_sizes as $size => $size_details ) {
-		$allowed_sizes[ $size ] = ! empty( $size_details['provide_additional_mime_types'] );
+		if ( isset( $size_details['provide_additional_mime_types'] ) ) {
+			// Give priority to the 'provide_additional_mime_types' property.
+			$allowed_sizes[ $size ] = ! empty( $size_details['provide_additional_mime_types'] );
+		} else {
+			// If 'provide_additional_mime_types' is not set, use the fallback all sizes setting.
+			$allowed_sizes[ $size ] = webp_uploads_is_fallback_all_sizes_enabled();
+		}
 	}
 
 	/**

@@ -412,6 +412,17 @@ function webp_uploads_is_fallback_enabled(): bool {
 }
 
 /**
+ * Checks if the `perflab_generate_fallback_all_sizes` option is enabled.
+ *
+ * @since n.e.x.t
+ *
+ * @return bool True if the option is enabled, false otherwise.
+ */
+function webp_uploads_is_fallback_all_sizes_enabled(): bool {
+	return (bool) get_option( 'perflab_generate_fallback_all_sizes' );
+}
+
+/**
  * Retrieves the image URL for a specified MIME type from the attachment metadata.
  *
  * This function attempts to locate an alternate image source URL in the
