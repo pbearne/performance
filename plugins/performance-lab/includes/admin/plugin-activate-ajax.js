@@ -15,14 +15,10 @@
 	 *
 	 * @param {MouseEvent} event - The click event object that is triggered when the user clicks on the document.
 	 *
-	 * @return {Promise<void>} - The asynchronous function returns a promise that resolves to void.
+	 * @return {Promise<void>} The asynchronous function returns a promise that resolves to void.
 	 */
 	async function handlePluginActivationClick( event ) {
 		const target = /** @type {HTMLElement} */ ( event.target );
-
-		if ( ! target.classList.contains( 'perflab-install-active-plugin' ) ) {
-			return;
-		}
 
 		// Prevent the default link behavior.
 		event.preventDefault();
@@ -44,16 +40,8 @@
 		try {
 			// Activate the plugin via the REST API.
 			await apiFetch( {
-				path: '/performance-lab/v1/activate-plugin',
+				path: `/performance-lab/v1/plugins/${ pluginSlug }:activate`,
 				method: 'POST',
-				data: { slug: pluginSlug },
-			} );
-
-			// Fetch the plugin settings URL via the REST API.
-			const settingsResponse = await apiFetch( {
-				path: '/performance-lab/v1/plugin-settings-url',
-				method: 'POST',
-				data: { slug: pluginSlug },
 			} );
 
 			a11y.speak( __( 'Plugin activated.', 'performance-lab' ) );
@@ -61,29 +49,39 @@
 			target.textContent = __( 'Active', 'performance-lab' );
 			target.classList.remove( 'updating-message' );
 			target.classList.add( 'disabled' );
-
-			const actionButtonList = document.querySelector(
-				`.plugin-card-${ pluginSlug } .plugin-action-buttons`
-			);
-
-			if ( settingsResponse?.pluginSettingsURL && actionButtonList ) {
-				const listItem = document.createElement( 'li' );
-				const anchor = document.createElement( 'a' );
-
-				anchor.href = settingsResponse?.pluginSettingsURL;
-				anchor.textContent = __( 'Settings', 'performance-lab' );
-
-				listItem.appendChild( anchor );
-				actionButtonList.appendChild( listItem );
-			}
 		} catch ( error ) {
 			a11y.speak( __( 'Plugin failed to activate.', 'performance-lab' ) );
 
 			target.classList.remove( 'updating-message' );
 			target.textContent = __( 'Activate', 'performance-lab' );
 		}
+
+		try {
+			// Fetch the plugin settings URL via the REST API.
+			const settingsResponse = await apiFetch( {
+				path: `/performance-lab/v1/plugin-settings-url/${ pluginSlug }`,
+				method: 'GET',
+			} );
+
+			const actionButtonList = document.querySelector(
+				`.plugin-card-${ pluginSlug } .plugin-action-buttons`
+			);
+
+			const listItem = document.createElement( 'li' );
+			const anchor = document.createElement( 'a' );
+
+			anchor.href = settingsResponse.pluginSettingsURL;
+			anchor.textContent = __( 'Settings', 'performance-lab' );
+
+			listItem.appendChild( anchor );
+			actionButtonList.appendChild( listItem );
+		} catch ( error ) {}
 	}
 
-	// Attach the event listener.
-	document.addEventListener( 'click', handlePluginActivationClick );
+	// Attach the event listeners.
+	document
+		.querySelectorAll( '.perflab-install-active-plugin' )
+		.forEach( ( item ) => {
+			item.addEventListener( 'click', handlePluginActivationClick );
+		} );
 } )();
