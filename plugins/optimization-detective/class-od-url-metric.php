@@ -14,40 +14,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Representation of the measurements taken from a single client's visit to a specific URL.
  *
- * @phpstan-type ViewportRect  array{
- *                                 width: int,
- *                                 height: int
- *                             }
- * @phpstan-type QueriedObject array{
- *                                 type: 'post'|'user'|'term',
- *                                 id: int
- *                             }
- * @phpstan-type DOMRect       array{
- *                                 width: float,
- *                                 height: float,
- *                                 x: float,
- *                                 y: float,
- *                                 top: float,
- *                                 right: float,
- *                                 bottom: float,
- *                                 left: float
- *                             }
- * @phpstan-type ElementData   array{
- *                                 isLCP: bool,
- *                                 isLCPCandidate: bool,
- *                                 xpath: non-empty-string,
- *                                 intersectionRatio: float,
- *                                 intersectionRect: DOMRect,
- *                                 boundingClientRect: DOMRect,
- *                             }
- * @phpstan-type Data          array{
- *                                 uuid: non-empty-string,
- *                                 url: non-empty-string,
- *                                 queriedObject: null|QueriedObject,
- *                                 timestamp: float,
- *                                 viewport: ViewportRect,
- *                                 elements: ElementData[]
- *                             }
+ * @phpstan-type ViewportRect array{
+ *                                width: int,
+ *                                height: int
+ *                            }
+ * @phpstan-type DOMRect      array{
+ *                                width: float,
+ *                                height: float,
+ *                                x: float,
+ *                                y: float,
+ *                                top: float,
+ *                                right: float,
+ *                                bottom: float,
+ *                                left: float
+ *                            }
+ * @phpstan-type ElementData  array{
+ *                                isLCP: bool,
+ *                                isLCPCandidate: bool,
+ *                                xpath: non-empty-string,
+ *                                intersectionRatio: float,
+ *                                intersectionRect: DOMRect,
+ *                                boundingClientRect: DOMRect,
+ *                            }
+ * @phpstan-type Data         array{
+ *                                uuid: non-empty-string,
+ *                                url: non-empty-string,
+ *                                timestamp: float,
+ *                                viewport: ViewportRect,
+ *                                elements: ElementData[]
+ *                            }
  *
  * @since 0.1.0
  * @access private
@@ -206,40 +201,21 @@ class OD_URL_Metric implements JsonSerializable {
 			'type'                 => 'object',
 			'required'             => true,
 			'properties'           => array(
-				'uuid'          => array(
+				'uuid'      => array(
 					'description' => __( 'The UUID for the URL Metric.', 'optimization-detective' ),
 					'type'        => 'string',
 					'format'      => 'uuid',
 					'required'    => true,
 					'readonly'    => true, // Omit from REST API.
 				),
-				'url'           => array(
+				'url'       => array(
 					'description' => __( 'The URL for which the metric was obtained.', 'optimization-detective' ),
 					'type'        => 'string',
 					'required'    => true,
 					'format'      => 'uri',
 					'pattern'     => '^https?://',
 				),
-				'queriedObject' => array(
-					'type'                 => 'object',
-					'required'             => false, // Not required since a query like is_home() will not have any queried object.
-					'properties'           => array(
-						'type' => array(
-							'type'        => array( 'string' ),
-							'description' => __( 'Queried object type.', 'optimization-detective' ),
-							'required'    => true,
-							'enum'        => array( 'post', 'term', 'user' ), // TODO: Should post_type be supported? There is no ID in this case, but the post type slug is used. But we don't need it to flush the cache.
-						),
-						'id'   => array(
-							'type'        => 'integer',
-							'description' => __( 'Queried object ID.', 'optimization-detective' ),
-							'required'    => true,
-							'minimum'     => 1,
-						),
-					),
-					'additionalProperties' => false,
-				),
-				'viewport'      => array(
+				'viewport'  => array(
 					'description'          => __( 'Viewport dimensions', 'optimization-detective' ),
 					'type'                 => 'object',
 					'required'             => true,
@@ -257,14 +233,14 @@ class OD_URL_Metric implements JsonSerializable {
 					),
 					'additionalProperties' => false,
 				),
-				'timestamp'     => array(
+				'timestamp' => array(
 					'description' => __( 'Timestamp at which the URL Metric was captured.', 'optimization-detective' ),
 					'type'        => 'number',
 					'required'    => true,
 					'readonly'    => true, // Omit from REST API.
 					'minimum'     => 0,
 				),
-				'elements'      => array(
+				'elements'  => array(
 					'description' => __( 'Element metrics', 'optimization-detective' ),
 					'type'        => 'array',
 					'required'    => true,
@@ -450,17 +426,6 @@ class OD_URL_Metric implements JsonSerializable {
 	 */
 	public function get_url(): string {
 		return $this->data['url'];
-	}
-
-	/**
-	 * Gets queried object.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @return QueriedObject|null Queried object.
-	 */
-	public function get_queried_object(): ?array {
-		return $this->data['queriedObject'] ?? null;
 	}
 
 	/**

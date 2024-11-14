@@ -293,26 +293,25 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 */
 	public function data_provider_to_test_hmac(): array {
 		return array(
-			'home' => array(
-				'url'  => static function () {
-					return home_url();
-				},
-				'slug' => od_get_url_metrics_slug( array() ),
-			),
-			'post' => array(
-				'url'                 => static function () {
-					wp_update_post(
-						array(
-							'ID'         => 1,
-							'post_type'  => 'post',
-							'post_title' => 'Hello!',
-						)
+			'is_home'   => array(
+				'set_up' => static function (): array {
+					$post_id = self::factory()->post->create();
+					return array(
+						home_url(),
+						od_get_url_metrics_slug( array() ),
+						$post_id,
 					);
-					return get_permalink( 1 );
 				},
-				'slug'                => od_get_url_metrics_slug( array( 'p' => 1 ) ),
-				'queried_object_type' => 'post',
-				'queried_object_id'   => 1,
+			),
+			'is_single' => array(
+				'set_up' => static function (): array {
+					$post_id = self::factory()->post->create();
+					return array(
+						get_permalink( $post_id ),
+						od_get_url_metrics_slug( array( 'p' => $post_id ) ),
+						$post_id,
+					);
+				},
 			),
 		);
 	}
@@ -325,11 +324,12 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 * @covers ::od_get_url_metrics_storage_hmac
 	 * @covers ::od_verify_url_metrics_storage_hmac
 	 */
-	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac( Closure $get_url, string $slug, ?string $queried_object_type = null, ?int $queried_object_id = null ): void {
-		$url  = $get_url();
-		$hmac = od_get_url_metrics_storage_hmac( $slug, $url, $queried_object_type, $queried_object_id );
+	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac( Closure $set_up ): void {
+		list( $url, $slug, $cache_purge_post_id ) = $set_up();
+		$this->go_to( $url );
+		$hmac = od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id );
 		$this->assertMatchesRegularExpression( '/^[0-9a-f]+$/', $hmac );
-		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url, $queried_object_type, $queried_object_id ) );
+		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url, $cache_purge_post_id ) );
 	}
 
 	/**

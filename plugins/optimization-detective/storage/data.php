@@ -152,14 +152,13 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @see od_get_url_metrics_slug()
  * @todo This should also include an ETag as a parameter. See <https://github.com/WordPress/performance/issues/1466>.
  *
- * @param string      $slug                Slug (hash of normalized query vars).
- * @param string      $url                 URL.
- * @param string|null $queried_object_type Queried object type.
- * @param int|null    $queried_object_id   Queried object ID.
+ * @param string   $slug                Slug (hash of normalized query vars).
+ * @param string   $url                 URL.
+ * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return string HMAC.
  */
-function od_get_url_metrics_storage_hmac( string $slug, string $url, ?string $queried_object_type = null, ?int $queried_object_id = null ): string {
-	$action = "store_url_metric:$slug:$url:$queried_object_type:$queried_object_id";
+function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache_purge_post_id = null ): string {
+	$action = "store_url_metric:$slug:$url:$cache_purge_post_id";
 	return wp_hash( $action, 'nonce' );
 }
 
@@ -172,15 +171,14 @@ function od_get_url_metrics_storage_hmac( string $slug, string $url, ?string $qu
  * @see od_get_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
- * @param string      $hmac                HMAC.
- * @param string      $slug                Slug (hash of normalized query vars).
- * @param String      $url                 URL.
- * @param string|null $queried_object_type Queried object type.
- * @param int|null    $queried_object_id   Queried object ID.
+ * @param string   $hmac                HMAC.
+ * @param string   $slug                Slug (hash of normalized query vars).
+ * @param String   $url                 URL.
+ * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url, ?string $queried_object_type = null, ?int $queried_object_id = null ): bool {
-	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url, $queried_object_type, $queried_object_id ), $hmac );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url, ?int $cache_purge_post_id = null ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id ), $hmac );
 }
 
 /**

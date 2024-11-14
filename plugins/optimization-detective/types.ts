@@ -12,14 +12,8 @@ export interface ElementData {
 
 export type ExtendedElementData = ExcludeProps< ElementData >;
 
-export interface QueriedObject {
-	type: 'post' | 'term' | 'user';
-	id: number;
-}
-
 export interface URLMetric {
 	url: string;
-	queriedObject?: QueriedObject;
 	viewport: {
 		width: number;
 		height: number;
