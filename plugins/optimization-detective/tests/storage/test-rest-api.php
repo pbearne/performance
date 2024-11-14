@@ -71,7 +71,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 *
 	 * @covers ::od_register_endpoint
 	 * @covers ::od_handle_rest_request
-	 * @covers ::od_clean_queried_object_cache_for_stored_url_metric
+	 * @covers ::od_trigger_page_cache_invalidation
 	 */
 	public function test_rest_request_good_params( Closure $set_up ): void {
 		$stored_context = null;
@@ -89,15 +89,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 
 		$valid_params = $set_up();
 
-		$all_hook_callback_args = array();
-		add_action(
-			'all',
-			static function ( string $hook, ...$args ) use ( &$all_hook_callback_args ): void {
-				$all_hook_callback_args[ $hook ][] = $args;
-			},
-			10,
-			PHP_INT_MAX
-		);
+		if ( isset( $valid_params['cache_purge_post_id'] ) ) {
+			$this->assertFalse( wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $valid_params['cache_purge_post_id'] ) ) );
+		}
 
 		$this->assertCount( 0, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
 		$request  = $this->create_request( $valid_params );
@@ -126,43 +120,14 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 
 		$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
 
-		// Now check that od_clean_queried_object_cache_for_stored_url_metric() cleaned caches as expected.
+		// Now check that od_trigger_page_cache_invalidation() cleaned caches as expected.
 		$this->assertSame( $url_metrics[0]->jsonSerialize(), $stored_context->url_metric->jsonSerialize() );
 		$cache_purge_post_id = $stored_context->request->get_param( 'cache_purge_post_id' );
-		if ( null !== $cache_purge_post_id ) {
-			$this->assertArrayHasKey( 'clean_post_cache', $all_hook_callback_args );
-			$found = false;
-			foreach ( $all_hook_callback_args['clean_post_cache'] as $args ) {
-				if ( $args[0] === $cache_purge_post_id ) {
-					$this->assertInstanceOf( WP_Post::class, $args[1] );
-					$this->assertSame( $cache_purge_post_id, $args[1]->ID );
-					$found = true;
-				}
-			}
-			$this->assertTrue( $found, 'Expected clean_post_cache to have been fired for the post queried object.' );
 
-			$this->assertArrayHasKey( 'transition_post_status', $all_hook_callback_args );
-			$found = false;
-			foreach ( $all_hook_callback_args['transition_post_status'] as $args ) {
-				$this->assertInstanceOf( WP_Post::class, $args[2] );
-				if ( $args[2]->ID === $cache_purge_post_id ) {
-					$this->assertSame( $args[2]->post_status, $args[0] );
-					$this->assertSame( $args[2]->post_status, $args[1] );
-					$found = true;
-				}
-			}
-			$this->assertTrue( $found, 'Expected transition_post_status to have been fired for the post queried object.' );
-
-			$this->assertArrayHasKey( 'save_post', $all_hook_callback_args );
-			$found = false;
-			foreach ( $all_hook_callback_args['save_post'] as $args ) {
-				if ( $args[0] === $cache_purge_post_id ) {
-					$this->assertInstanceOf( WP_Post::class, $args[1] );
-					$this->assertSame( $cache_purge_post_id, $args[1]->ID );
-					$found = true;
-				}
-			}
-			$this->assertTrue( $found, 'Expected save_post to have been fired for the post queried object.' );
+		if ( isset( $valid_params['cache_purge_post_id'] ) ) {
+			$scheduled = wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $valid_params['cache_purge_post_id'] ) );
+			$this->assertIsInt( $scheduled );
+			$this->assertGreaterThan( time(), $scheduled );
 		}
 	}
 
@@ -616,6 +581,61 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$request  = $this->create_request( $narrower_viewport_params );
 		$response = rest_get_server()->dispatch( $request );
 		$this->assertSame( 403, $response->get_status(), 'Response: ' . wp_json_encode( $response->get_data() ) );
+	}
+
+	/**
+	 * Test od_trigger_page_cache_invalidation().
+	 *
+	 * @covers ::od_trigger_page_cache_invalidation
+	 */
+	public function test_od_trigger_page_cache_invalidation(): void {
+		$cache_purge_post_id = self::factory()->post->create();
+
+		$all_hook_callback_args = array();
+		add_action(
+			'all',
+			static function ( string $hook, ...$args ) use ( &$all_hook_callback_args ): void {
+				$all_hook_callback_args[ $hook ][] = $args;
+			},
+			10,
+			PHP_INT_MAX
+		);
+
+		od_trigger_page_cache_invalidation( $cache_purge_post_id );
+
+		$this->assertArrayHasKey( 'clean_post_cache', $all_hook_callback_args );
+		$found = false;
+		foreach ( $all_hook_callback_args['clean_post_cache'] as $args ) {
+			if ( $args[0] === $cache_purge_post_id ) {
+				$this->assertInstanceOf( WP_Post::class, $args[1] );
+				$this->assertSame( $cache_purge_post_id, $args[1]->ID );
+				$found = true;
+			}
+		}
+		$this->assertTrue( $found, 'Expected clean_post_cache to have been fired for the post queried object.' );
+
+		$this->assertArrayHasKey( 'transition_post_status', $all_hook_callback_args );
+		$found = false;
+		foreach ( $all_hook_callback_args['transition_post_status'] as $args ) {
+			$this->assertInstanceOf( WP_Post::class, $args[2] );
+			if ( $args[2]->ID === $cache_purge_post_id ) {
+				$this->assertSame( $args[2]->post_status, $args[0] );
+				$this->assertSame( $args[2]->post_status, $args[1] );
+				$found = true;
+			}
+		}
+		$this->assertTrue( $found, 'Expected transition_post_status to have been fired for the post queried object.' );
+
+		$this->assertArrayHasKey( 'save_post', $all_hook_callback_args );
+		$found = false;
+		foreach ( $all_hook_callback_args['save_post'] as $args ) {
+			if ( $args[0] === $cache_purge_post_id ) {
+				$this->assertInstanceOf( WP_Post::class, $args[1] );
+				$this->assertSame( $cache_purge_post_id, $args[1]->ID );
+				$found = true;
+			}
+		}
+		$this->assertTrue( $found, 'Expected save_post to have been fired for the post queried object.' );
 	}
 
 	/**

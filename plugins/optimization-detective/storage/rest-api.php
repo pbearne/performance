@@ -208,6 +208,16 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 	}
 	$post_id = $result;
 
+	// Schedule an event in 10 minutes to trigger an invalidation of the page cache (hopefully).
+	$cache_purge_post_id = $request->get_param( 'cache_purge_post_id' );
+	if ( is_int( $cache_purge_post_id ) && false === wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $cache_purge_post_id ) ) ) {
+		wp_schedule_single_event(
+			time() + 10 * MINUTE_IN_SECONDS,
+			'od_trigger_page_cache_invalidation',
+			array( $cache_purge_post_id )
+		);
+	}
+
 	/**
 	 * Fires whenever a URL Metric was successfully stored.
 	 *
@@ -235,30 +245,17 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 }
 
 /**
- * Cleans the cache for the queried object when it has a new URL Metric stored.
+ * Triggers actions for page caches to invalidate their caches related to the supplied cache purge post ID.
  *
  * This is intended to flush any page cache for the URL after the new URL Metric was submitted so that the optimizations
- * which depend on that URL Metric can start to take effect. Furthermore, when a submitted URL Metric results in a full
- * sample of URL Metric groups, then flushing the page cache will allow the next request to omit the detection script
- * module altogether. When a page cache holds onto a cached page for a long time (e.g. a week), this will result in
- * the stored URL Metrics being stale if they have the default freshness TTL of 1 day. Nevertheless, if no changes have
- * been applied to a cached page then those stale URL Metrics should continue to result in an optimized page.
- *
- * This assumes that a page caching plugin flushes the page cache for a queried object via `clean_post_cache`,
- * `clean_term_cache`, and `clean_user_cache` actions. Other actions may make sense to trigger as well as can be seen in
- * {@link https://github.com/pantheon-systems/pantheon-advanced-page-cache/blob/e3b5552/README.md?plain=1#L314-L356}.
+ * which depend on that URL Metric can start to take effect.
  *
  * @since n.e.x.t
+ * @access private
  *
- * @param OD_URL_Metric_Store_Request_Context $context Context.
+ * @param int $cache_purge_post_id Cache purge post ID.
  */
-function od_clean_queried_object_cache_for_stored_url_metric( OD_URL_Metric_Store_Request_Context $context ): void {
-
-	$cache_purge_post_id = $context->request->get_param( 'cache_purge_post_id' );
-	if ( ! is_int( $cache_purge_post_id ) ) {
-		return;
-	}
-
+function od_trigger_page_cache_invalidation( int $cache_purge_post_id ): void {
 	$post = get_post( $cache_purge_post_id );
 	if ( ! ( $post instanceof WP_Post ) ) {
 		return;

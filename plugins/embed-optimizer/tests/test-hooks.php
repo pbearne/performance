@@ -18,7 +18,6 @@ class Test_Embed_Optimizer_Hooks extends WP_UnitTestCase {
 		$this->assertSame( 10, has_action( 'od_init', 'embed_optimizer_init_optimization_detective' ) );
 		$this->assertSame( 10, has_action( 'wp_head', 'embed_optimizer_render_generator' ) );
 		$this->assertSame( 10, has_action( 'wp_loaded', 'embed_optimizer_add_non_optimization_detective_hooks' ) );
-		$this->assertSame( 10, has_action( 'od_url_metric_stored', 'od_clean_queried_object_cache_for_stored_url_metric' ) );
 	}
 
 	/**
