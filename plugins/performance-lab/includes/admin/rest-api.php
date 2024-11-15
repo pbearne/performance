@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Namespace for performance-lab REST API.
  *
+ * @since n.e.x.t
  * @var string
  */
 const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
@@ -23,6 +24,7 @@ const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
  * Note the `:activate` art of the endpoint follows Google's guidance in AIP-136 for the use of the POST method in a way
  * that does not strictly follow the standard usage.
  *
+ * @since n.e.x.t
  * @link https://google.aip.dev/136
  * @var string
  */
@@ -31,6 +33,7 @@ const PERFLAB_FEATURES_ACTIVATE_ROUTE = '/features/(?P<slug>[a-z0-9_-]+):activat
 /**
  * Route for fetching plugin/feature information.
  *
+ * @since n.e.x.t
  * @var string
  */
 const PERFLAB_FEATURES_INFORMATION_ROUTE = '/features/(?P<slug>[a-z0-9_-]+)';

@@ -50,7 +50,7 @@
 				method: 'GET',
 			} );
 
-			if ( featureInfo?.settingsUrl ) {
+			if ( featureInfo.settingsUrl ) {
 				const actionButtonList = document.querySelector(
 					`.plugin-card-${ pluginSlug } .plugin-action-buttons`
 				);
