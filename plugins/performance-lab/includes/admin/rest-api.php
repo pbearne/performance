@@ -60,11 +60,12 @@ function perflab_register_endpoint(): void {
 			),
 			'callback'            => 'perflab_handle_feature_activation',
 			'permission_callback' => static function () {
-				if ( current_user_can( 'install_plugins' ) ) {
+				// Important: The endpoint calls perflab_install_and_activate_plugin() which does more granular capability checks.
+				if ( current_user_can( 'activate_plugins' ) ) {
 					return true;
 				}
 
-				return new WP_Error( 'cannot_install_plugin', __( 'Sorry, you are not allowed to install plugins on this site.', 'performance-lab' ) );
+				return new WP_Error( 'cannot_activate', __( 'Sorry, you are not allowed to activate this feature.', 'performance-lab' ) );
 			},
 		)
 	);
