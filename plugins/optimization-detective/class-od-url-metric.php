@@ -154,6 +154,8 @@ class OD_URL_Metric implements JsonSerializable {
 	/**
 	 * Gets JSON schema for URL Metric.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @todo Cache the return value?
 	 *
 	 * @return array<string, mixed> Schema.
@@ -407,6 +409,8 @@ class OD_URL_Metric implements JsonSerializable {
 	/**
 	 * Gets UUID.
 	 *
+	 * @since 0.6.0
+	 *
 	 * @return string UUID.
 	 */
 	public function get_uuid(): string {
@@ -415,6 +419,8 @@ class OD_URL_Metric implements JsonSerializable {
 
 	/**
 	 * Gets URL.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return string URL.
 	 */
@@ -425,6 +431,8 @@ class OD_URL_Metric implements JsonSerializable {
 	/**
 	 * Gets viewport data.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return ViewportRect Viewport data.
 	 */
 	public function get_viewport(): array {
@@ -433,6 +441,8 @@ class OD_URL_Metric implements JsonSerializable {
 
 	/**
 	 * Gets viewport width.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return int Viewport width.
 	 */
@@ -443,6 +453,8 @@ class OD_URL_Metric implements JsonSerializable {
 	/**
 	 * Gets timestamp.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return float Timestamp.
 	 */
 	public function get_timestamp(): float {
@@ -451,6 +463,8 @@ class OD_URL_Metric implements JsonSerializable {
 
 	/**
 	 * Gets elements.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return OD_Element[] Elements.
 	 */
@@ -468,6 +482,8 @@ class OD_URL_Metric implements JsonSerializable {
 
 	/**
 	 * Specifies data which should be serialized to JSON.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return Data Exports to be serialized by json_encode().
 	 */
