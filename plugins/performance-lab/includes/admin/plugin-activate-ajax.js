@@ -45,6 +45,7 @@
 			} );
 
 			// Fetch the plugin/feature information via the REST API.
+			/** @type {{settingsUrl: string|null}} */
 			const featureInfo = await apiFetch( {
 				path: `/performance-lab/v1/features/${ pluginSlug }`,
 				method: 'GET',
