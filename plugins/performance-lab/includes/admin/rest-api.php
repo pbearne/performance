@@ -127,6 +127,7 @@ function perflab_validate_slug_endpoint_arg( string $slug ): bool {
  * @return WP_REST_Response|WP_Error Response.
  */
 function perflab_handle_feature_activation( WP_REST_Request $request ) {
+	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 	require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
