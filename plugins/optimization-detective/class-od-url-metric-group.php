@@ -321,6 +321,62 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	}
 
 	/**
+	 * Gets all elements from all URL Metrics in the viewport group keyed by the elements' XPaths.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return array<string, non-empty-array<int, OD_Element>> Keys are XPaths and values are the element instances.
+	 */
+	public function get_xpath_elements_map(): array {
+		$result = ( function () {
+			$all_elements = array();
+			foreach ( $this->url_metrics as $url_metric ) {
+				foreach ( $url_metric->get_elements() as $element ) {
+					$all_elements[ $element->get_xpath() ][] = $element;
+				}
+			}
+			return $all_elements;
+		} )();
+
+		return $result;
+	}
+
+	/**
+	 * Gets the max intersection ratios of all elements in the viewport group and its captured URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return array<string, float> Keys are XPaths and values are the intersection ratios.
+	 */
+	public function get_all_element_max_intersection_ratios(): array {
+		$result = ( function () {
+			$elements_max_intersection_ratios = array();
+			foreach ( $this->get_xpath_elements_map() as $xpath => $elements ) {
+				$element_intersection_ratios = array();
+				foreach ( $elements as $element ) {
+					$element_intersection_ratios[] = $element->get_intersection_ratio();
+				}
+				$elements_max_intersection_ratios[ $xpath ] = (float) max( $element_intersection_ratios );
+			}
+			return $elements_max_intersection_ratios;
+		} )();
+
+		return $result;
+	}
+
+	/**
+	 * Gets the max intersection ratio of an element in the viewport group and its captured URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param string $xpath XPath for the element.
+	 * @return float|null Max intersection ratio of null if tag is unknown (not captured).
+	 */
+	public function get_element_max_intersection_ratio( string $xpath ): ?float {
+		return $this->get_all_element_max_intersection_ratios()[ $xpath ] ?? null;
+	}
+
+	/**
 	 * Returns an iterator for the URL Metrics in the group.
 	 *
 	 * @return ArrayIterator<int, OD_URL_Metric> ArrayIterator for OD_URL_Metric instances.
