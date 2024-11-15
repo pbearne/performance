@@ -53,7 +53,7 @@ function perflab_register_endpoint(): void {
 			'args'                => array(
 				'slug' => array(
 					'type'              => 'string',
-					'description'       => __( 'Plugin slug of plugin/feature that needs to be activated.', 'performance-lab' ),
+					'description'       => __( 'Plugin slug of the Performance Lab feature to be activated.', 'performance-lab' ),
 					'required'          => true,
 					'validate_callback' => 'perflab_validate_slug_endpoint_arg',
 				),
