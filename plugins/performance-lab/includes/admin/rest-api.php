@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
 
 /**
- * Route for activating plugin.
+ * Route for activating plugin/feature.
  *
  * Note the `:activate` art of the endpoint follows Google's guidance in AIP-136 for the use of the POST method in a way
  * that does not strictly follow the standard usage.
@@ -26,14 +26,14 @@ const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
  * @link https://google.aip.dev/136
  * @var string
  */
-const PERFLAB_ACTIVATE_PLUGIN_ROUTE = '/plugins/(?P<slug>[a-z0-9_-]+):activate';
+const PERFLAB_FEATURES_ACTIVATE_ROUTE = '/features/(?P<slug>[a-z0-9_-]+):activate';
 
 /**
- * Route for fetching plugin settings URL.
+ * Route for fetching plugin/feature information.
  *
  * @var string
  */
-const PERFLAB_PLUGIN_SETTINGS_URL_ROUTE = '/plugin-settings-url/(?P<slug>[a-z0-9_-]+)';
+const PERFLAB_FEATURES_INFORMATION_ROUTE = '/features/(?P<slug>[a-z0-9_-]+)';
 
 /**
  * Registers endpoint for performance-lab REST API.
@@ -44,18 +44,18 @@ const PERFLAB_PLUGIN_SETTINGS_URL_ROUTE = '/plugin-settings-url/(?P<slug>[a-z0-9
 function perflab_register_endpoint(): void {
 	register_rest_route(
 		PERFLAB_REST_API_NAMESPACE,
-		PERFLAB_ACTIVATE_PLUGIN_ROUTE,
+		PERFLAB_FEATURES_ACTIVATE_ROUTE,
 		array(
 			'methods'             => 'POST',
 			'args'                => array(
 				'slug' => array(
 					'type'              => 'string',
-					'description'       => __( 'Plugin slug of plugin that needs to be activated.', 'performance-lab' ),
+					'description'       => __( 'Plugin slug of plugin/feature that needs to be activated.', 'performance-lab' ),
 					'required'          => true,
 					'validate_callback' => 'perflab_validate_slug_endpoint_arg',
 				),
 			),
-			'callback'            => 'perflab_handle_activate_plugin',
+			'callback'            => 'perflab_handle_feature_activation',
 			'permission_callback' => static function () {
 				if ( current_user_can( 'install_plugins' ) ) {
 					return true;
@@ -68,18 +68,18 @@ function perflab_register_endpoint(): void {
 
 	register_rest_route(
 		PERFLAB_REST_API_NAMESPACE,
-		PERFLAB_PLUGIN_SETTINGS_URL_ROUTE,
+		PERFLAB_FEATURES_INFORMATION_ROUTE,
 		array(
 			'methods'             => 'GET',
 			'args'                => array(
 				'slug' => array(
 					'type'              => 'string',
-					'description'       => __( 'Plugin slug of plugin whose settings URL is needed.', 'performance-lab' ),
+					'description'       => __( 'Plugin slug of plugin/feature whose settings URL is needed.', 'performance-lab' ),
 					'required'          => true,
 					'validate_callback' => 'perflab_validate_slug_endpoint_arg',
 				),
 			),
-			'callback'            => 'perflab_handle_get_plugin_settings_url',
+			'callback'            => 'perflab_handle_get_feature_information',
 			'permission_callback' => static function () {
 				if ( current_user_can( 'manage_options' ) ) {
 					return true;
@@ -112,7 +112,7 @@ function perflab_validate_slug_endpoint_arg( string $slug ): bool {
 }
 
 /**
- * Handles REST API request to activate plugin.
+ * Handles REST API request to activate plugin/feature.
  *
  * @since n.e.x.t
  * @access private
@@ -122,7 +122,7 @@ function perflab_validate_slug_endpoint_arg( string $slug ): bool {
  * @param WP_REST_Request $request Request.
  * @return WP_REST_Response|WP_Error Response.
  */
-function perflab_handle_activate_plugin( WP_REST_Request $request ) {
+function perflab_handle_feature_activation( WP_REST_Request $request ) {
 	require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 	require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
@@ -145,7 +145,7 @@ function perflab_handle_activate_plugin( WP_REST_Request $request ) {
 }
 
 /**
- * Handles REST API request to get plugin settings URL.
+ * Handles REST API request to get plugin/feature information.
  *
  * @since n.e.x.t
  * @access private
@@ -153,17 +153,15 @@ function perflab_handle_activate_plugin( WP_REST_Request $request ) {
  * @phpstan-param WP_REST_Request<array<string, mixed>> $request
  *
  * @param WP_REST_Request $request Request.
- * @return WP_REST_Response|WP_Error Response.
+ * @return WP_REST_Response Response.
  */
-function perflab_handle_get_plugin_settings_url( WP_REST_Request $request ) {
+function perflab_handle_get_feature_information( WP_REST_Request $request ): WP_REST_Response {
 	$plugin_settings_url = perflab_get_plugin_settings_url( $request['slug'] );
-	if ( null === $plugin_settings_url ) {
-		return new WP_Error(
-			'no_settings_url',
-			__( 'No settings URL', 'performance-lab' ),
-			array( 'status' => 404 )
-		);
-	}
 
-	return new WP_REST_Response( $plugin_settings_url );
+	return new WP_REST_Response(
+		array(
+			'slug'        => $request['slug'],
+			'settingsUrl' => $plugin_settings_url,
+		)
+	);
 }

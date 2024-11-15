@@ -38,11 +38,32 @@
 		const pluginSlug = target.dataset.pluginSlug;
 
 		try {
-			// Activate the plugin via the REST API.
+			// Activate the plugin/feature via the REST API.
 			await apiFetch( {
-				path: `/performance-lab/v1/plugins/${ pluginSlug }:activate`,
+				path: `/performance-lab/v1/features/${ pluginSlug }:activate`,
 				method: 'POST',
 			} );
+
+			// Fetch the plugin/feature information via the REST API.
+			const featureInfo = await apiFetch( {
+				path: `/performance-lab/v1/features/${ pluginSlug }`,
+				method: 'GET',
+			} );
+
+			if ( featureInfo?.settingsUrl ) {
+				const actionButtonList = document.querySelector(
+					`.plugin-card-${ pluginSlug } .plugin-action-buttons`
+				);
+
+				const listItem = document.createElement( 'li' );
+				const anchor = document.createElement( 'a' );
+
+				anchor.href = featureInfo.settingsUrl;
+				anchor.textContent = __( 'Settings', 'performance-lab' );
+
+				listItem.appendChild( anchor );
+				actionButtonList.appendChild( listItem );
+			}
 
 			a11y.speak( __( 'Plugin activated.', 'performance-lab' ) );
 
@@ -55,27 +76,6 @@
 			target.classList.remove( 'updating-message' );
 			target.textContent = __( 'Activate', 'performance-lab' );
 		}
-
-		try {
-			// Fetch the plugin settings URL via the REST API.
-			const settingsResponse = await apiFetch( {
-				path: `/performance-lab/v1/plugin-settings-url/${ pluginSlug }`,
-				method: 'GET',
-			} );
-
-			const actionButtonList = document.querySelector(
-				`.plugin-card-${ pluginSlug } .plugin-action-buttons`
-			);
-
-			const listItem = document.createElement( 'li' );
-			const anchor = document.createElement( 'a' );
-
-			anchor.href = settingsResponse.pluginSettingsURL;
-			anchor.textContent = __( 'Settings', 'performance-lab' );
-
-			listItem.appendChild( anchor );
-			actionButtonList.appendChild( listItem );
-		} catch ( error ) {}
 	}
 
 	// Attach the event listeners.
