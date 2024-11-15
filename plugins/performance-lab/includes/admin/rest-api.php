@@ -134,10 +134,21 @@ function perflab_handle_feature_activation( WP_REST_Request $request ) {
 	// Install and activate the plugin/feature and its dependencies.
 	$result = perflab_install_and_activate_plugin( $request['slug'] );
 	if ( is_wp_error( $result ) ) {
+		switch ( $result->get_error_code() ) {
+			case 'cannot_install_plugin':
+			case 'cannot_activate_plugin':
+				$response_code = rest_authorization_required_code();
+				break;
+			case 'plugin_not_found':
+				$response_code = 404;
+				break;
+			default:
+				$response_code = 500;
+		}
 		return new WP_Error(
-			'plugin_activation_failed',
+			$result->get_error_code(),
 			$result->get_error_message(),
-			array( 'status' => 500 )
+			array( 'status' => $response_code )
 		);
 	}
 
