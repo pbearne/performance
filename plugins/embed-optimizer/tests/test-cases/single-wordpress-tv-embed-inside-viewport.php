@@ -40,10 +40,10 @@ return array(
 				@media (min-width: 601px) and (max-width: 782px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				@media (min-width: 783px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				</style>
-				<link data-od-added-tag rel="preconnect" href="https://video.wordpress.com">
 				<link data-od-added-tag rel="preconnect" href="https://public-api.wordpress.com">
-				<link data-od-added-tag rel="preconnect" href="https://videos.files.wordpress.com">
 				<link data-od-added-tag rel="preconnect" href="https://v0.wordpress.com">
+				<link data-od-added-tag rel="preconnect" href="https://video.wordpress.com">
+				<link data-od-added-tag rel="preconnect" href="https://videos.files.wordpress.com">
 			</head>
 			<body>
 				<figure data-od-added-id id="embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8" class="wp-block-embed is-type-video is-provider-wordpress-tv wp-block-embed-wordpress-tv wp-embed-aspect-16-9 wp-has-aspect-ratio">

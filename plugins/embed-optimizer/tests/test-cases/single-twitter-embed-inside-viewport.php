@@ -39,8 +39,8 @@ return array(
 				@media (min-width: 601px) and (max-width: 782px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				@media (min-width: 783px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				</style>
-				<link data-od-added-tag rel="preconnect" href="https://syndication.twitter.com">
 				<link data-od-added-tag rel="preconnect" href="https://pbs.twimg.com">
+				<link data-od-added-tag rel="preconnect" href="https://syndication.twitter.com">
 			</head>
 			<body>
 				<figure data-od-added-id id="embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8" class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter">

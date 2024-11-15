@@ -38,8 +38,8 @@ return array(
 				@media (min-width: 601px) and (max-width: 782px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				@media (min-width: 783px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
 				</style>
-				<link data-od-added-tag rel="preconnect" href="https://www.youtube.com">
 				<link data-od-added-tag rel="preconnect" href="https://i.ytimg.com">
+				<link data-od-added-tag rel="preconnect" href="https://www.youtube.com">
 			</head>
 			<body>
 				<figure data-od-added-id id="embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8" class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio">
