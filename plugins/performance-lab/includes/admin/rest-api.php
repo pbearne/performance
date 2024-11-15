@@ -74,7 +74,7 @@ function perflab_register_endpoint(): void {
 			'args'                => array(
 				'slug' => array(
 					'type'              => 'string',
-					'description'       => __( 'Plugin slug of plugin/feature whose settings URL is needed.', 'performance-lab' ),
+					'description'       => __( 'Plugin slug of plugin/feature whose information is needed.', 'performance-lab' ),
 					'required'          => true,
 					'validate_callback' => 'perflab_validate_slug_endpoint_arg',
 				),
@@ -85,7 +85,7 @@ function perflab_register_endpoint(): void {
 					return true;
 				}
 
-				return new WP_Error( 'cannot_access_plugin_settings_url', __( 'Sorry, you are not allowed to access plugin settings URL on this site.', 'performance-lab' ) );
+				return new WP_Error( 'cannot_access_plugin_settings_url', __( 'Sorry, you are not allowed to access plugin/feature information on this site.', 'performance-lab' ) );
 			},
 		)
 	);
@@ -127,7 +127,7 @@ function perflab_handle_feature_activation( WP_REST_Request $request ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 	require_once ABSPATH . 'wp-admin/includes/class-wp-ajax-upgrader-skin.php';
 
-	// Install and activate the plugin and its dependencies.
+	// Install and activate the plugin/feature and its dependencies.
 	$result = perflab_install_and_activate_plugin( $request['slug'] );
 	if ( is_wp_error( $result ) ) {
 		return new WP_Error(
