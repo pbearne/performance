@@ -270,6 +270,14 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 **Enhancements**
 
 * Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
+* Bump web-vitals from 4.2.3 to 4.2.4. ([1628](https://github.com/WordPress/performance/pull/1628))
+
+**Bug Fixes**
+
+* Eliminate the detection time window. ([1640](https://github.com/WordPress/performance/pull/1640))
+* Fix phpstan errors. ([1627](https://github.com/WordPress/performance/pull/1627))
+* Revise the use of nonces in requests to store a URL Metric and block cross-origin requests. ([1637](https://github.com/WordPress/performance/pull/1637))
+* Send post ID of queried object or first post in loop in URL Metric storage request to schedule page cache validation. ([1641](https://github.com/WordPress/performance/pull/1641))
 
 = 0.7.0 =
 

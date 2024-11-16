@@ -73,6 +73,17 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 = 3.6.0 =
 
+**Enhancements**
+
+* Add unminified source JS files to builds. ([1643](https://github.com/WordPress/performance/pull/1643))
+* Install and activate Optimization Detective when the Embed Optimizer feature is activated from the Performance screen. ([1644](https://github.com/WordPress/performance/pull/1644))
+* Introduce AVIF header health check. ([1612](https://github.com/WordPress/performance/pull/1612))
+* Use AJAX for activating features / plugins in Performance Lab. ([1646](https://github.com/WordPress/performance/pull/1646))
+
+**Bug Fixes**
+
+* Fix uses of 'Plugin not found' string. ([1651](https://github.com/WordPress/performance/pull/1651))
+
 = 3.5.1 =
 
 **Bug Fixes**
