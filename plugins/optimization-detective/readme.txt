@@ -274,10 +274,10 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 **Bug Fixes**
 
-* Eliminate the detection time window. ([1640](https://github.com/WordPress/performance/pull/1640))
-* Fix phpstan errors. ([1627](https://github.com/WordPress/performance/pull/1627))
+* Eliminate the detection time window which prevented URL Metrics from being gathered when page caching is present. ([1640](https://github.com/WordPress/performance/pull/1640))
 * Revise the use of nonces in requests to store a URL Metric and block cross-origin requests. ([1637](https://github.com/WordPress/performance/pull/1637))
 * Send post ID of queried object or first post in loop in URL Metric storage request to schedule page cache validation. ([1641](https://github.com/WordPress/performance/pull/1641))
+* Fix phpstan errors. ([1627](https://github.com/WordPress/performance/pull/1627))
 
 = 0.7.0 =
 

@@ -75,10 +75,9 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 **Enhancements**
 
-* Add unminified source JS files to builds. ([1643](https://github.com/WordPress/performance/pull/1643))
-* Install and activate Optimization Detective when the Embed Optimizer feature is activated from the Performance screen. ([1644](https://github.com/WordPress/performance/pull/1644))
-* Introduce AVIF header health check. ([1612](https://github.com/WordPress/performance/pull/1612))
 * Use AJAX for activating features / plugins in Performance Lab. ([1646](https://github.com/WordPress/performance/pull/1646))
+* Introduce AVIF header health check. ([1612](https://github.com/WordPress/performance/pull/1612))
+* Install and activate Optimization Detective when the Embed Optimizer feature is activated from the Performance screen. ([1644](https://github.com/WordPress/performance/pull/1644))
 
 **Bug Fixes**
 
