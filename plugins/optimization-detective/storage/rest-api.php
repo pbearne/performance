@@ -101,7 +101,7 @@ add_action( 'rest_api_init', 'od_register_endpoint' );
  * not account for the URL port (although there is a to-do comment committed in core to address this). Additionally,
  * the `is_allowed_http_origin()` function in core for some reason returns a string rather than a boolean.
  *
- * @since n.e.x.t
+ * @since 0.8.0
  * @access private
  *
  * @see is_allowed_http_origin()
@@ -249,7 +249,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
  * This is intended to flush any page cache for the URL after the new URL Metric was submitted so that the optimizations
  * which depend on that URL Metric can start to take effect.
  *
- * @since n.e.x.t
+ * @since 0.8.0
  * @access private
  *
  * @param int $cache_purge_post_id Cache purge post ID.

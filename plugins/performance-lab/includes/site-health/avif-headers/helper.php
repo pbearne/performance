@@ -3,7 +3,7 @@
  * Helper function to detect and test AVIF header information.
  *
  * @package performance-lab
- * @since n.e.x.t
+ * @since 3.6.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Callback for avif_headers test.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  *
  * @return array{label: string, status: string, badge: array{label: string, color: string}, description: string, actions: string, test: string} Result.
  */
@@ -57,7 +57,7 @@ function avif_headers_check_avif_headers_test(): array {
 /**
  * Checks if AVIF headers are enabled.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  *
  * @return bool True if AVIF headers are enabled, false otherwise.
  */
