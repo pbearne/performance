@@ -35,11 +35,45 @@ const sharedConfig = {
 
 // Store plugins that require build process.
 const pluginsWithBuild = [
+	'performance-lab',
 	'embed-optimizer',
 	'image-prioritizer',
 	'optimization-detective',
 	'web-worker-offloading',
 ];
+
+/**
+ * Webpack Config: Performance Lab
+ *
+ * @param {*} env Webpack environment
+ * @return {Object} Webpack configuration
+ */
+const performanceLab = ( env ) => {
+	if ( env.plugin && env.plugin !== 'performance-lab' ) {
+		return defaultBuildConfig;
+	}
+
+	const pluginDir = path.resolve( __dirname, 'plugins/performance-lab' );
+
+	return {
+		...sharedConfig,
+		name: 'performance-lab',
+		plugins: [
+			new CopyWebpackPlugin( {
+				patterns: [
+					{
+						from: `${ pluginDir }/includes/admin/plugin-activate-ajax.js`,
+						to: `${ pluginDir }/includes/admin/plugin-activate-ajax.min.js`,
+					},
+				],
+			} ),
+			new WebpackBar( {
+				name: 'Building Performance Lab Assets',
+				color: '#2196f3',
+			} ),
+		],
+	};
+};
 
 /**
  * Webpack Config: Embed Optimizer
@@ -286,6 +320,7 @@ const buildPlugin = ( env ) => {
 };
 
 module.exports = [
+	performanceLab,
 	embedOptimizer,
 	imagePrioritizer,
 	optimizationDetective,
