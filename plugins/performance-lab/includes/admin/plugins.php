@@ -71,16 +71,29 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		return new WP_Error( 'no_plugins', __( 'No plugins found in the API response.', 'performance-lab' ) );
 	}
 
-	$plugins            = array();
-	$standalone_plugins = array_merge(
-		array_flip( perflab_get_standalone_plugins() ),
-		array( 'optimization-detective' => array() ) // TODO: Programmatically discover the plugin dependencies and add them here. See <https://github.com/WordPress/performance/issues/1616>.
-	);
-	foreach ( $response->plugins as $plugin_data ) {
-		if ( ! isset( $standalone_plugins[ $plugin_data['slug'] ] ) ) {
+	$plugins      = array();
+	$plugin_queue = perflab_get_standalone_plugins();
+
+	// Index the plugins from the API response by their slug for efficient lookup.
+	$plugins_by_slug = array_column( $response->plugins, null, 'slug' );
+
+	// Start processing the plugins using a queue-based approach.
+	while ( ! empty( $plugin_queue ) ) {
+		$current_plugin_slug = array_shift( $plugin_queue );
+
+		if ( isset( $plugins[ $current_plugin_slug ] ) || ! isset( $plugins_by_slug[ $current_plugin_slug ] ) ) {
 			continue;
 		}
-		$plugins[ $plugin_data['slug'] ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		$plugin_data                     = $plugins_by_slug[ $current_plugin_slug ];
+		$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		if ( empty( $plugin_data['requires_plugins'] ) || ! is_array( $plugin_data['requires_plugins'] ) ) {
+			continue;
+		}
+
+		// Enqueue the required plugins slug by adding it to the queue.
+		$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
 	}
 
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
@@ -440,9 +453,8 @@ function perflab_render_plugin_card( array $plugin_data ): void {
 		);
 
 		$action_links[] = sprintf(
-			'<a class="button perflab-install-active-plugin" href="%s" data-plugin-slug="%s">%s</a>',
+			'<a class="button perflab-install-active-plugin" href="%s">%s</a>',
 			esc_url( $url ),
-			esc_attr( $plugin_data['slug'] ),
 			esc_html__( 'Activate', 'default' )
 		);
 	} else {
