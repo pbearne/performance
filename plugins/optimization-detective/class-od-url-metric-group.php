@@ -72,7 +72,9 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 *
 	 * @var array{
 	 *          get_lcp_element?: OD_Element|null,
-	 *          is_complete?: bool
+	 *          is_complete?: bool,
+	 *          get_xpath_elements_map?: array<string, non-empty-array<int, OD_Element>>,
+	 *          get_all_element_max_intersection_ratios?: array<string, float>,
 	 *      }
 	 */
 	private $result_cache = array();
@@ -328,6 +330,10 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * @return array<string, non-empty-array<int, OD_Element>> Keys are XPaths and values are the element instances.
 	 */
 	public function get_xpath_elements_map(): array {
+		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
+			return $this->result_cache[ __FUNCTION__ ];
+		}
+
 		$result = ( function () {
 			$all_elements = array();
 			foreach ( $this->url_metrics as $url_metric ) {
@@ -338,6 +344,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			return $all_elements;
 		} )();
 
+		$this->result_cache[ __FUNCTION__ ] = $result;
 		return $result;
 	}
 
@@ -349,6 +356,10 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * @return array<string, float> Keys are XPaths and values are the intersection ratios.
 	 */
 	public function get_all_element_max_intersection_ratios(): array {
+		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
+			return $this->result_cache[ __FUNCTION__ ];
+		}
+
 		$result = ( function () {
 			$elements_max_intersection_ratios = array();
 			foreach ( $this->get_xpath_elements_map() as $xpath => $elements ) {
@@ -361,6 +372,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			return $elements_max_intersection_ratios;
 		} )();
 
+		$this->result_cache[ __FUNCTION__ ] = $result;
 		return $result;
 	}
 
