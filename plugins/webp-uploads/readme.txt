@@ -62,6 +62,11 @@ By default, the Modern Image Formats plugin will only generate WebP versions of 
 
 = 2.3.0 =
 
+**Enhancements**
+
+* Introduce `webp_uploads_get_file_mime_type` helper function. ([1642](https://github.com/WordPress/performance/pull/1642))
+* Rename `webp_uploads_get_file_mime_type` to `webp_uploads_get_attachment_file_mime_type` to clarify scope. ([1662](https://github.com/WordPress/performance/pull/1662))
+
 **Bug Fixes**
 
 * Fix bug that would prevent uploaded images from being converted to the intended output format when having fallback formats enabled. ([1635](https://github.com/WordPress/performance/pull/1635))
