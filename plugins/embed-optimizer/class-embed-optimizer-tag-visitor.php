@@ -174,7 +174,7 @@ final class Embed_Optimizer_Tag_Visitor {
 
 				foreach ( $preconnect_hrefs as $preconnect_href ) {
 					foreach ( $context->url_metric_group_collection as $group ) {
-						if ( $group->get_element_max_intersection_ratio( $embed_wrapper_xpath ) <= 0 ) {
+						if ( ! ( $group->get_element_max_intersection_ratio( $embed_wrapper_xpath ) > 0.0 ) ) {
 							continue;
 						}
 
