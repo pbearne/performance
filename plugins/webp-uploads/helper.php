@@ -474,11 +474,7 @@ function webp_uploads_get_mime_type_image( int $attachment_id, string $src, stri
  *
  * If checking the file directly fails, the function falls back to the attachment's MIME type.
  *
- * The function attempts to determine the MIME type directly from the file.
- * If that information is unavailable, it uses the MIME type from the attachment metadata.
- * If neither is available, it defaults to an empty string.
- *
- * @since n.e.x.t
+ * @since 2.3.0
  *
  * @param int    $attachment_id The attachment ID.
  * @param string $file          Optional. The path to the file.
