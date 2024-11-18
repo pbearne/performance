@@ -8,13 +8,13 @@
   },
   "dependencies": {
     "@builder.io/partytown": "github:westonruter/partytown#add/wp-i18n-workaround",
-    "web-vitals": "4.2.3"
+    "web-vitals": "4.2.4"
   },
   "devDependencies": {
     "@octokit/rest": "^21.0.2",
-    "@wordpress/env": "^10.10.0",
-    "@wordpress/prettier-config": "^4.9.0",
-    "@wordpress/scripts": "^30.3.0",
+    "@wordpress/env": "^10.11.0",
+    "@wordpress/prettier-config": "^4.11.0",
+    "@wordpress/scripts": "^30.4.0",
     "commander": "12.1.0",
     "copy-webpack-plugin": "^12.0.2",
     "fast-glob": "^3.3.2",
@@ -25,7 +25,7 @@
     "micromatch": "^4.0.8",
     "npm-run-all": "^4.1.5",
     "typescript": "^5.6.3",
-    "webpackbar": "^6.0.1"
+    "webpackbar": "^7.0.0"
   },
   "scripts": {
     "changelog": "./bin/plugin/cli.js changelog",
