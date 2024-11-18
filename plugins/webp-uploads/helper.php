@@ -488,7 +488,7 @@ function webp_uploads_get_attachment_file_mime_type( int $attachment_id, string 
 	if ( '' === $file ) {
 		$file = get_attached_file( $attachment_id, true );
 		// File does not exist.
-		if ( false === $file || ! file_exists( $file ) ) {
+		if ( false === $file ) {
 			return '';
 		}
 	}
