@@ -214,7 +214,7 @@ function perflab_dismiss_wp_pointer_wrapper(): void {
 add_action( 'wp_ajax_dismiss-wp-pointer', 'perflab_dismiss_wp_pointer_wrapper', 0 );
 
 /**
- * Gets the URL to a script or stylesheet.
+ * Gets the path to a script or stylesheet.
  *
  * @since n.e.x.t
  *
@@ -222,12 +222,10 @@ add_action( 'wp_ajax_dismiss-wp-pointer', 'perflab_dismiss_wp_pointer_wrapper', 
  * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
  * @return string URL to script or stylesheet.
  */
-function perflab_get_asset_src( string $src_path, ?string $min_path = null ): string {
-	$dir_url = plugin_dir_url( PERFLAB_MAIN_FILE );
-
+function perflab_get_asset_path( string $src_path, ?string $min_path = null ): string {
 	if ( null === $min_path ) {
 		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
-		$min_path = preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
 	}
 
 	$force_src = false;
@@ -249,10 +247,10 @@ function perflab_get_asset_src( string $src_path, ?string $min_path = null ): st
 	}
 
 	if ( SCRIPT_DEBUG || $force_src ) {
-		return $dir_url . $src_path;
+		return $src_path;
 	}
 
-	return $dir_url . $min_path;
+	return $min_path;
 }
 
 /**
@@ -270,7 +268,7 @@ function perflab_enqueue_features_page_scripts(): void {
 	// Enqueue plugin activate AJAX script and localize script data.
 	wp_enqueue_script(
 		'perflab-plugin-activate-ajax',
-		perflab_get_asset_src( 'includes/admin/plugin-activate-ajax.js' ),
+		plugin_dir_url( PERFLAB_MAIN_FILE ) . perflab_get_asset_path( 'includes/admin/plugin-activate-ajax.js' ),
 		array( 'wp-i18n', 'wp-a11y', 'wp-api-fetch' ),
 		PERFLAB_VERSION,
 		true
