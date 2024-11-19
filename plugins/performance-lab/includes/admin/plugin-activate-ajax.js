@@ -29,6 +29,7 @@
 			return;
 		}
 
+		target.classList.add( 'updating-message' );
 		target.textContent = __( 'Waiting…', 'performance-lab' );
 
 		const pluginSlug = target.dataset.pluginSlug;
@@ -56,7 +57,6 @@
 
 		const { target, pluginSlug } = activationQueue.shift();
 
-		target.classList.add( 'updating-message' );
 		target.textContent = __( 'Activating…', 'performance-lab' );
 
 		a11y.speak( __( 'Activating…', 'performance-lab' ) );
