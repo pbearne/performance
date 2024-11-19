@@ -3,7 +3,7 @@
  * Hook callbacks used for AVIF Headers.
  *
  * @package performance-lab
- * @since n.e.x.t
+ * @since 3.6.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Adds tests to site health.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  *
  * @param array{direct: array<string, array{label: string, test: string}>} $tests Site Health Tests.
  * @return array{direct: array<string, array{label: string, test: string}>} Amended tests.

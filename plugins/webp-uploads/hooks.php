@@ -58,7 +58,7 @@ function webp_uploads_create_sources_property( array $metadata, int $attachment_
 		return $metadata;
 	}
 
-	$mime_type = webp_uploads_get_file_mime_type( $file, $attachment_id );
+	$mime_type = webp_uploads_get_attachment_file_mime_type( $attachment_id, $file );
 	if ( '' === $mime_type ) {
 		return $metadata;
 	}

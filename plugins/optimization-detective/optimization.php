@@ -123,7 +123,7 @@ function od_can_optimize_response(): bool {
 		current_user_can( 'customize' ) ||
 		// Page caching plugins can only reliably be told to invalidate a cached page when a post is available to trigger
 		// the relevant actions on.
-		null !== od_get_cache_purge_post_id()
+		null === od_get_cache_purge_post_id()
 	);
 
 	/**

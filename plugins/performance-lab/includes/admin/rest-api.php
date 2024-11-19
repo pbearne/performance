@@ -3,7 +3,7 @@
  * REST API integration for the plugin.
  *
  * @package performance-lab
- * @since n.e.x.t
+ * @since 3.6.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Namespace for performance-lab REST API.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @var string
  */
 const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
@@ -24,7 +24,7 @@ const PERFLAB_REST_API_NAMESPACE = 'performance-lab/v1';
  * Note the `:activate` art of the endpoint follows Google's guidance in AIP-136 for the use of the POST method in a way
  * that does not strictly follow the standard usage.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @link https://google.aip.dev/136
  * @var string
  */
@@ -33,7 +33,7 @@ const PERFLAB_FEATURES_ACTIVATE_ROUTE = '/features/(?P<slug>[a-z0-9_-]+):activat
 /**
  * Route for fetching plugin/feature information.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @var string
  */
 const PERFLAB_FEATURES_INFORMATION_ROUTE = '/features/(?P<slug>[a-z0-9_-]+)';
@@ -41,7 +41,7 @@ const PERFLAB_FEATURES_INFORMATION_ROUTE = '/features/(?P<slug>[a-z0-9_-]+)';
 /**
  * Registers endpoint for performance-lab REST API.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @access private
  */
 function perflab_register_endpoint(): void {
@@ -102,7 +102,7 @@ add_action( 'rest_api_init', 'perflab_register_endpoint' );
  * Note that an enum is not being used because additional PHP files have to be required to access the necessary functions,
  * and this would not be ideal to do at rest_api_init.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @access private
  *
  * @param string $slug Plugin slug.
@@ -118,7 +118,7 @@ function perflab_validate_slug_endpoint_arg( string $slug ): bool {
 /**
  * Handles REST API request to activate plugin/feature.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @access private
  *
  * @phpstan-param WP_REST_Request<array<string, mixed>> $request
@@ -163,7 +163,7 @@ function perflab_handle_feature_activation( WP_REST_Request $request ) {
 /**
  * Handles REST API request to get plugin/feature information.
  *
- * @since n.e.x.t
+ * @since 3.6.0
  * @access private
  *
  * @phpstan-param WP_REST_Request<array<string, mixed>> $request

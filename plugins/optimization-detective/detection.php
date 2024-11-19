@@ -31,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * a post available for cache purging. As seen in {@see od_can_optimize_response()}, when such a post ID is not
  * available for cache purging then it returns false, as it also does in another case like if is_404().
  *
- * @since n.e.x.t
+ * @since 0.8.0
  * @access private
  *
  * @return int|null Post ID or null if none found.
