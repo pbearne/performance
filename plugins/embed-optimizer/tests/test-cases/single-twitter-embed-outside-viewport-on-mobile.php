@@ -1,12 +1,12 @@
 <?php
 return array(
 	'set_up'   => static function ( Test_Embed_Optimizer_Optimization_Detective $test_case ): void {
-		foreach ( array_merge( od_get_breakpoint_max_widths(), array( 1000 ) ) as $viewport_width ) {
+		foreach ( array_merge( od_get_breakpoint_max_widths(), array( 1000 ) ) as $i => $viewport_width ) {
 			$elements = array(
 				array(
 					'xpath'                     => '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::FIGURE]/*[1][self::DIV]',
 					'isLCP'                     => true,
-					'resizedBoundingClientRect' => array_merge( $test_case->get_sample_dom_rect(), array( 'height' => 500 ) ),
+					'resizedBoundingClientRect' => array_merge( $test_case->get_sample_dom_rect(), array( 'height' => 500 + $i * 100 ) ),
 				),
 			);
 
@@ -17,7 +17,7 @@ return array(
 			}
 
 			$sample_size = od_get_url_metrics_breakpoint_sample_size();
-			for ( $i = 0; $i < $sample_size; $i++ ) {
+			for ( $j = 0; $j < $sample_size; $j++ ) {
 				OD_URL_Metrics_Post_Type::store_url_metric(
 					od_get_url_metrics_slug( od_get_normalized_query_vars() ),
 					$test_case->get_sample_url_metric(
@@ -53,9 +53,9 @@ return array(
 				<title>...</title>
 				<style>
 				@media (max-width: 480px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
-				@media (min-width: 481px) and (max-width: 600px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
-				@media (min-width: 601px) and (max-width: 782px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
-				@media (min-width: 783px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 500px; } }
+				@media (min-width: 481px) and (max-width: 600px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 600px; } }
+				@media (min-width: 601px) and (max-width: 782px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 700px; } }
+				@media (min-width: 783px) { #embed-optimizer-a7659db28ecaa36ddee6ae66857dabd8 { min-height: 800px; } }
 				</style>
 				<link data-od-added-tag rel="preconnect" href="https://pbs.twimg.com" media="(min-width: 481px)">
 				<link data-od-added-tag rel="preconnect" href="https://syndication.twitter.com" media="(min-width: 481px)">
