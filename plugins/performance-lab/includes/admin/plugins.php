@@ -23,14 +23,16 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	$plugins       = get_transient( $transient_key );
 
 	if ( is_array( $plugins ) ) {
-		// If the specific plugin_slug is not in the cache, return an error.
-		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-			return new WP_Error(
-				'plugin_not_found',
-				__( 'Plugin not found in cached API response.', 'performance-lab' )
-			);
+		if ( isset( $plugins[ $plugin_slug ] ) ) {
+			if ( false === $plugins[ $plugin_slug ] ) {
+				// Plugin was requested before and not found.
+				return new WP_Error(
+					'plugin_not_found',
+					__( 'Plugin not found in previous API response.', 'performance-lab' )
+				);
+			}
+			return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 		}
-		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 	}
 
 	$fields = array(
@@ -83,9 +85,14 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		$plugins[ $plugin_data['slug'] ] = wp_array_slice_assoc( $plugin_data, $fields );
 	}
 
+	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
+		// Cache the fact that the plugin was not found.
+		$plugins[ $plugin_slug ] = false;
+	}
+
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
-	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
+	if ( false === $plugins[ $plugin_slug ] ) {
 		return new WP_Error(
 			'plugin_not_found',
 			__( 'Plugin not found in API response.', 'performance-lab' )
