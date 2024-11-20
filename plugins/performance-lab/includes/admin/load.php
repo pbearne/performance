@@ -229,7 +229,7 @@ function perflab_get_asset_path( string $src_path, ?string $min_path = null ): s
 	}
 
 	$force_src = false;
-	if ( WP_DEBUG && ! file_exists( PERFLAB_PLUGIN_DIR_PATH . $min_path ) ) {
+	if ( WP_DEBUG && ! file_exists( trailingslashit( PERFLAB_PLUGIN_DIR_PATH ) . $min_path ) ) {
 		$force_src = true;
 		wp_trigger_error(
 			__FUNCTION__,

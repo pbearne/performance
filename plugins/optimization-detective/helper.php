@@ -64,3 +64,39 @@ function od_render_generator_meta_tag(): void {
 	// Use the plugin slug as it is immutable.
 	echo '<meta name="generator" content="optimization-detective ' . esc_attr( OPTIMIZATION_DETECTIVE_VERSION ) . '">' . "\n";
 }
+
+/**
+ * Gets the path to a script or stylesheet.
+ *
+ * @since n.e.x.t
+ *
+ * @param string      $src_path Source path, relative to plugin root.
+ * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
+ * @return string URL to script or stylesheet.
+ */
+function od_get_asset_path( string $src_path, ?string $min_path = null ): string {
+	if ( null === $min_path ) {
+		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+	}
+
+	$force_src = false;
+	if ( WP_DEBUG && ! file_exists( trailingslashit( __DIR__ ) . $min_path ) ) {
+		$force_src = true;
+		wp_trigger_error(
+			__FUNCTION__,
+			sprintf(
+				/* translators: %s is the minified asset path */
+				__( 'Minified asset has not been built: %s', 'optimization-detective' ),
+				$min_path
+			),
+			E_USER_WARNING
+		);
+	}
+
+	if ( SCRIPT_DEBUG || $force_src ) {
+		return $src_path;
+	}
+
+	return $min_path;
+}
