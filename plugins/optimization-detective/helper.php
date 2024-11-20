@@ -37,7 +37,7 @@ function od_initialize_extensions(): void {
  */
 function od_generate_media_query( ?int $minimum_viewport_width, ?int $maximum_viewport_width ): ?string {
 	if ( is_int( $minimum_viewport_width ) && is_int( $maximum_viewport_width ) && $minimum_viewport_width > $maximum_viewport_width ) {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'The minimum width must be greater than the maximum width.', 'optimization-detective' ), 'Optimization Detective 0.7.0' );
+		_doing_it_wrong( __FUNCTION__, esc_html__( 'The minimum width cannot be greater than the maximum width.', 'optimization-detective' ), 'Optimization Detective 0.7.0' );
 		return null;
 	}
 	$media_attributes = array();

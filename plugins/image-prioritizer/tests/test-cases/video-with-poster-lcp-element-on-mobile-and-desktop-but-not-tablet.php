@@ -88,8 +88,8 @@ return array(
 				<meta charset="utf-8">
 				<title>...</title>
 				<link data-od-added-tag rel="preload" fetchpriority="high" as="image" href="https://example.com/poster.jpg" media="screen and (max-width: 480px)">
-				<link data-od-added-tag rel="preload" fetchpriority="high" as="image" href="https://example.com/tablet-header.jpg" media="screen and (min-width: 481px) and (max-width: 782px)">
 				<link data-od-added-tag rel="preload" fetchpriority="high" as="image" href="https://example.com/poster.jpg" media="screen and (min-width: 783px)">
+				<link data-od-added-tag rel="preload" fetchpriority="high" as="image" href="https://example.com/tablet-header.jpg" media="screen and (min-width: 481px) and (max-width: 782px)">
 			</head>
 			<body>
 				<img data-od-xpath="/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]" class="tablet" src="https://example.com/tablet-header.jpg" alt="Tablet header" width="800" height="600">

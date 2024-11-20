@@ -42,7 +42,7 @@ function embed_optimizer_add_non_optimization_detective_hooks(): void {
  * @param string $optimization_detective_version Current version of the optimization detective plugin.
  */
 function embed_optimizer_init_optimization_detective( string $optimization_detective_version ): void {
-	$required_od_version = '0.7.0';
+	$required_od_version = '0.9.0';
 	if ( version_compare( (string) strtok( $optimization_detective_version, '-' ), $required_od_version, '<' ) ) {
 		add_action(
 			'admin_notices',
