@@ -3,7 +3,7 @@
  * Plugin Name: Image Prioritizer
  * Plugin URI: https://github.com/WordPress/performance/tree/trunk/plugins/image-prioritizer
  * Description: Prioritizes the loading of images and videos based on how visible they are to actual visitors; adds <code>fetchpriority</code> and applies lazy-loading.
- * Requires at least: 6.5
+ * Requires at least: 6.6
  * Requires PHP: 7.2
  * Requires Plugins: optimization-detective
  * Version: 0.2.0

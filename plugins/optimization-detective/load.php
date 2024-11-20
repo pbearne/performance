@@ -3,7 +3,7 @@
  * Plugin Name: Optimization Detective
  * Plugin URI: https://github.com/WordPress/performance/tree/trunk/plugins/optimization-detective
  * Description: Provides an API for leveraging real user metrics to detect optimizations to apply on the frontend to improve page performance.
- * Requires at least: 6.5
+ * Requires at least: 6.6
  * Requires PHP: 7.2
  * Version: 0.8.0
  * Author: WordPress Performance Team
