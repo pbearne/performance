@@ -34,6 +34,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.8.0
  * @access private
  *
+ * @global WP_Query $wp_query WordPress Query object.
+ *
  * @return int|null Post ID or null if none found.
  */
 function od_get_cache_purge_post_id(): ?int {
