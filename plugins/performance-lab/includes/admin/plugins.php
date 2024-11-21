@@ -81,8 +81,15 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
 		$current_plugin_slug = array_shift( $plugin_queue );
 
-		if ( isset( $plugins[ $current_plugin_slug ] ) || ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+		if ( isset( $plugins[ $current_plugin_slug ] ) ) {
 			continue;
+		}
+
+		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found in Performance Lab\'s features / plugins.', 'performance-lab' )
+			);
 		}
 
 		$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
