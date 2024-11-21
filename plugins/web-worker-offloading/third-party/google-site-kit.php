@@ -26,6 +26,10 @@ function plwwo_google_site_kit_configure( $configuration ): array {
 	$configuration['globalFns'][] = 'gtag'; // Because gtag() is defined in one script and called in another.
 	$configuration['forward'][]   = 'dataLayer.push'; // Because the Partytown integration has this in its example config.
 
+	// See <https://github.com/google/site-kit-wp/blob/440dcd6e8289a8776acc60ecb3c13f99bfd0ac5a/includes/Core/Consent_Mode/Consent_Mode.php#L239-L240>.
+	$configuration['mainWindowAccessors'][] = '_googlesitekitConsentCategoryMap';
+	$configuration['mainWindowAccessors'][] = '_googlesitekitConsents';
+
 	return $configuration;
 }
 add_filter( 'plwwo_configuration', 'plwwo_google_site_kit_configure' );
@@ -35,3 +39,23 @@ plwwo_mark_scripts_for_offloading(
 		'google_gtagjs',
 	)
 );
+
+/**
+ * Filters inline script attributes to offload Rank Math's GTag script tag to Partytown.
+ *
+ * @since n.e.x.t
+ * @access private
+ * @link https://github.com/rankmath/seo-by-rank-math/blob/c78adba6f78079f27ff1430fabb75c6ac3916240/includes/modules/analytics/class-gtag.php#L169-L174
+ *
+ * @param array|mixed $attributes Script attributes.
+ * @return array|mixed Filtered inline script attributes.
+ */
+function plwwo_google_site_kit_filter_inline_script_attributes( $attributes ) {
+	if ( isset( $attributes['id'] ) && 'google_gtagjs-js-consent-mode-data-layer' === $attributes['id'] ) {
+		wp_enqueue_script( 'web-worker-offloading' );
+		$attributes['type'] = 'text/partytown';
+	}
+	return $attributes;
+}
+
+add_filter( 'wp_inline_script_attributes', 'plwwo_google_site_kit_filter_inline_script_attributes' );
