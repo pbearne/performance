@@ -2,7 +2,7 @@
 
 Contributors: wordpressdotorg
 Tested up to: 6.7
-Stable tag:   0.7.0
+Stable tag:   0.8.0
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Tags:         performance, optimization, rum
@@ -219,6 +219,18 @@ add_filter(
 
 See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L128-L144) in Embed Optimizer. Note in particular the structure of the plugin’s [detect.js](https://github.com/WordPress/performance/blob/trunk/plugins/embed-optimizer/detect.js) script module, how it exports `initialize` and `finalize` functions which Optimization Detective then calls when the page loads and when the page unloads, at which time the URL Metric is constructed and sent to the server for storage. Refer also to the [TypeScript type definitions](https://github.com/WordPress/performance/blob/trunk/plugins/optimization-detective/types.ts).
 
+**Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
+
+Fires whenever a URL Metric was successfully stored.
+
+The supplied context object includes these properties:
+
+* `$request`: The `WP_REST_Request` for storing the URL Metric.
+* `$post_id`: The post ID for the `od_url_metric` post.
+* `$url_metric`: The newly-stored URL Metric.
+* `$url_metric_group`: The viewport group that the URL Metric was added to.
+* `$url_metric_group_collection`: The `OD_URL_Metric_Group_Collection` instance to which the URL Metric was added.
+
 == Installation ==
 
 = Installation from within WordPress =
@@ -253,11 +265,19 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 == Changelog ==
 
-= n.e.x.t =
+= 0.8.0 =
 
 **Enhancements**
 
 * Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
+* Bump web-vitals from 4.2.3 to 4.2.4. ([1628](https://github.com/WordPress/performance/pull/1628))
+
+**Bug Fixes**
+
+* Eliminate the detection time window which prevented URL Metrics from being gathered when page caching is present. ([1640](https://github.com/WordPress/performance/pull/1640))
+* Revise the use of nonces in requests to store a URL Metric and block cross-origin requests. ([1637](https://github.com/WordPress/performance/pull/1637))
+* Send post ID of queried object or first post in loop in URL Metric storage request to schedule page cache validation. ([1641](https://github.com/WordPress/performance/pull/1641))
+* Fix phpstan errors. ([1627](https://github.com/WordPress/performance/pull/1627))
 
 = 0.7.0 =
 

@@ -87,7 +87,7 @@ jobs:
           fi
       - name: Upload single site coverage reports to Codecov
         if: ${{ matrix.coverage == true }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage-${{ github.sha }}.xml
@@ -96,7 +96,7 @@ jobs:
           fail_ci_if_error: true
       - name: Upload multisite coverage reports to Codecov
         if: ${{ matrix.coverage == true }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage-multisite-${{ github.sha }}.xml

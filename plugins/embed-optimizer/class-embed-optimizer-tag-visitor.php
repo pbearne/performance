@@ -81,6 +81,7 @@ final class Embed_Optimizer_Tag_Visitor {
 	 * Otherwise, if the embed is not in any initial viewport, it will add lazy-loading logic.
 	 *
 	 * @since 0.2.0
+	 * @since n.e.x.t Adds preconnect links for each viewport group and skips if the element is not in the viewport for that group.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 * @return bool Whether the tag should be tracked in URL Metrics.
@@ -109,7 +110,8 @@ final class Embed_Optimizer_Tag_Visitor {
 			&&
 			$context->url_metric_group_collection->get_last_group()->count() > 0
 		) {
-			$max_intersection_ratio = $context->url_metric_group_collection->get_element_max_intersection_ratio( self::get_embed_wrapper_xpath( $processor->get_xpath() ) );
+			$embed_wrapper_xpath    = self::get_embed_wrapper_xpath( $processor->get_xpath() );
+			$max_intersection_ratio = $context->url_metric_group_collection->get_element_max_intersection_ratio( $embed_wrapper_xpath );
 			if ( $max_intersection_ratio > 0 ) {
 				/*
 				 * The following embeds have been chosen for optimization due to their relative popularity among all embed types.
@@ -171,12 +173,20 @@ final class Embed_Optimizer_Tag_Visitor {
 				}
 
 				foreach ( $preconnect_hrefs as $preconnect_href ) {
-					$context->link_collection->add_link(
-						array(
-							'rel'  => 'preconnect',
-							'href' => $preconnect_href,
-						)
-					);
+					foreach ( $context->url_metric_group_collection as $group ) {
+						if ( ! ( $group->get_element_max_intersection_ratio( $embed_wrapper_xpath ) > 0.0 ) ) {
+							continue;
+						}
+
+						$context->link_collection->add_link(
+							array(
+								'rel'  => 'preconnect',
+								'href' => $preconnect_href,
+							),
+							$group->get_minimum_viewport_width(),
+							$group->get_maximum_viewport_width()
+						);
+					}
 				}
 			} elseif ( embed_optimizer_update_markup( $processor, false ) && ! $this->added_lazy_script ) {
 				$processor->append_body_html( wp_get_inline_script_tag( embed_optimizer_get_lazy_load_script(), array( 'type' => 'module' ) ) );

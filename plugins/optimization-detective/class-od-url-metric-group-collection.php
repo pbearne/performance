@@ -461,9 +461,9 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 		$result = ( function () {
 			$all_elements = array();
 			foreach ( $this->groups as $group ) {
-				foreach ( $group as $url_metric ) {
-					foreach ( $url_metric->get_elements() as $element ) {
-						$all_elements[ $element->get_xpath() ][] = $element;
+				foreach ( $group->get_xpath_elements_map() as $xpath => $elements ) {
+					foreach ( $elements as $element ) {
+						$all_elements[ $xpath ][] = $element;
 					}
 				}
 			}
@@ -488,12 +488,13 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 
 		$result = ( function () {
 			$elements_max_intersection_ratios = array();
-			foreach ( $this->get_xpath_elements_map() as $xpath => $elements ) {
-				$element_intersection_ratios = array();
-				foreach ( $elements as $element ) {
-					$element_intersection_ratios[] = $element->get_intersection_ratio();
+			foreach ( $this->groups as $group ) {
+				foreach ( $group->get_all_element_max_intersection_ratios() as $xpath => $element_max_intersection_ratio ) {
+					$elements_max_intersection_ratios[ $xpath ] = (float) max(
+						$elements_max_intersection_ratios[ $xpath ] ?? 0,
+						$element_max_intersection_ratio
+					);
 				}
-				$elements_max_intersection_ratios[ $xpath ] = (float) max( $element_intersection_ratios );
 			}
 			return $elements_max_intersection_ratios;
 		} )();

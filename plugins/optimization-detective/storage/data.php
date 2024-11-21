@@ -145,39 +145,40 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
- * @since n.e.x.t
+ * @since 0.8.0
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
+ * @todo This should also include an ETag as a parameter. See <https://github.com/WordPress/performance/issues/1466>.
  *
- * @param string $slug Slug (hash of normalized query vars).
- * @param string $url  URL.
- *
+ * @param string   $slug                Slug (hash of normalized query vars).
+ * @param string   $url                 URL.
+ * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return string HMAC.
  */
-function od_get_url_metrics_storage_hmac( string $slug, string $url ): string {
-	$action = "store_url_metric:$slug:$url";
+function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache_purge_post_id = null ): string {
+	$action = "store_url_metric:$slug:$url:$cache_purge_post_id";
 	return wp_hash( $action, 'nonce' );
 }
 
 /**
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
- * @since n.e.x.t
+ * @since 0.8.0
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
- * @param string $hmac HMAC.
- * @param string $slug Slug (hash of normalized query vars).
- * @param String $url  URL.
- *
+ * @param string   $hmac                HMAC.
+ * @param string   $slug                Slug (hash of normalized query vars).
+ * @param String   $url                 URL.
+ * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url ): bool {
-	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url ), $hmac );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url, ?int $cache_purge_post_id = null ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id ), $hmac );
 }
 
 /**

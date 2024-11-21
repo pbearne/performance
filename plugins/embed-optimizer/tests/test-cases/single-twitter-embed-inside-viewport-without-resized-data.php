@@ -33,8 +33,8 @@ return array(
 			<head>
 				<meta charset="utf-8">
 				<title>...</title>
-				<link data-od-added-tag rel="preconnect" href="https://syndication.twitter.com">
 				<link data-od-added-tag rel="preconnect" href="https://pbs.twimg.com">
+				<link data-od-added-tag rel="preconnect" href="https://syndication.twitter.com">
 			</head>
 			<body>
 				<figure class="wp-block-embed is-type-rich is-provider-twitter wp-block-embed-twitter">

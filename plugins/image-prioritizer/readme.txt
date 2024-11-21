@@ -62,12 +62,6 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 == Changelog ==
 
-= n.e.x.t =
-
-**Enhancements**
-
-* Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
-
 = 0.2.0 =
 
 **Enhancements**
