@@ -37,6 +37,7 @@ add_filter( 'plwwo_configuration', 'plwwo_google_site_kit_configure' );
 plwwo_mark_scripts_for_offloading(
 	array(
 		'google_gtagjs',
+		'googlesitekit-consent-mode',
 	)
 );
 
