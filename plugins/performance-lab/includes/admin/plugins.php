@@ -75,25 +75,23 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	$plugin_queue = perflab_get_standalone_plugins();
 
 	// Index the plugins from the API response by their slug for efficient lookup.
-	$plugins_by_slug = array_column( $response->plugins, null, 'slug' );
+	$all_performance_plugins = array_column( $response->plugins, null, 'slug' );
 
 	// Start processing the plugins using a queue-based approach.
-	while ( ! empty( $plugin_queue ) ) {
+	while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
 		$current_plugin_slug = array_shift( $plugin_queue );
 
-		if ( isset( $plugins[ $current_plugin_slug ] ) || ! isset( $plugins_by_slug[ $current_plugin_slug ] ) ) {
+		if ( isset( $plugins[ $current_plugin_slug ] ) || ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
 			continue;
 		}
 
-		$plugin_data                     = $plugins_by_slug[ $current_plugin_slug ];
+		$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
 		$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
 
-		if ( empty( $plugin_data['requires_plugins'] ) || ! is_array( $plugin_data['requires_plugins'] ) ) {
-			continue;
-		}
-
 		// Enqueue the required plugins slug by adding it to the queue.
-		$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+		if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
+			$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+		}
 	}
 
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
