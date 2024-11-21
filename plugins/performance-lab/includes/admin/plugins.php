@@ -88,7 +88,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
 			return new WP_Error(
 				'plugin_not_found',
-				__( 'Plugin not found in Performance Lab\'s features / plugins.', 'performance-lab' )
+				__( 'Plugin not found in WordPress.org API response.', 'performance-lab' )
 			);
 		}
 
