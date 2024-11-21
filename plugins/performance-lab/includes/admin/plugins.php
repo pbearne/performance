@@ -71,16 +71,34 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		return new WP_Error( 'no_plugins', __( 'No plugins found in the API response.', 'performance-lab' ) );
 	}
 
-	$plugins            = array();
-	$standalone_plugins = array_merge(
-		array_flip( perflab_get_standalone_plugins() ),
-		array( 'optimization-detective' => array() ) // TODO: Programmatically discover the plugin dependencies and add them here. See <https://github.com/WordPress/performance/issues/1616>.
-	);
-	foreach ( $response->plugins as $plugin_data ) {
-		if ( ! isset( $standalone_plugins[ $plugin_data['slug'] ] ) ) {
+	$plugins      = array();
+	$plugin_queue = perflab_get_standalone_plugins();
+
+	// Index the plugins from the API response by their slug for efficient lookup.
+	$all_performance_plugins = array_column( $response->plugins, null, 'slug' );
+
+	// Start processing the plugins using a queue-based approach.
+	while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
+		$current_plugin_slug = array_shift( $plugin_queue );
+
+		if ( isset( $plugins[ $current_plugin_slug ] ) ) {
 			continue;
 		}
-		$plugins[ $plugin_data['slug'] ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found in WordPress.org API response.', 'performance-lab' )
+			);
+		}
+
+		$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
+		$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		// Enqueue the required plugins slug by adding it to the queue.
+		if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
+			$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+		}
 	}
 
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
