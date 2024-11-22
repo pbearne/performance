@@ -58,7 +58,7 @@ function webp_uploads_create_sources_property( array $metadata, int $attachment_
 		return $metadata;
 	}
 
-	$mime_type = webp_uploads_get_file_mime_type( $file, $attachment_id );
+	$mime_type = webp_uploads_get_attachment_file_mime_type( $attachment_id, $file );
 	if ( '' === $mime_type ) {
 		return $metadata;
 	}
@@ -780,3 +780,29 @@ function webp_uploads_init(): void {
 	}
 }
 add_action( 'init', 'webp_uploads_init' );
+
+/**
+ * Automatically opt into extra image sizes when generating fallback images.
+ *
+ * @since n.e.x.t
+ *
+ * @global array $_wp_additional_image_sizes Associative array of additional image sizes.
+ */
+function webp_uploads_opt_in_extra_image_sizes(): void {
+	if ( ! webp_uploads_is_fallback_enabled() ) {
+		return;
+	}
+
+	global $_wp_additional_image_sizes;
+
+	// Modify global to mimic the "hypothetical" WP core API behavior via an additional `add_image_size()` parameter.
+
+	if ( isset( $_wp_additional_image_sizes['1536x1536'] ) && ! isset( $_wp_additional_image_sizes['1536x1536']['provide_additional_mime_types'] ) ) {
+		$_wp_additional_image_sizes['1536x1536']['provide_additional_mime_types'] = true; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+	}
+
+	if ( isset( $_wp_additional_image_sizes['2048x2048'] ) && ! isset( $_wp_additional_image_sizes['2048x2048']['provide_additional_mime_types'] ) ) {
+		$_wp_additional_image_sizes['2048x2048']['provide_additional_mime_types'] = true; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+	}
+}
+add_action( 'plugins_loaded', 'webp_uploads_opt_in_extra_image_sizes' );
