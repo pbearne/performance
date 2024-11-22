@@ -347,7 +347,8 @@ export default async function detect( {
 			extensions.set( extensionModuleUrl, extension );
 			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args. It's important to pass webVitalsLibrarySrc to the extension so that onLCP, onCLS, or onINP can be obtained.
 			if ( extension.initialize instanceof Function ) {
-				extension.initialize( { isDebug } );
+				// TODO: Should initialize be an async function like finalize is? Probably not because we do not want to wait for it.
+				extension.initialize( { isDebug, webVitalsLibrarySrc } );
 			}
 		} catch ( err ) {
 			error(

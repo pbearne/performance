@@ -30,6 +30,7 @@ export interface URLMetricGroupStatus {
 
 export type InitializeArgs = {
 	readonly isDebug: boolean;
+	readonly webVitalsLibrarySrc: string;
 };
 
 export type InitializeCallback = ( args: InitializeArgs ) => void;
