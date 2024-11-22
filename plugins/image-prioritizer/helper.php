@@ -95,3 +95,50 @@ function image_prioritizer_get_lazy_load_script(): string {
 
 	return $script;
 }
+
+/**
+ * Filters the list of Optimization Detective extension module URLs to include the extension for Image Prioritizer.
+ *
+ * @since n.e.x.t
+ *
+ * @param string[]|mixed $extension_module_urls Extension module URLs.
+ * @return string[] Extension module URLs.
+ */
+function image_prioritizer_filter_extension_module_urls( $extension_module_urls ): array {
+	if ( ! is_array( $extension_module_urls ) ) {
+		$extension_module_urls = array();
+	}
+	$extension_module_urls[] = add_query_arg( 'ver', IMAGE_PRIORITIZER_VERSION, plugin_dir_url( __FILE__ ) . sprintf( 'detect%s.js', wp_scripts_get_suffix() ) );
+	return $extension_module_urls;
+}
+
+/**
+ * Filters additional properties for the element item schema for Optimization Detective.
+ *
+ * @since n.e.x.t
+ *
+ * @param array<string, array{type: string}> $additional_properties Additional properties.
+ * @return array<string, array{type: string}> Additional properties.
+ */
+function image_prioritizer_add_element_item_schema_properties( array $additional_properties ): array {
+	// TODO: Validation of the URL.
+	$additional_properties['lcpElementExternalBackgroundImage'] = array(
+		'type'       => 'object',
+		'properties' => array_fill_keys(
+			array(
+				'url',
+				'tagName',
+				'parentTagName',
+				'id',
+				'className',
+			),
+			array(
+				// TODO: Add constraints on length.
+				// TODO: Add constraints on formats and patterns.
+				'type'     => 'string',
+				'required' => true,
+			)
+		),
+	);
+	return $additional_properties;
+}

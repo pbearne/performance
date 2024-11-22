@@ -1,0 +1,164 @@
+/**
+ * Image Prioritizer module for Optimization Detective
+ *
+ * TODO: Description.
+ */
+
+const consoleLogPrefix = '[Image Prioritizer]';
+
+/**
+ * Detected LCP external background image candidates.
+ *
+ * @type {Array<{url: string, tagName: string, parentTagName: string, id: string, className: string}>}
+ */
+const externalBackgroundImages = [];
+
+/**
+ * @typedef {import("web-vitals").LCPMetric} LCPMetric
+ * @typedef {import("../optimization-detective/types.ts").InitializeCallback} InitializeCallback
+ * @typedef {import("../optimization-detective/types.ts").InitializeArgs} InitializeArgs
+ * @typedef {import("../optimization-detective/types.ts").FinalizeArgs} FinalizeArgs
+ * @typedef {import("../optimization-detective/types.ts").FinalizeCallback} FinalizeCallback
+ */
+
+/**
+ * Logs a message.
+ *
+ * @since n.e.x.t
+ *
+ * @param {...*} message
+ */
+function log( ...message ) {
+	// eslint-disable-next-line no-console
+	console.log( consoleLogPrefix, ...message );
+}
+
+/**
+ * Initializes extension.
+ *
+ * @since n.e.x.t
+ *
+ * @type {InitializeCallback}
+ * @param {InitializeArgs} args Args.
+ */
+export function initialize( { isDebug, webVitalsLibrarySrc } ) {
+	import( webVitalsLibrarySrc ).then( ( { onLCP } ) => {
+		onLCP(
+			( /** @type {LCPMetric} */ metric ) => {
+				handleLCPMetric( metric, isDebug );
+			},
+			{
+				// This avoids needing to click to finalize LCP candidate. While this is helpful for testing, it also
+				// ensures that we always get an LCP candidate reported. Otherwise, the callback may never fire if the
+				// user never does a click or keydown, per <https://github.com/GoogleChrome/web-vitals/blob/07f6f96/src/onLCP.ts#L99-L107>.
+				reportAllChanges: true,
+			}
+		);
+	} );
+}
+
+/**
+ * Gets the performance resource entry for a given URL.
+ *
+ * @since n.e.x.t
+ *
+ * @param {string} url - Resource URL.
+ * @return {PerformanceResourceTiming|null} Resource entry or null.
+ */
+function getPerformanceResourceByURL( url ) {
+	const entries =
+		/** @type PerformanceResourceTiming[] */ performance.getEntriesByType(
+			'resource'
+		);
+	for ( const entry of entries ) {
+		if ( entry.name === url ) {
+			return entry;
+		}
+	}
+	return null;
+}
+
+/**
+ * Handles a new LCP metric being reported.
+ *
+ * @since n.e.x.t
+ *
+ * @param {LCPMetric} metric  - LCP Metric.
+ * @param {boolean}   isDebug - Whether in debug mode.
+ */
+function handleLCPMetric( metric, isDebug ) {
+	for ( const entry of metric.entries ) {
+		// Look only for LCP entries that have a URL and a corresponding element which is not an IMG or VIDEO.
+		if (
+			! entry.url ||
+			! ( entry.element instanceof HTMLElement ) ||
+			entry.element instanceof HTMLImageElement ||
+			entry.element instanceof HTMLVideoElement
+		) {
+			continue;
+		}
+
+		// Always ignore data: URLs.
+		if ( entry.url.startsWith( 'data:' ) ) {
+			continue;
+		}
+
+		// Skip elements that have the background image defined inline.
+		// These are handled by Image_Prioritizer_Background_Image_Styled_Tag_Visitor.
+		if ( entry.element.style.backgroundImage ) {
+			continue;
+		}
+
+		// Now only consider proceeding with the URL if its loading was initiated with CSS.
+		const resourceEntry = getPerformanceResourceByURL( entry.url );
+		if ( ! resourceEntry || resourceEntry.initiatorType !== 'css' ) {
+			return;
+		}
+
+		// The id and className allow the tag visitor to detect whether the element is still in the document.
+		// This is used instead of having a full XPath which is likely not available since the tag visitor would not
+		// know to return true for this element since it has no awareness of which elements have external backgrounds.
+		const externalBackgroundImage = {
+			url: entry.url,
+			tagName: entry.element.tagName,
+			parentTagName: entry.element.parentElement.tagName,
+			id: entry.id,
+			className: entry.element.className,
+		};
+
+		if ( isDebug ) {
+			log(
+				'Detected external LCP background image:',
+				externalBackgroundImage
+			);
+		}
+
+		externalBackgroundImages.push( externalBackgroundImage );
+	}
+}
+
+/**
+ * Finalizes extension.
+ *
+ * @since n.e.x.t
+ *
+ * @type {FinalizeCallback}
+ * @param {FinalizeArgs} args Args.
+ */
+export async function finalize( { extendRootData, isDebug } ) {
+	if ( externalBackgroundImages.length === 0 ) {
+		return;
+	}
+
+	// Get the last detected external background image which is going to be for the LCP element (or very likely will be).
+	const lcpElementExternalBackgroundImage = externalBackgroundImages.pop();
+
+	if ( isDebug ) {
+		log(
+			'Sending external background image for LCP element:',
+			lcpElementExternalBackgroundImage
+		);
+	}
+
+	extendRootData( { lcpElementExternalBackgroundImage } );
+}
