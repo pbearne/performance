@@ -372,7 +372,9 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 		// Replace new Plugin_Installer_Skin with new Quiet_Upgrader_Skin when output needs to be suppressed.
 		$skin     = new WP_Ajax_Upgrader_Skin( array( 'api' => $plugin_data ) );
 		$upgrader = new Plugin_Upgrader( $skin );
-		$result   = $upgrader->install( $plugin_data['download_link'] );
+		// Remove the version number from the link to download the latest plugin version.
+		$download_link = (string) preg_replace( '#(\/plugin\/[^\/]+)\.\d+\.\d+\.\d+\.zip#', '$1.zip', $plugin_data['download_link'] );
+		$result        = $upgrader->install( $download_link );
 
 		if ( is_wp_error( $result ) ) {
 			return $result;
