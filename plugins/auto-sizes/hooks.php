@@ -183,11 +183,8 @@ function auto_sizes_prime_attachment_caches( $content ): string {
 	return $content;
 }
 
-/*
- * The priority 6 is used to ensure the new filter runs right after the "wp-image-$attachment_id" class
- * is added to the img tag at priority 5, allowing modifications that rely on this class being in place.
- */
-add_filter( 'the_content', 'auto_sizes_prime_attachment_caches', 6 );
+// This must run before 'do_blocks', which runs at priority 9.
+add_filter( 'the_content', 'auto_sizes_prime_attachment_caches', 9 );
 
 /**
  * Filter the sizes attribute for images to improve the default calculation.
