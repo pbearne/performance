@@ -251,7 +251,7 @@ add_filter( 'render_block_core/image', 'auto_sizes_filter_image_tag', 10, 3 );
 add_filter( 'render_block_core/cover', 'auto_sizes_filter_image_tag', 10, 3 );
 
 /**
- * Hypothetical function to calculate better sizes.
+ * Modifies the sizes attribute of an image based on layout context.
  *
  * @param int    $id           The image id.
  * @param string $size         The image size data.
