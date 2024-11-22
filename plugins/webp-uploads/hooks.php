@@ -724,7 +724,7 @@ function webp_uploads_get_image_sizes_additional_mime_type_support(): array {
 			$allowed_sizes[ $size ] = (bool) $size_details['provide_additional_mime_types'];
 		} else {
 			// If 'provide_additional_mime_types' is not set, use the fallback all sizes setting.
-			$allowed_sizes[ $size ] = webp_uploads_is_fallback_all_sizes_enabled();
+			$allowed_sizes[ $size ] = webp_uploads_should_generate_all_fallback_sizes();
 		}
 	}
 
@@ -771,7 +771,7 @@ function webp_uploads_render_generator(): void {
 	// Use the plugin slug as it is immutable.
 	echo '<meta name="generator" content="webp-uploads ' . esc_attr( WEBP_UPLOADS_VERSION ) . '">' . "\n";
 
-	if ( webp_uploads_is_fallback_all_sizes_enabled() ) {
+	if ( webp_uploads_should_generate_all_fallback_sizes() ) {
 		echo '<meta name="generator" content="webp-uploads-fallback-all-sizes ' . esc_attr( WEBP_UPLOADS_VERSION ) . '">' . "\n";
 	}
 }
