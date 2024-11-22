@@ -719,13 +719,7 @@ function webp_uploads_get_image_sizes_additional_mime_type_support(): array {
 	);
 
 	foreach ( $additional_sizes as $size => $size_details ) {
-		if ( isset( $size_details['provide_additional_mime_types'] ) ) {
-			// Give priority to the 'provide_additional_mime_types' property.
-			$allowed_sizes[ $size ] = (bool) $size_details['provide_additional_mime_types'];
-		} else {
-			// If 'provide_additional_mime_types' is not set, use the fallback all sizes setting.
-			$allowed_sizes[ $size ] = webp_uploads_should_generate_all_fallback_sizes();
-		}
+		$allowed_sizes[ $size ] = ! empty( $size_details['provide_additional_mime_types'] );
 	}
 
 	/**
@@ -816,3 +810,25 @@ function webp_uploads_opt_in_extra_image_sizes(): void {
 	}
 }
 add_action( 'plugins_loaded', 'webp_uploads_opt_in_extra_image_sizes' );
+
+/**
+ * Enables additional MIME type support for all image sizes based on the generate all fallback sizes settings.
+ *
+ * @since n.e.x.t
+ *
+ * @param array<string, bool> $allowed_sizes A map of image size names and whether they are allowed to have additional MIME types.
+ *
+ * @return array<string, bool> Modified map of image sizes with additional MIME type support.
+ */
+function webp_uploads_enable_additional_mime_type_support_for_all_sizes( array $allowed_sizes ): array {
+	if ( ! webp_uploads_should_generate_all_fallback_sizes() ) {
+		return $allowed_sizes;
+	}
+
+	foreach ( array_keys( $allowed_sizes ) as $size ) {
+		$allowed_sizes[ $size ] = true;
+	}
+
+	return $allowed_sizes;
+}
+add_filter( 'webp_uploads_image_sizes_with_additional_mime_type_support', 'webp_uploads_enable_additional_mime_type_support_for_all_sizes' );
