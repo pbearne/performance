@@ -28,7 +28,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 				// Plugin was requested before and not found.
 				return new WP_Error(
 					'plugin_not_found',
-					__( 'Plugin not found in API response.', 'performance-lab' )
+					__( 'Plugin not found in cached API response.', 'performance-lab' )
 				);
 			}
 			return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
@@ -88,6 +88,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		}
 
 		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+			// Cache the fact that the plugin was not found.
 			$plugins[ $current_plugin_slug ] = false;
 			continue;
 		}
