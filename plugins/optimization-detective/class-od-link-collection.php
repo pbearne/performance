@@ -130,18 +130,29 @@ final class OD_Link_Collection implements Countable {
 	 */
 	private function merge_consecutive_links( array $links ): array {
 
-		// Ensure links are sorted by the minimum_viewport_width.
 		usort(
 			$links,
 			/**
 			 * Comparator.
+			 *
+			 * The links are sorted first by the 'href' attribute to group identical URLs together.
+			 * If the 'href' attributes are the same, the links are then sorted by 'minimum_viewport_width'.
 			 *
 			 * @param Link $a First link.
 			 * @param Link $b Second link.
 			 * @return int Comparison result.
 			 */
 			static function ( array $a, array $b ): int {
-				return $a['minimum_viewport_width'] <=> $b['minimum_viewport_width'];
+				// Get href values, defaulting to empty string if not present.
+				$href_a = $a['attributes']['href'] ?? '';
+				$href_b = $b['attributes']['href'] ?? '';
+
+				$href_comparison = strcmp( $href_a, $href_b );
+				if ( 0 === $href_comparison ) {
+					return $a['minimum_viewport_width'] <=> $b['minimum_viewport_width'];
+				}
+
+				return $href_comparison;
 			}
 		);
 

@@ -273,7 +273,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 			$this->open_stack_tags    = array();
 			$this->open_stack_indices = array();
 
-			// Mark that the end of the document was reached, meaning that get_modified_html() can should now be able to append markup to the HEAD and the BODY.
+			// Mark that the end of the document was reached, meaning that get_modified_html() should now be able to append markup to the HEAD and the BODY.
 			$this->reached_end_of_document = true;
 			return false;
 		}
