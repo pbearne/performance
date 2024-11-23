@@ -9,7 +9,7 @@ const consoleLogPrefix = '[Image Prioritizer]';
 /**
  * Detected LCP external background image candidates.
  *
- * @type {Array<{url: string, tagName: string, parentTagName: string, id: string, className: string}>}
+ * @type {Array<{url: string, tag: string, id: string, class: string}>}
  */
 const externalBackgroundImages = [];
 
@@ -111,8 +111,38 @@ function handleLCPMetric( metric, isDebug ) {
 
 		// Now only consider proceeding with the URL if its loading was initiated with CSS.
 		const resourceEntry = getPerformanceResourceByURL( entry.url );
-		if ( ! resourceEntry || resourceEntry.initiatorType !== 'css' ) {
+		if (
+			! resourceEntry ||
+			! [ 'css', 'link' ].includes( resourceEntry.initiatorType ) // TODO: When is it css and when is it link?
+		) {
+			if ( isDebug ) {
+				// eslint-disable-next-line no-console
+				console.warn(
+					consoleLogPrefix,
+					'Skipped considering URL do due to resource initiatorType:',
+					entry.url,
+					resourceEntry.initiatorType
+				);
+			}
 			return;
+		}
+
+		// Skip URLs that are excessively long. This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
+		if ( entry.url.length > 500 ) {
+			if ( isDebug ) {
+				log( `Skipping very long URL: ${ entry.url }` );
+			}
+			return;
+		}
+
+		// Note that getAttribute() is used instead of properties so that null can be returned in case of an absent attribute.
+		let id = entry.element.getAttribute( 'id' );
+		if ( null !== id ) {
+			id = id.substring( 0, 100 ); // This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
+		}
+		let className = entry.element.getAttribute( 'class' );
+		if ( null !== className ) {
+			className = className.substring( 0, 500 ); // This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
 		}
 
 		// The id and className allow the tag visitor to detect whether the element is still in the document.
@@ -120,10 +150,9 @@ function handleLCPMetric( metric, isDebug ) {
 		// know to return true for this element since it has no awareness of which elements have external backgrounds.
 		const externalBackgroundImage = {
 			url: entry.url,
-			tagName: entry.element.tagName,
-			parentTagName: entry.element.parentElement.tagName,
-			id: entry.id,
-			className: entry.element.className,
+			tag: entry.element.tagName,
+			id,
+			class: className,
 		};
 
 		if ( isDebug ) {

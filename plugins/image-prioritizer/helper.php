@@ -124,20 +124,29 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 	// TODO: Validation of the URL.
 	$additional_properties['lcpElementExternalBackgroundImage'] = array(
 		'type'       => 'object',
-		'properties' => array_fill_keys(
-			array(
-				'url',
-				'tagName',
-				'parentTagName',
-				'id',
-				'className',
+		'properties' => array(
+			'url'   => array(
+				'type'      => 'string',
+				'format'    => 'uri',
+				'required'  => true,
+				'maxLength' => 500, // Image URLs can be quite long.
 			),
-			array(
-				// TODO: Add constraints on length.
-				// TODO: Add constraints on formats and patterns.
-				'type'     => 'string',
-				'required' => true,
-			)
+			'tag'   => array(
+				'type'      => 'string',
+				'required'  => true,
+				'minLength' => 1,
+				'pattern'   => '^[a-zA-Z0-9\-]+$', // Technically emoji can be allowed in a custom element's tag name, but this is not supported here.
+			),
+			'id'    => array(
+				'type'      => array( 'string', 'null' ),
+				'maxLength' => 100, // A reasonable upper-bound length for a long ID. The client will must truncate anything longer.
+				'required'  => true,
+			),
+			'class' => array(
+				'type'      => array( 'string', 'null' ),
+				'maxLength' => 500, // There can be a ton of class names on an element. The client will must truncate anything longer.
+				'required'  => true,
+			),
 		),
 	);
 	return $additional_properties;
