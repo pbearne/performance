@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * When a URL Metric expires it is eligible to be replaced by a newer one if its viewport lies within the same breakpoint.
  *
  * @since 0.1.0
+ * @since n.e.x.t The freshness TTL is set to zero when in 'plugin' development mode.
  * @access private
  *
  * @return int Expiration TTL in seconds.
@@ -31,7 +32,7 @@ function od_get_url_metric_freshness_ttl(): int {
 	 *
 	 * @param int $ttl Expiration TTL in seconds. Defaults to 1 day.
 	 */
-	$freshness_ttl = (int) apply_filters( 'od_url_metric_freshness_ttl', DAY_IN_SECONDS );
+	$freshness_ttl = (int) apply_filters( 'od_url_metric_freshness_ttl', wp_is_development_mode( 'plugin' ) ? 0 : DAY_IN_SECONDS );
 
 	if ( $freshness_ttl < 0 ) {
 		_doing_it_wrong(
@@ -315,6 +316,7 @@ function od_get_breakpoint_max_widths(): array {
  * total of 6 URL Metrics stored for a given URL: 3 for mobile and 3 for desktop.
  *
  * @since 0.1.0
+ * @since n.e.x.t The sample size is set to 1 when in 'plugin' development mode.
  * @access private
  *
  * @return int Sample size.
@@ -329,7 +331,7 @@ function od_get_url_metrics_breakpoint_sample_size(): int {
 	 *
 	 * @param int $sample_size Sample size. Defaults to 3.
 	 */
-	$sample_size = (int) apply_filters( 'od_url_metrics_breakpoint_sample_size', 3 );
+	$sample_size = (int) apply_filters( 'od_url_metrics_breakpoint_sample_size', wp_is_development_mode( 'plugin' ) ? 1 : 3 );
 
 	if ( $sample_size <= 0 ) {
 		_doing_it_wrong(
