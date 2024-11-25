@@ -14,7 +14,12 @@ const consoleLogPrefix = '[Image Prioritizer]';
 /**
  * Detected LCP external background image candidates.
  *
- * @type {Array<{url: string, tag: string, id: string, class: string}>}
+ * @type {Array<{
+ *     url: string,
+ *     tag: string,
+ *     id: string|null,
+ *     class: string|null,
+ * }>}
  */
 const externalBackgroundImages = [];
 
