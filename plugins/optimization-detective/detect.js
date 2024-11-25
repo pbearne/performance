@@ -360,13 +360,14 @@ export default async function detect( {
 			extensions.set( extensionModuleUrl, extension );
 			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args.
 			if ( extension.initialize instanceof Function ) {
-				extensionInitializePromises.push(
-					extension.initialize( {
-						isDebug,
-						webVitalsLibrarySrc,
-					} )
-				);
-				initializingExtensionModuleUrls.push( extensionModuleUrl );
+				const initializePromise = extension.initialize( {
+					isDebug,
+					webVitalsLibrarySrc,
+				} );
+				if ( initializePromise instanceof Promise ) {
+					extensionInitializePromises.push( initializePromise );
+					initializingExtensionModuleUrls.push( extensionModuleUrl );
+				}
 			}
 		} catch ( err ) {
 			error(
@@ -564,16 +565,19 @@ export default async function detect( {
 		] of extensions.entries() ) {
 			if ( extension.finalize instanceof Function ) {
 				try {
-					extensionFinalizePromises.push(
-						extension.finalize( {
-							isDebug,
-							getRootData,
-							getElementData,
-							extendElementData,
-							extendRootData,
-						} )
-					);
-					finalizingExtensionModuleUrls.push( extensionModuleUrl );
+					const finalizePromise = extension.finalize( {
+						isDebug,
+						getRootData,
+						getElementData,
+						extendElementData,
+						extendRootData,
+					} );
+					if ( finalizePromise instanceof Promise ) {
+						extensionFinalizePromises.push( finalizePromise );
+						finalizingExtensionModuleUrls.push(
+							extensionModuleUrl
+						);
+					}
 				} catch ( err ) {
 					error(
 						`Unable to start finalizing extension '${ extensionModuleUrl }':`,
