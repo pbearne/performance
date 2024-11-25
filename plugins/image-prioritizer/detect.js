@@ -1,7 +1,12 @@
 /**
  * Image Prioritizer module for Optimization Detective
  *
- * TODO: Description.
+ * This extension to Optimization Detective captures the LCP element's CSS background image which is not defined with
+ * an inline style attribute but rather in either an external stylesheet loaded with a LINK tag or by stylesheet in
+ * a STYLE element. The URL for this LCP background image and the tag's name, ID, and class are all amended to the
+ * stored URL Metric so that a responsive preload link with fetchpriority=high will be added for that background image
+ * once a URL Metric group is fully populated with URL Metrics that all agree on that being the LCP image, and if the
+ * document has a tag with the same name, ID, and class.
  */
 
 const consoleLogPrefix = '[Image Prioritizer]';
@@ -31,6 +36,18 @@ const externalBackgroundImages = [];
 function log( ...message ) {
 	// eslint-disable-next-line no-console
 	console.log( consoleLogPrefix, ...message );
+}
+
+/**
+ * Logs a warning.
+ *
+ * @since n.e.x.t
+ *
+ * @param {...*} message
+ */
+function warn( ...message ) {
+	// eslint-disable-next-line no-console
+	console.warn( consoleLogPrefix, ...message );
 }
 
 /**
@@ -109,19 +126,16 @@ function handleLCPMetric( metric, isDebug ) {
 			continue;
 		}
 
-		// Now only consider proceeding with the URL if its loading was initiated with CSS.
+		// Now only consider proceeding with the URL if its loading was initiated with stylesheet or preload link.
 		const resourceEntry = getPerformanceResourceByURL( entry.url );
 		if (
 			! resourceEntry ||
-			! [ 'css', 'link' ].includes( resourceEntry.initiatorType ) // TODO: When is it css and when is it link?
+			! [ 'css', 'link' ].includes( resourceEntry.initiatorType )
 		) {
 			if ( isDebug ) {
-				// eslint-disable-next-line no-console
-				console.warn(
-					consoleLogPrefix,
-					'Skipped considering URL do due to resource initiatorType:',
-					entry.url,
-					resourceEntry.initiatorType
+				warn(
+					`Skipped considering URL (${ entry.url }) due to unexpected performance resource timing entry:`,
+					resourceEntry
 				);
 			}
 			return;
