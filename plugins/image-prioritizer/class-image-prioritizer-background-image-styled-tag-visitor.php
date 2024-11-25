@@ -31,7 +31,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	 *
 	 * @var array<array{OD_URL_Metric_Group, LcpElementExternalBackgroundImage}>
 	 */
-	private $group_common_lcp_element_external_background_images = array();
+	private $group_common_lcp_element_external_background_images;
 
 	/**
 	 * Visits a tag.
@@ -121,15 +121,15 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	 * @param OD_Tag_Visitor_Context $context Context.
 	 */
 	private function maybe_preload_external_lcp_background_image( OD_Tag_Visitor_Context $context ): void {
-		static $did_collect_data = false;
-		if ( false === $did_collect_data ) {
+		// Gather the tuples of URL Metric group and the common LCP element external background image.
+		if ( ! is_array( $this->group_common_lcp_element_external_background_images ) ) {
+			$this->group_common_lcp_element_external_background_images = array();
 			foreach ( $context->url_metric_group_collection as $group ) {
 				$common = $this->get_common_lcp_element_external_background_image( $group );
 				if ( is_array( $common ) ) {
 					$this->group_common_lcp_element_external_background_images[] = array( $group, $common );
 				}
 			}
-			$did_collect_data = true;
 		}
 
 		// There are no common LCP background images, so abort.
