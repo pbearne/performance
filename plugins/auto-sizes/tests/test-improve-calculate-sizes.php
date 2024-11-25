@@ -6,7 +6,7 @@
  * @group   improve-calculate-sizes
  */
 
-class Tests_Improve_Sizes extends WP_UnitTestCase {
+class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 
 	/**
 	 * Attachment ID.
