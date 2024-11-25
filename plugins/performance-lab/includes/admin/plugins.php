@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 2.8.0
  *
  * @param string $plugin_slug The string identifier for the plugin in questions slug.
- * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}|WP_Error Array of plugin data or WP_Error if failed.
+ * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], version: string}|WP_Error Array of plugin data or WP_Error if failed.
  */
 function perflab_query_plugin_info( string $plugin_slug ) {
 	$transient_key = 'perflab_plugins_info';
@@ -40,7 +40,6 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		'requires',
 		'requires_php',
 		'requires_plugins',
-		'download_link',
 		'version', // Needed by install_plugin_install_status().
 	);
 
@@ -113,7 +112,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	/**
 	 * Validated (mostly) plugin data.
 	 *
-	 * @var array<string, array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}> $plugins
+	 * @var array<string, array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], version: string}> $plugins
 	 */
 	return $plugins[ $plugin_slug ];
 }
