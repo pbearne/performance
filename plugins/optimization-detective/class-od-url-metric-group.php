@@ -24,12 +24,16 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * URL Metrics.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @var OD_URL_Metric[]
 	 */
 	private $url_metrics;
 
 	/**
 	 * Minimum possible viewport width for the group (inclusive).
+	 *
+	 * @since 0.1.0
 	 *
 	 * @var int
 	 * @phpstan-var 0|positive-int
@@ -39,6 +43,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Maximum possible viewport width for the group (inclusive).
 	 *
+	 * @since 0.1.0
+	 *
 	 * @var int
 	 * @phpstan-var positive-int
 	 */
@@ -46,6 +52,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 	/**
 	 * Sample size for URL Metrics for a given breakpoint.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @var int
 	 * @phpstan-var positive-int
@@ -55,6 +63,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Freshness age (TTL) for a given URL Metric.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @var int
 	 * @phpstan-var 0|positive-int
 	 */
@@ -63,12 +73,16 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Collection that this instance belongs to.
 	 *
+	 * @since 0.3.0
+	 *
 	 * @var OD_URL_Metric_Group_Collection|null
 	 */
 	private $collection;
 
 	/**
 	 * Result cache.
+	 *
+	 * @since 0.3.0
 	 *
 	 * @var array{
 	 *          get_lcp_element?: OD_Element|null,
@@ -146,6 +160,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the minimum possible viewport width (inclusive).
 	 *
+	 * @since 0.1.0
+	 *
 	 * @todo Eliminate in favor of readonly public property.
 	 * @return int<0, max> Minimum viewport width.
 	 */
@@ -156,6 +172,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the maximum possible viewport width (inclusive).
 	 *
+	 * @since 0.1.0
+	 *
 	 * @todo Eliminate in favor of readonly public property.
 	 * @return int<1, max> Minimum viewport width.
 	 */
@@ -165,6 +183,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 	/**
 	 * Gets the sample size for URL Metrics for a given breakpoint.
+	 *
+	 * @since n.e.x.t
 	 *
 	 * @todo Eliminate in favor of readonly public property.
 	 * @phpstan-return positive-int
@@ -177,8 +197,9 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the freshness age (TTL) for a given URL Metric.
 	 *
-	 * @todo Eliminate in favor of readonly public property.
+	 * @since n.e.x.t
 	 *
+	 * @todo Eliminate in favor of readonly public property.
 	 * @phpstan-return 0|positive-int
 	 * @return int Freshness age.
 	 */
@@ -187,7 +208,9 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	}
 
 	/**
-	 * Checks whether the provided viewport width is within the minimum/maximum range for
+	 * Checks whether the provided viewport width is within the minimum/maximum range for.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @param int $viewport_width Viewport width.
 	 * @return bool Whether the viewport width is in range.
@@ -201,6 +224,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 	/**
 	 * Adds a URL Metric to the group.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @throws InvalidArgumentException If the viewport width of the URL Metric is not within the min/max bounds of the group.
 	 *
@@ -243,6 +268,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * A group is complete if it has the full sample size of URL Metrics
 	 * and all of these URL Metrics are fresh.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return bool Whether complete.
 	 */
 	public function is_complete(): bool {
@@ -270,6 +297,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 	/**
 	 * Gets the LCP element in the viewport group.
+	 *
+	 * @since 0.3.0
 	 *
 	 * @return OD_Element|null LCP element data or null if not available, either because there are no URL Metrics or
 	 *                          the LCP element type is not supported.
@@ -414,6 +443,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Returns an iterator for the URL Metrics in the group.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @return ArrayIterator<int, OD_URL_Metric> ArrayIterator for OD_URL_Metric instances.
 	 */
 	public function getIterator(): ArrayIterator {
@@ -422,6 +453,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 	/**
 	 * Counts the URL Metrics in the group.
+	 *
+	 * @since 0.1.0
 	 *
 	 * @return int<0, max> URL Metric count.
 	 */
