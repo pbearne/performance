@@ -58,20 +58,19 @@ function warn( ...message ) {
  * @type {InitializeCallback}
  * @param {InitializeArgs} args Args.
  */
-export function initialize( { isDebug, webVitalsLibrarySrc } ) {
-	import( webVitalsLibrarySrc ).then( ( { onLCP } ) => {
-		onLCP(
-			( /** @type {LCPMetric} */ metric ) => {
-				handleLCPMetric( metric, isDebug );
-			},
-			{
-				// This avoids needing to click to finalize LCP candidate. While this is helpful for testing, it also
-				// ensures that we always get an LCP candidate reported. Otherwise, the callback may never fire if the
-				// user never does a click or keydown, per <https://github.com/GoogleChrome/web-vitals/blob/07f6f96/src/onLCP.ts#L99-L107>.
-				reportAllChanges: true,
-			}
-		);
-	} );
+export async function initialize( { isDebug, webVitalsLibrarySrc } ) {
+	const { onLCP } = await import( webVitalsLibrarySrc );
+	onLCP(
+		( /** @type {LCPMetric} */ metric ) => {
+			handleLCPMetric( metric, isDebug );
+		},
+		{
+			// This avoids needing to click to finalize LCP candidate. While this is helpful for testing, it also
+			// ensures that we always get an LCP candidate reported. Otherwise, the callback may never fire if the
+			// user never does a click or keydown, per <https://github.com/GoogleChrome/web-vitals/blob/07f6f96/src/onLCP.ts#L99-L107>.
+			reportAllChanges: true,
+		}
+	);
 }
 
 /**

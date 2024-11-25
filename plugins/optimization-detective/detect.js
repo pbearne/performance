@@ -346,20 +346,44 @@ export default async function detect( {
 
 	/** @type {Map<string, Extension>} */
 	const extensions = new Map();
+
+	/** @type {Promise[]} */
+	const extensionInitializePromises = [];
+
 	for ( const extensionModuleUrl of extensionModuleUrls ) {
 		try {
 			/** @type {Extension} */
 			const extension = await import( extensionModuleUrl );
 			extensions.set( extensionModuleUrl, extension );
-			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args. It's important to pass webVitalsLibrarySrc to the extension so that onLCP, onCLS, or onINP can be obtained.
+			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args.
 			if ( extension.initialize instanceof Function ) {
-				// TODO: Should initialize be an async function like finalize is? Probably not because we do not want to wait for it.
-				extension.initialize( { isDebug, webVitalsLibrarySrc } );
+				extensionInitializePromises.push(
+					extension.initialize( {
+						isDebug,
+						webVitalsLibrarySrc,
+					} )
+				);
 			}
 		} catch ( err ) {
 			error(
 				`Failed to initialize extension '${ extensionModuleUrl }':`,
 				err
+			);
+		}
+	}
+
+	// Wait for all extensions to finish initializing.
+	const settledInitializePromises = await Promise.allSettled(
+		extensionInitializePromises
+	);
+	for ( const [
+		i,
+		settledInitializePromise,
+	] of settledInitializePromises.entries() ) {
+		if ( settledInitializePromise.status === 'rejected' ) {
+			error(
+				`Failed to initialize extension '${ extensionModuleUrls[ i ] }':`,
+				settledInitializePromise.reason
 			);
 		}
 	}

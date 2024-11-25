@@ -33,7 +33,7 @@ export type InitializeArgs = {
 	readonly webVitalsLibrarySrc: string;
 };
 
-export type InitializeCallback = ( args: InitializeArgs ) => void;
+export type InitializeCallback = ( args: InitializeArgs ) => Promise< void >;
 
 export type FinalizeArgs = {
 	readonly getRootData: () => URLMetric;
