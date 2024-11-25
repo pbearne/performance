@@ -164,6 +164,29 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	}
 
 	/**
+	 * Gets the sample size for URL Metrics for a given breakpoint.
+	 *
+	 * @todo Eliminate in favor of readonly public property.
+	 * @phpstan-return positive-int
+	 * @return int Sample size.
+	 */
+	public function get_sample_size(): int {
+		return $this->sample_size;
+	}
+
+	/**
+	 * Gets the freshness age (TTL) for a given URL Metric.
+	 *
+	 * @todo Eliminate in favor of readonly public property.
+	 *
+	 * @phpstan-return 0|positive-int
+	 * @return int Freshness age.
+	 */
+	public function get_freshness_ttl(): int {
+		return $this->freshness_ttl;
+	}
+
+	/**
 	 * Checks whether the provided viewport width is within the minimum/maximum range for
 	 *
 	 * @param int $viewport_width Viewport width.

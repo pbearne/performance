@@ -89,8 +89,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		// If the group is not fully populated, we don't have enough URL Metrics to reliably know whether the background image is consistent across page loads.
 		// This is intentionally not using $group->is_complete() because we still will use stale URL Metrics in the calculation.
-		// TODO: There should be a $group->get_sample_size() method.
-		if ( $group->count() !== od_get_url_metrics_breakpoint_sample_size() ) {
+		if ( $group->count() !== $group->get_sample_size() ) {
 			return null;
 		}
 
