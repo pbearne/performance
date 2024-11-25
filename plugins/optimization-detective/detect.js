@@ -350,6 +350,9 @@ export default async function detect( {
 	/** @type {Promise[]} */
 	const extensionInitializePromises = [];
 
+	/** @type {string[]} */
+	const initializingExtensionModuleUrls = [];
+
 	for ( const extensionModuleUrl of extensionModuleUrls ) {
 		try {
 			/** @type {Extension} */
@@ -363,10 +366,11 @@ export default async function detect( {
 						webVitalsLibrarySrc,
 					} )
 				);
+				initializingExtensionModuleUrls.push( extensionModuleUrl );
 			}
 		} catch ( err ) {
 			error(
-				`Failed to initialize extension '${ extensionModuleUrl }':`,
+				`Failed to start initializing extension '${ extensionModuleUrl }':`,
 				err
 			);
 		}
@@ -382,7 +386,7 @@ export default async function detect( {
 	] of settledInitializePromises.entries() ) {
 		if ( settledInitializePromise.status === 'rejected' ) {
 			error(
-				`Failed to initialize extension '${ extensionModuleUrls[ i ] }':`,
+				`Failed to initialize extension '${ initializingExtensionModuleUrls[ i ] }':`,
 				settledInitializePromise.reason
 			);
 		}
@@ -548,25 +552,50 @@ export default async function detect( {
 	}
 
 	if ( extensions.size > 0 ) {
+		/** @type {Promise[]} */
+		const extensionFinalizePromises = [];
+
+		/** @type {string[]} */
+		const finalizingExtensionModuleUrls = [];
+
 		for ( const [
 			extensionModuleUrl,
 			extension,
 		] of extensions.entries() ) {
 			if ( extension.finalize instanceof Function ) {
 				try {
-					await extension.finalize( {
-						isDebug,
-						getRootData,
-						getElementData,
-						extendElementData,
-						extendRootData,
-					} );
+					extensionFinalizePromises.push(
+						extension.finalize( {
+							isDebug,
+							getRootData,
+							getElementData,
+							extendElementData,
+							extendRootData,
+						} )
+					);
+					finalizingExtensionModuleUrls.push( extensionModuleUrl );
 				} catch ( err ) {
 					error(
-						`Unable to finalize module '${ extensionModuleUrl }':`,
+						`Unable to start finalizing extension '${ extensionModuleUrl }':`,
 						err
 					);
 				}
+			}
+		}
+
+		// Wait for all extensions to finish finalizing.
+		const settledFinalizePromises = await Promise.allSettled(
+			extensionFinalizePromises
+		);
+		for ( const [
+			i,
+			settledFinalizePromise,
+		] of settledFinalizePromises.entries() ) {
+			if ( settledFinalizePromise.status === 'rejected' ) {
+				error(
+					`Failed to finalize extension '${ finalizingExtensionModuleUrls[ i ] }':`,
+					settledFinalizePromise.reason
+				);
 			}
 		}
 	}
