@@ -139,12 +139,12 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 			),
 			'id'    => array(
 				'type'      => array( 'string', 'null' ),
-				'maxLength' => 100, // A reasonable upper-bound length for a long ID. The client will must truncate anything longer.
+				'maxLength' => 100, // A reasonable upper-bound length for a long ID.
 				'required'  => true,
 			),
 			'class' => array(
 				'type'      => array( 'string', 'null' ),
-				'maxLength' => 500, // There can be a ton of class names on an element. The client will must truncate anything longer.
+				'maxLength' => 500, // There can be a ton of class names on an element.
 				'required'  => true,
 			),
 		),

@@ -164,13 +164,19 @@ function handleLCPMetric( metric, isDebug ) {
 		}
 
 		// Note that getAttribute() is used instead of properties so that null can be returned in case of an absent attribute.
-		let id = entry.element.getAttribute( 'id' );
-		if ( null !== id ) {
-			id = id.substring( 0, 100 ); // This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
+		const id = entry.element.getAttribute( 'id' );
+		if ( typeof id === 'string' && id.length > 100 ) {
+			if ( isDebug ) {
+				log( `Skipping very long ID: ${ id }` );
+			}
+			return;
 		}
-		let className = entry.element.getAttribute( 'class' );
-		if ( null !== className ) {
-			className = className.substring( 0, 500 ); // This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
+		const className = entry.element.getAttribute( 'class' );
+		if ( typeof className === 'string' && className.length > 500 ) {
+			if ( isDebug ) {
+				log( `Skipping very long className: ${ className }` );
+			}
+			return;
 		}
 
 		// The id and className allow the tag visitor to detect whether the element is still in the document.
