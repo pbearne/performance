@@ -764,10 +764,6 @@ add_filter( 'wp_editor_set_quality', 'webp_uploads_modify_webp_quality', 10, 2 )
 function webp_uploads_render_generator(): void {
 	// Use the plugin slug as it is immutable.
 	echo '<meta name="generator" content="webp-uploads ' . esc_attr( WEBP_UPLOADS_VERSION ) . '">' . "\n";
-
-	if ( webp_uploads_should_generate_all_fallback_sizes() ) {
-		echo '<meta name="generator" content="webp-uploads-fallback-all-sizes ' . esc_attr( WEBP_UPLOADS_VERSION ) . '">' . "\n";
-	}
 }
 add_action( 'wp_head', 'webp_uploads_render_generator' );
 
