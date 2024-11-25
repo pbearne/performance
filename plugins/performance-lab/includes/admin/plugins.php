@@ -22,17 +22,15 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	$transient_key = 'perflab_plugins_info';
 	$plugins       = get_transient( $transient_key );
 
-	if ( is_array( $plugins ) ) {
-		if ( isset( $plugins[ $plugin_slug ] ) ) {
-			if ( false === $plugins[ $plugin_slug ] ) {
-				// Plugin was requested before and not found.
-				return new WP_Error(
-					'plugin_not_found',
-					__( 'Plugin not found in cached API response.', 'performance-lab' )
-				);
-			}
-			return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
+	if ( is_array( $plugins ) && isset( $plugins[ $plugin_slug ] ) ) {
+		if ( isset( $plugins[ $plugin_slug ]['error'] ) ) {
+			// Plugin was requested before and not found.
+			return new WP_Error(
+				$plugins[ $plugin_slug ]['error']['code'],
+				$plugins[ $plugin_slug ]['error']['message']
+			);
 		}
+		return $plugins[ $plugin_slug ]; // Return cached plugin info if found.
 	}
 
 	$fields = array(
@@ -89,7 +87,12 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 
 		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
 			// Cache the fact that the plugin was not found.
-			$plugins[ $current_plugin_slug ] = false;
+			$plugins[ $current_plugin_slug ] = array(
+				'error' => array(
+					'code'    => 'plugin_not_found',
+					'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
+				),
+			);
 			continue;
 		}
 
@@ -104,15 +107,20 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 
 	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
 		// Cache the fact that the plugin was not found.
-		$plugins[ $plugin_slug ] = false;
+		$plugins[ $plugin_slug ] = array(
+			'error' => array(
+				'code'    => 'plugin_not_found',
+				'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
+			),
+		);
 	}
 
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
-	if ( false === $plugins[ $plugin_slug ] ) {
+	if ( isset( $plugins[ $plugin_slug ]['error'] ) ) {
 		return new WP_Error(
-			'plugin_not_found',
-			__( 'Plugin not found in API response.', 'performance-lab' )
+			$plugins[ $plugin_slug ]['error']['code'],
+			$plugins[ $plugin_slug ]['error']['message']
 		);
 	}
 
