@@ -148,6 +148,16 @@ function handleLCPMetric( metric, isDebug ) {
 			return;
 		}
 
+		// Also skip Custom Elements which have excessively long tag names.
+		if ( entry.element.tagName.length > 25 ) {
+			if ( isDebug ) {
+				log(
+					`Skipping very long tag name: ${ entry.element.tagName }`
+				);
+			}
+			return;
+		}
+
 		// Note that getAttribute() is used instead of properties so that null can be returned in case of an absent attribute.
 		let id = entry.element.getAttribute( 'id' );
 		if ( null !== id ) {
