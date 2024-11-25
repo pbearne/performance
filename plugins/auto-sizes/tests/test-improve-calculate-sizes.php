@@ -385,4 +385,69 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( '<p>No image here</p>', $result );
 	}
+
+	/**
+	 * Test that the layout property of a group block is passed by context to the image block.
+	 *
+	 * @group test
+	 */
+	public function test_ancestor_layout_is_passed_by_context(): void {
+		$block_content = $this->get_group_block_markup(
+			$this->get_image_block_markup( self::$image_id, 'large', 'full' )
+		);
+
+		$result = apply_filters( 'the_content', $block_content );
+
+		$this->assertStringContainsString( 'sizes="(max-width: 620px) 100vw, 620px" ', $result );
+	}
+
+
+	/**
+	 * Helper to generate image block markup.
+	 *
+	 * @param int    $attachment_id Attachment ID.
+	 * @param string $size          Optional. Image size. Default 'full'.
+	 * @param string $align         Optional.  Image alignment. Default null.
+	 * @return string Image block markup.
+	 */
+	public function get_image_block_markup( int $attachment_id, string $size = 'full', string $align = null ): string {
+		$image_url = wp_get_attachment_image_url( $attachment_id, $size );
+
+		$atts = wp_parse_args(
+			array(
+				'id'       => $attachment_id,
+				'sizeSlug' => $size,
+				'align'    => $align,
+			),
+			array(
+				'id'              => $attachment_id,
+				'sizeSlug'        => 'large',
+				'linkDestination' => 'none',
+			)
+		);
+
+		return '<!-- wp:image ' . wp_json_encode( $atts ) . ' --><figure class="wp-block-image size-' . $size . '"><img src="' . $image_url . '" alt="" class="wp-image-' . $attachment_id . '"/></figure><!-- /wp:image -->';
+	}
+
+	/**
+	 * Helper to generate group block markup.
+	 *
+	 * @param string       $content Block content.
+	 * @param array<mixed> $atts    Optional. Block attributes. Default empty array.
+	 * @return string Group block markup.
+	 */
+	public function get_group_block_markup( string $content, array $atts = array() ): string {
+		$atts = wp_parse_args(
+			$atts,
+			array(
+				'layout' => array(
+					'type' => 'constrained',
+				),
+			)
+		);
+
+		return '<!-- wp:group ' . wp_json_encode( $atts ) . ' -->
+		<div class="wp-block-group">' . $content . '</div>
+		<!-- /wp:group -->';
+	}
 }
