@@ -66,10 +66,14 @@ function od_get_cache_purge_post_id(): ?int {
  * @since 0.1.0
  * @access private
  *
+ * @global string $od_etag ETag for the current environment.
+ *
  * @param string                         $slug             URL Metrics slug.
  * @param OD_URL_Metric_Group_Collection $group_collection URL Metric group collection.
  */
 function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $group_collection ): string {
+	global $od_etag;
+
 	$web_vitals_lib_data = require __DIR__ . '/build/web-vitals.asset.php';
 	$web_vitals_lib_src  = add_query_arg( 'ver', $web_vitals_lib_data['version'], plugin_dir_url( __FILE__ ) . 'build/web-vitals.js' );
 
@@ -85,12 +89,14 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 	$cache_purge_post_id = od_get_cache_purge_post_id();
 
 	$current_url = od_get_current_url();
+
 	$detect_args = array(
 		'minViewportAspectRatio' => od_get_minimum_viewport_aspect_ratio(),
 		'maxViewportAspectRatio' => od_get_maximum_viewport_aspect_ratio(),
 		'isDebug'                => WP_DEBUG,
 		'extensionModuleUrls'    => $extension_module_urls,
 		'restApiEndpoint'        => rest_url( OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE ),
+		'currentETag'            => $od_etag,
 		'currentUrl'             => $current_url,
 		'urlMetricSlug'          => $slug,
 		'cachePurgePostId'       => od_get_cache_purge_post_id(),

@@ -13,6 +13,7 @@ export interface ElementData {
 export type ExtendedElementData = ExcludeProps< ElementData >;
 
 export interface URLMetric {
+	eTag: string;
 	url: string;
 	viewport: {
 		width: number;

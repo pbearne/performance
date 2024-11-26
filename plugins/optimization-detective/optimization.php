@@ -217,6 +217,19 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	$tag_visitor_context  = new OD_Tag_Visitor_Context( $processor, $group_collection, $link_collection );
 	$current_tag_bookmark = 'optimization_detective_current_tag';
 	$visitors             = iterator_to_array( $tag_visitor_registry );
+
+	/**
+	 * ETag generated for the current environment.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @global string $od_etag
+	 */
+	global $od_etag;
+
+	// Generate and store an ETag consisting of all the tag visitors' IDs in the current environment.
+	$od_etag = implode( ',', array_keys( $visitors ) );
+
 	do {
 		$tracked_in_url_metrics = false;
 		$processor->set_bookmark( $current_tag_bookmark ); // TODO: Should we break if this returns false?

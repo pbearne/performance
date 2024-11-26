@@ -100,3 +100,21 @@ function od_get_asset_path( string $src_path, ?string $min_path = null ): string
 
 	return $min_path;
 }
+
+/**
+ * Adds optional URL Metric schema root properties.
+ *
+ * @since n.e.x.t
+ *
+ * @param array<string, array{type: string}> $additional_properties Additional properties.
+ * @return array<string, array{type: string}> Additional properties.
+ */
+function od_add_optional_url_metric_schema_root_properties( array $additional_properties ): array {
+	// The ETag is being kept optional for now so as to avoid invalidating all current URL Metrics.
+	$additional_properties['eTag'] = array(
+		'description' => __( 'The ETag for the URL Metric.', 'optimization-detective' ),
+		'type'        => 'string',
+	);
+
+	return $additional_properties;
+}
