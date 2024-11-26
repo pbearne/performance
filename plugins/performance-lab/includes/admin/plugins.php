@@ -347,7 +347,9 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 		array(
 			'slug'   => $plugin_slug,
 			'fields' => array(
-				'sections' => false,
+				'download_link'    => true,
+				'requires_plugins' => true,
+				'sections'         => false, // Omit the bulk of the response which we don't need.
 			),
 		)
 	);
