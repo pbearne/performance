@@ -23,7 +23,6 @@ final class OD_Storage_Lock {
 	 * Gets the TTL (in seconds) for the URL Metric storage lock.
 	 *
 	 * @since 0.1.0
-	 * @since n.e.x.t The TTL is zero when in 'plugin' development mode.
 	 * @access private
 	 *
 	 * @return int TTL in seconds, greater than or equal to zero. A value of zero means that the storage lock should be disabled and thus that transients must not be used.
@@ -44,7 +43,7 @@ final class OD_Storage_Lock {
 		 *
 		 * @param int $ttl TTL.
 		 */
-		$ttl = (int) apply_filters( 'od_url_metric_storage_lock_ttl', wp_is_development_mode( 'plugin' ) ? 0 : MINUTE_IN_SECONDS );
+		$ttl = (int) apply_filters( 'od_url_metric_storage_lock_ttl', MINUTE_IN_SECONDS );
 		return max( 0, $ttl );
 	}
 

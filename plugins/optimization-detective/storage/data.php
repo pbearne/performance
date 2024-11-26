@@ -16,7 +16,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  * When a URL Metric expires it is eligible to be replaced by a newer one if its viewport lies within the same breakpoint.
  *
  * @since 0.1.0
- * @since n.e.x.t The freshness TTL is set to zero when in 'plugin' development mode.
  * @access private
  *
  * @return int Expiration TTL in seconds.
@@ -32,7 +31,7 @@ function od_get_url_metric_freshness_ttl(): int {
 	 *
 	 * @param int $ttl Expiration TTL in seconds. Defaults to 1 day.
 	 */
-	$freshness_ttl = (int) apply_filters( 'od_url_metric_freshness_ttl', wp_is_development_mode( 'plugin' ) ? 0 : DAY_IN_SECONDS );
+	$freshness_ttl = (int) apply_filters( 'od_url_metric_freshness_ttl', DAY_IN_SECONDS );
 
 	if ( $freshness_ttl < 0 ) {
 		_doing_it_wrong(
@@ -186,7 +185,6 @@ function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string 
  * Gets the minimum allowed viewport aspect ratio for URL Metrics.
  *
  * @since 0.6.0
- * @since n.e.x.t The default of 0 is used when in plugin development mode.
  * @access private
  *
  * @return float Minimum viewport aspect ratio for URL Metrics.
@@ -195,22 +193,20 @@ function od_get_minimum_viewport_aspect_ratio(): float {
 	/**
 	 * Filters the minimum allowed viewport aspect ratio for URL Metrics.
 	 *
-	 * The 0.4 default value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when
-	 * rotated 90 degrees to 9:21 (0.429). When in plugin development mode, the default value is 0; this is to account
-	 * for Dev Tools likely being open.
+	 * The 0.4 default value is intended to accommodate the phone with the greatest known aspect
+	 * ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
 	 *
 	 * @since 0.6.0
 	 *
 	 * @param float $minimum_viewport_aspect_ratio Minimum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_minimum_viewport_aspect_ratio', wp_is_development_mode( 'plugin' ) ? 0 : 0.4 );
+	return (float) apply_filters( 'od_minimum_viewport_aspect_ratio', 0.4 );
 }
 
 /**
  * Gets the maximum allowed viewport aspect ratio for URL Metrics.
  *
  * @since 0.6.0
- * @since n.e.x.t The default of PHP_INT_MAX is used when in plugin development mode.
  * @access private
  *
  * @return float Maximum viewport aspect ratio for URL Metrics.
@@ -219,14 +215,14 @@ function od_get_maximum_viewport_aspect_ratio(): float {
 	/**
 	 * Filters the maximum allowed viewport aspect ratio for URL Metrics.
 	 *
-	 * The 2.5 default value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
-	 * When in plugin development mode, the default value is PHP_INT_MAX; this is to account for Dev Tools likely being open.
+	 * The 2.5 default value is intended to accommodate the phone with the greatest known aspect
+	 * ratio at 21:9 (2.333).
 	 *
 	 * @since 0.6.0
 	 *
 	 * @param float $maximum_viewport_aspect_ratio Maximum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_maximum_viewport_aspect_ratio', wp_is_development_mode( 'plugin' ) ? PHP_INT_MAX : 2.5 );
+	return (float) apply_filters( 'od_maximum_viewport_aspect_ratio', 2.5 );
 }
 
 /**
@@ -319,7 +315,6 @@ function od_get_breakpoint_max_widths(): array {
  * total of 6 URL Metrics stored for a given URL: 3 for mobile and 3 for desktop.
  *
  * @since 0.1.0
- * @since n.e.x.t The sample size is set to 1 when in 'plugin' development mode.
  * @access private
  *
  * @return int Sample size.
@@ -334,7 +329,7 @@ function od_get_url_metrics_breakpoint_sample_size(): int {
 	 *
 	 * @param int $sample_size Sample size. Defaults to 3.
 	 */
-	$sample_size = (int) apply_filters( 'od_url_metrics_breakpoint_sample_size', wp_is_development_mode( 'plugin' ) ? 1 : 3 );
+	$sample_size = (int) apply_filters( 'od_url_metrics_breakpoint_sample_size', 3 );
 
 	if ( $sample_size <= 0 ) {
 		_doing_it_wrong(
