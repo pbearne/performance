@@ -728,7 +728,11 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 				$this->assertTrue( $schema['additionalProperties'], "Path: $path" );
 			}
 			foreach ( $schema['properties'] as $key => $property_schema ) {
-				$this->check_schema_subset( $property_schema, "$path/$key", $extended );
+				if ( 'eTag' === $key ) {
+					$this->check_schema_subset( $property_schema, "$path/$key", true );
+				} else {
+					$this->check_schema_subset( $property_schema, "$path/$key", $extended );
+				}
 			}
 		} elseif ( 'array' === $schema['type'] ) {
 			$this->assertArrayHasKey( 'items', $schema, $path );
