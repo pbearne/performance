@@ -186,6 +186,7 @@ function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string 
  * Gets the minimum allowed viewport aspect ratio for URL Metrics.
  *
  * @since 0.6.0
+ * @since n.e.x.t The default of 0 is used when in plugin development mode.
  * @access private
  *
  * @return float Minimum viewport aspect ratio for URL Metrics.
@@ -194,20 +195,22 @@ function od_get_minimum_viewport_aspect_ratio(): float {
 	/**
 	 * Filters the minimum allowed viewport aspect ratio for URL Metrics.
 	 *
-	 * The 0.4 default value is intended to accommodate the phone with the greatest known aspect
-	 * ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
+	 * The 0.4 default value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when
+	 * rotated 90 degrees to 9:21 (0.429). When in plugin development mode, the default value is 0; this is to account
+	 * for Dev Tools likely being open.
 	 *
 	 * @since 0.6.0
 	 *
 	 * @param float $minimum_viewport_aspect_ratio Minimum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_minimum_viewport_aspect_ratio', 0.4 );
+	return (float) apply_filters( 'od_minimum_viewport_aspect_ratio', wp_is_development_mode( 'plugin' ) ? 0 : 0.4 );
 }
 
 /**
  * Gets the maximum allowed viewport aspect ratio for URL Metrics.
  *
  * @since 0.6.0
+ * @since n.e.x.t The default of PHP_INT_MAX is used when in plugin development mode.
  * @access private
  *
  * @return float Maximum viewport aspect ratio for URL Metrics.
@@ -216,14 +219,14 @@ function od_get_maximum_viewport_aspect_ratio(): float {
 	/**
 	 * Filters the maximum allowed viewport aspect ratio for URL Metrics.
 	 *
-	 * The 2.5 default value is intended to accommodate the phone with the greatest known aspect
-	 * ratio at 21:9 (2.333).
+	 * The 2.5 default value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
+	 * When in plugin development mode, the default value is PHP_INT_MAX; this is to account for Dev Tools likely being open.
 	 *
 	 * @since 0.6.0
 	 *
 	 * @param float $maximum_viewport_aspect_ratio Maximum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_maximum_viewport_aspect_ratio', 2.5 );
+	return (float) apply_filters( 'od_maximum_viewport_aspect_ratio', wp_is_development_mode( 'plugin' ) ? PHP_INT_MAX : 2.5 );
 }
 
 /**
