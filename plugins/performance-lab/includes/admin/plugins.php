@@ -342,6 +342,7 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 	}
 	$processed_plugins[] = $plugin_slug;
 
+	// Get the freshest data (including the most recent download_link) as opposed what is cached by perflab_query_plugin_info().
 	$plugin_data = plugins_api(
 		'plugin_information',
 		array(
