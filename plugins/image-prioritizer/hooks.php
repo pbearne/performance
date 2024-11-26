@@ -22,7 +22,8 @@ add_action( 'od_init', 'image_prioritizer_init' );
  * @since 0.2.0
  */
 function image_prioritizer_get_lazy_load_script(): string {
-	$script = file_get_contents( __DIR__ . sprintf( '/lazy-load%s.js', wp_scripts_get_suffix() ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+	$path   = image_prioritizer_get_asset_path( 'lazy-load.js' );
+	$script = file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
 
 	if ( false === $script ) {
 		return '';
