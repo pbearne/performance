@@ -58,7 +58,7 @@ function od_register_endpoint(): void {
 			'required'          => true,
 			'pattern'           => '^[0-9a-f]+$',
 			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
-				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['url'], $request['cache_purge_post_id'] ?? null ) ) {
+				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['eTag'], $request['url'], $request['cache_purge_post_id'] ?? null ) ) {
 					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );
 				}
 				return true;

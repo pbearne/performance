@@ -156,7 +156,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					'hmac' => 'not even a hash',
 				),
 				'invalid_hmac'                             => array(
-					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), '', home_url( '/' ) ),
 				),
 				'invalid_hmac_with_queried_object'         => array(
 					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), home_url( '/' ), 1 ),
@@ -672,7 +672,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$data = array_merge(
 			array(
 				'slug' => $slug,
-				'hmac' => od_get_url_metrics_storage_hmac( $slug, $data['url'] ),
+				'hmac' => od_get_url_metrics_storage_hmac( $slug, '', $data['url'] ),
 			),
 			$data
 		);

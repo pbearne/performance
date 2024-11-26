@@ -100,7 +100,7 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 		'currentUrl'             => $current_url,
 		'urlMetricSlug'          => $slug,
 		'cachePurgePostId'       => od_get_cache_purge_post_id(),
-		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_url, $cache_purge_post_id ),
+		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $od_etag, $current_url, $cache_purge_post_id ),
 		'urlMetricGroupStatuses' => array_map(
 			static function ( OD_URL_Metric_Group $group ): array {
 				return array(
