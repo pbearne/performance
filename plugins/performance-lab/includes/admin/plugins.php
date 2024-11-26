@@ -54,76 +54,93 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		)
 	);
 
+	$has_errors = false;
+	$plugins    = array();
+
 	if ( is_wp_error( $response ) ) {
-		return new WP_Error(
-			'api_error',
-			sprintf(
-				/* translators: %s: API error message */
-				__( 'Failed to retrieve plugins data from WordPress.org API: %s', 'performance-lab' ),
-				$response->get_error_message()
-			)
+		$plugins[ $plugin_slug ] = array(
+			'error' => array(
+				'code'    => 'api_error',
+				'message' => sprintf(
+					/* translators: %s: API error message */
+					__( 'Failed to retrieve plugins data from WordPress.org API: %s', 'performance-lab' ),
+					$response->get_error_message()
+				),
+			),
 		);
+
+		$has_errors = true;
 	}
 
 	// Check if the response contains plugins.
-	if ( ! ( is_object( $response ) && property_exists( $response, 'plugins' ) ) ) {
-		return new WP_Error( 'no_plugins', __( 'No plugins found in the API response.', 'performance-lab' ) );
+	if ( ! $has_errors && ! ( is_object( $response ) && property_exists( $response, 'plugins' ) ) ) {
+		$plugins[ $plugin_slug ] = array(
+			'error' => array(
+				'code'    => 'no_plugins',
+				'message' => __( 'No plugins found in the API response.', 'performance-lab' ),
+			),
+		);
+
+		$has_errors = true;
 	}
 
-	$plugins      = array();
-	$plugin_queue = perflab_get_standalone_plugins();
+	if ( ! $has_errors && is_object( $response ) && property_exists( $response, 'plugins' ) ) {
+		$plugin_queue = perflab_get_standalone_plugins();
 
-	// Index the plugins from the API response by their slug for efficient lookup.
-	$all_performance_plugins = array_column( $response->plugins, null, 'slug' );
+		// Index the plugins from the API response by their slug for efficient lookup.
+		$all_performance_plugins = array_column( $response->plugins, null, 'slug' );
 
-	// Start processing the plugins using a queue-based approach.
-	while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
-		$current_plugin_slug = array_shift( $plugin_queue );
+		// Start processing the plugins using a queue-based approach.
+		while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
+			$current_plugin_slug = array_shift( $plugin_queue );
 
-		if ( isset( $plugins[ $current_plugin_slug ] ) ) {
-			continue;
+			if ( isset( $plugins[ $current_plugin_slug ] ) ) {
+				continue;
+			}
+
+			if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+				// Cache the fact that the plugin was not found.
+				$plugins[ $current_plugin_slug ] = array(
+					'error' => array(
+						'code'    => 'plugin_not_found',
+						'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
+					),
+				);
+				continue;
+			}
+
+			$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
+			$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+			// Enqueue the required plugins slug by adding it to the queue.
+			if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
+				$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+			}
 		}
 
-		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+		if ( ! isset( $plugins[ $plugin_slug ] ) ) {
 			// Cache the fact that the plugin was not found.
-			$plugins[ $current_plugin_slug ] = array(
+			$plugins[ $plugin_slug ] = array(
 				'error' => array(
 					'code'    => 'plugin_not_found',
 					'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
 				),
 			);
-			continue;
-		}
 
-		$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
-		$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
-
-		// Enqueue the required plugins slug by adding it to the queue.
-		if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
-			$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+			$has_errors = true;
 		}
 	}
 
-	if ( ! isset( $plugins[ $plugin_slug ] ) ) {
-		// Cache the fact that the plugin was not found.
-		$plugins[ $plugin_slug ] = array(
-			'error' => array(
-				'code'    => 'plugin_not_found',
-				'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
-			),
-		);
-
+	if ( $has_errors ) {
 		set_transient( $transient_key, $plugins, MINUTE_IN_SECONDS );
-	} else {
-		set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
-	}
 
-	if ( isset( $plugins[ $plugin_slug ]['error'] ) ) {
 		return new WP_Error(
 			$plugins[ $plugin_slug ]['error']['code'],
 			$plugins[ $plugin_slug ]['error']['message']
 		);
 	}
+
+	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
 	/**
 	 * Validated (mostly) plugin data.
