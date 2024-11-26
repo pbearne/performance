@@ -135,7 +135,7 @@ add_filter( 'od_url_metric_freshness_ttl', static function (): int {
 } );
 `
 
-During development, this can be useful to set to zero:
+During development, this can be useful to set to zero so that you don't have to wait for new URL Metrics to be requested when engineering a new optimization:
 
 `
 <?php
