@@ -199,9 +199,6 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 		od_get_url_metric_freshness_ttl()
 	);
 
-	// Whether we need to add the data-od-xpath attribute to elements and whether the detection script should be injected.
-	$needs_detection = ! $group_collection->is_every_group_complete();
-
 	$tag_visitor_registry = new OD_Tag_Visitor_Registry();
 
 	/**
@@ -229,6 +226,9 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 
 	// Generate and store an ETag consisting of all the tag visitors' IDs in the current environment.
 	$od_etag = implode( ',', array_keys( $visitors ) );
+
+	// Whether we need to add the data-od-xpath attribute to elements and whether the detection script should be injected.
+	$needs_detection = ! $group_collection->is_every_group_complete();
 
 	do {
 		$tracked_in_url_metrics = false;

@@ -220,20 +220,32 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * A group is complete if it has the full sample size of URL Metrics
 	 * and all of these URL Metrics are fresh.
 	 *
+	 * @since n.e.x.t If the current environment's generated ETag does not match the URL Metric's ETag, the URL Metric is considered stale.
+	 *
+	 * @global string $od_etag ETag for the current environment.
+	 *
 	 * @return bool Whether complete.
 	 */
 	public function is_complete(): bool {
+		global $od_etag;
+
 		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
 			return $this->result_cache[ __FUNCTION__ ];
 		}
 
-		$result = ( function () {
+		$result = ( function () use ( $od_etag ) {
 			if ( count( $this->url_metrics ) < $this->sample_size ) {
 				return false;
 			}
 			$current_time = microtime( true );
 			foreach ( $this->url_metrics as $url_metric ) {
-				if ( $current_time > $url_metric->get_timestamp() + $this->freshness_ttl ) {
+				if (
+					$current_time > $url_metric->get_timestamp() + $this->freshness_ttl
+					||
+					// If the generated ETag does not match the URL metric's ETag, consider the URL metric as stale.
+					// NOTE: Since the ETag is optional for now, existing ones without it are not considered stale.
+					( $url_metric->get( 'eTag' ) !== null && $url_metric->get( 'eTag' ) !== $od_etag )
+				) {
 					return false;
 				}
 			}
