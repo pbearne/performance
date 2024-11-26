@@ -148,7 +148,7 @@ add_filter( 'od_url_metric_freshness_ttl', static function (): int {
 
 Filters the minimum allowed viewport aspect ratio for URL Metrics.
 
-The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429). During development you may want to set this to 0 to account Dev Tools likely being open and docked to the right:
+The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429). During development when you have the DevTools console open on the right, the viewport aspect ratio will be smaller than normal. In this case, you may want to set this to 0:
 
 `
 <?php
@@ -163,7 +163,7 @@ Filters the maximum allowed viewport aspect ratio for URL Metrics.
 
 The 2.5 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
 
-During development when you have the DevTools console open on the bottom, for example, the viewport aspect ratio larger than normal. In this case, you may want to increase the maximum aspect ratio:
+During development when you have the DevTools console open on the bottom, for example, the viewport aspect ratio will be larger than normal. In this case, you may want to increase the maximum aspect ratio:
 
 `
 <?php
