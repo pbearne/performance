@@ -38,6 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                            }
  * @phpstan-type Data         array{
  *                                uuid: non-empty-string,
+ *                                eTag?: string,
  *                                url: non-empty-string,
  *                                timestamp: float,
  *                                viewport: ViewportRect,
@@ -155,6 +156,7 @@ class OD_URL_Metric implements JsonSerializable {
 	 * Gets JSON schema for URL Metric.
 	 *
 	 * @since 0.1.0
+	 * @since n.e.x.t Added the 'eTag' property to the schema.
 	 *
 	 * @todo Cache the return value?
 	 *
@@ -207,6 +209,11 @@ class OD_URL_Metric implements JsonSerializable {
 					'format'      => 'uuid',
 					'required'    => true,
 					'readonly'    => true, // Omit from REST API.
+				),
+				'eTag'      => array(
+					'description' => __( 'The ETag for the URL Metric.', 'optimization-detective' ),
+					'type'        => 'string',
+					'required'    => false,
 				),
 				'url'       => array(
 					'description' => __( 'The URL for which the metric was obtained.', 'optimization-detective' ),
@@ -415,6 +422,17 @@ class OD_URL_Metric implements JsonSerializable {
 	 */
 	public function get_uuid(): string {
 		return $this->data['uuid'];
+	}
+
+	/**
+	 * Gets ETag.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return string|null The ETag, or null if not set.
+	 */
+	public function get_etag(): ?string {
+		return $this->data['eTag'] ?? null;
 	}
 
 	/**

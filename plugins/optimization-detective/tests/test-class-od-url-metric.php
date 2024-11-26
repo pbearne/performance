@@ -715,7 +715,8 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 */
 	protected function check_schema_subset( array $schema, string $path, bool $extended = false ): void {
 		$this->assertArrayHasKey( 'required', $schema, $path );
-		if ( ! $extended ) {
+		// Skipping the check for 'root/eTag' as it is currently optional.
+		if ( ! $extended && 'root/eTag' !== $path ) {
 			$this->assertTrue( $schema['required'], $path );
 		}
 		$this->assertArrayHasKey( 'type', $schema, $path );
@@ -728,11 +729,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 				$this->assertTrue( $schema['additionalProperties'], "Path: $path" );
 			}
 			foreach ( $schema['properties'] as $key => $property_schema ) {
-				if ( 'eTag' === $key ) {
-					$this->check_schema_subset( $property_schema, "$path/$key", true );
-				} else {
-					$this->check_schema_subset( $property_schema, "$path/$key", $extended );
-				}
+				$this->check_schema_subset( $property_schema, "$path/$key", $extended );
 			}
 		} elseif ( 'array' === $schema['type'] ) {
 			$this->assertArrayHasKey( 'items', $schema, $path );
