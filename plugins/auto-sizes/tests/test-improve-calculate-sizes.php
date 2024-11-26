@@ -3,10 +3,10 @@
  * Tests for the improve sizes for Images.
  *
  * @package auto-sizes
- * @group   improve-sizes
+ * @group   improve-calculate-sizes
  */
 
-class Tests_Improve_Sizes extends WP_UnitTestCase {
+class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 
 	/**
 	 * Attachment ID.
