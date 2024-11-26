@@ -167,7 +167,7 @@ During development when you have the DevTools console open on the bottom, for ex
 
 `
 <?php
-add_filter( 'od_maximum_viewport_aspect_ratio', function (): int {
+add_filter( 'od_maximum_viewport_aspect_ratio', static function (): int {
 	return 5;
 } );
 `
