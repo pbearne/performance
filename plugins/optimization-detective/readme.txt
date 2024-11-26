@@ -104,7 +104,7 @@ add_filter( 'od_can_optimize_response', '__return_true' );
 
 **Filter:** `od_url_metrics_breakpoint_sample_size` (default: 3)
 
-Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. In plugin development mode, the default is 1. You can increase the sample size if you want better guarnatees that the applied optimizations will be accurate:
+Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. In plugin development mode, the default is 1. You can increase the sample size if you want better guarantees that the applied optimizations will be accurate:
 
 `
 <?php
