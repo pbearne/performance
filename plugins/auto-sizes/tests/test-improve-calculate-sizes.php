@@ -417,7 +417,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 */
 	public function data_ancestor_and_image_block_alignment(): array {
 		return array(
-			// Parent defaule alignment.
+			// Parent default alignment.
 			'Return contentSize 620px, parent block default alignment, image block default alignment' => array(
 				'',
 				'',
