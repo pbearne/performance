@@ -87,7 +87,8 @@ function image_prioritizer_register_tag_visitors( OD_Tag_Visitor_Registry $regis
  * @since 0.2.0
  */
 function image_prioritizer_get_lazy_load_script(): string {
-	$script = file_get_contents( __DIR__ . sprintf( '/lazy-load%s.js', wp_scripts_get_suffix() ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+	$path   = image_prioritizer_get_asset_path( 'lazy-load.js' );
+	$script = file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
 
 	if ( false === $script ) {
 		return '';
@@ -108,7 +109,7 @@ function image_prioritizer_filter_extension_module_urls( $extension_module_urls 
 	if ( ! is_array( $extension_module_urls ) ) {
 		$extension_module_urls = array();
 	}
-	$extension_module_urls[] = add_query_arg( 'ver', IMAGE_PRIORITIZER_VERSION, plugin_dir_url( __FILE__ ) . sprintf( 'detect%s.js', wp_scripts_get_suffix() ) );
+	$extension_module_urls[] = add_query_arg( 'ver', IMAGE_PRIORITIZER_VERSION, plugin_dir_url( __FILE__ ) . image_prioritizer_get_asset_path( 'detect.js' ) );
 	return $extension_module_urls;
 }
 
@@ -210,4 +211,40 @@ function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Stric
 
 	// TODO: Check for the Content-Length and return invalid if it is gigantic?
 	return $validity;
+}
+
+/**
+ * Gets the path to a script or stylesheet.
+ *
+ * @since n.e.x.t
+ *
+ * @param string      $src_path Source path, relative to plugin root.
+ * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
+ * @return string URL to script or stylesheet.
+ */
+function image_prioritizer_get_asset_path( string $src_path, ?string $min_path = null ): string {
+	if ( null === $min_path ) {
+		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+	}
+
+	$force_src = false;
+	if ( WP_DEBUG && ! file_exists( trailingslashit( __DIR__ ) . $min_path ) ) {
+		$force_src = true;
+		wp_trigger_error(
+			__FUNCTION__,
+			sprintf(
+				/* translators: %s is the minified asset path */
+				__( 'Minified asset has not been built: %s', 'image-prioritizer' ),
+				$min_path
+			),
+			E_USER_WARNING
+		);
+	}
+
+	if ( SCRIPT_DEBUG || $force_src ) {
+		return $src_path;
+	}
+
+	return $min_path;
 }
