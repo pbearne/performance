@@ -626,7 +626,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 				'assert'                   => function ( array $original_schema, $extended_schema ): void {
 					$this->assertSame( $original_schema, $extended_schema );
 				},
-				'expected_incorrect_usage' => 'Filter: &#039;od_url_metric_schema_root_additional_properties&#039;',
+				'expected_incorrect_usage' => 'Filter: &#039;od_url_metric_schema_element_item_additional_properties&#039;',
 			),
 
 			'adding_root_string'             => array(
