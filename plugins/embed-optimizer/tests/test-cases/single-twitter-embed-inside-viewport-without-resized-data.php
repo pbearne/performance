@@ -9,7 +9,8 @@ return array(
 					'intersectionRatio' => 1,
 					// Intentionally omitting resizedBoundingClientRect here to test behavior when data isn't supplied.
 				),
-			)
+			),
+			'embeds'
 		);
 	},
 	'buffer'   => '

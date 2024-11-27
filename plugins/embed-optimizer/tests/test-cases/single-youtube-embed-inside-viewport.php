@@ -9,7 +9,8 @@ return array(
 					'intersectionRatio'         => 1,
 					'resizedBoundingClientRect' => array_merge( $test_case->get_sample_dom_rect(), array( 'height' => 500 ) ),
 				),
-			)
+			),
+			'embeds'
 		);
 	},
 	'buffer'   => '
