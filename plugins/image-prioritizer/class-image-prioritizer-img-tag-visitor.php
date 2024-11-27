@@ -29,7 +29,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Collected `<source>` elements within the current `<picture>`.
 	 *
-	 * @var array<int, array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,crossorigin?: string|true|null}>
+	 * @var array<int, array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,media?: string|true|null,crossorigin?: string|true|null}>
 	 */
 	private $collected_sources = array();
 
@@ -65,6 +65,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				'srcset'      => $processor->get_attribute( 'srcset' ),
 				'sizes'       => $processor->get_attribute( 'sizes' ),
 				'type'        => $processor->get_attribute( 'type' ),
+				'media'       => $processor->get_attribute( 'media' ),
 				'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
 			);
 
@@ -203,6 +204,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 								'imagesrcset' => isset( $source['srcset'] ) && is_string( $source['srcset'] ) ? $source['srcset'] : '',
 								'imagesizes'  => isset( $source['sizes'] ) && is_string( $source['sizes'] ) ? $source['sizes'] : '',
 								'type'        => isset( $source['type'] ) && is_string( $source['type'] ) ? $source['type'] : '',
+								'media'       => isset( $source['media'] ) && is_string( $source['media'] ) ? 'screen and ' . $source['media'] : 'screen',
 							),
 							static function ( string $value ): bool {
 								return '' !== $value;
@@ -213,8 +215,6 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 					if ( isset( $source['crossorigin'] ) ) {
 						$link_attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
 					}
-
-					$link_attributes['media'] = 'screen';
 
 					$context->link_collection->add_link(
 						$link_attributes,
