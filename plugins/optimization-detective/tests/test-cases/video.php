@@ -8,6 +8,7 @@ return array(
 					'isLCP' => true,
 				),
 			),
+			'img,video',
 			false
 		);
 	},

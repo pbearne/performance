@@ -9,7 +9,8 @@ return array(
 					'xpath' => '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]',
 					'isLCP' => true,
 				),
-			)
+			),
+			'img,video'
 		);
 	},
 	'buffer'   => '

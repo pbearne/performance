@@ -22,10 +22,11 @@ trait Optimization_Detective_Test_Helpers {
 	 *
 	 * @phpstan-param ElementDataSubset[] $elements
 	 * @param array[] $elements Element data.
+	 * @param string  $etag     ETag to set for the URL metrics.
 	 * @param bool    $complete Whether to fully populate the groups.
 	 * @throws Exception But it won't.
 	 */
-	public function populate_url_metrics( array $elements, bool $complete = true ): void {
+	public function populate_url_metrics( array $elements, string $etag = '', bool $complete = true ): void {
 		$slug        = od_get_url_metrics_slug( od_get_normalized_query_vars() );
 		$sample_size = $complete ? od_get_url_metrics_breakpoint_sample_size() : 1;
 		foreach ( array_merge( od_get_breakpoint_max_widths(), array( 1000 ) ) as $viewport_width ) {
@@ -34,6 +35,7 @@ trait Optimization_Detective_Test_Helpers {
 					$slug,
 					$this->get_sample_url_metric(
 						array(
+							'eTag'           => $etag,
 							'viewport_width' => $viewport_width,
 							'elements'       => $elements,
 						)
@@ -65,6 +67,7 @@ trait Optimization_Detective_Test_Helpers {
 	 * Gets a sample URL metric.
 	 *
 	 * @phpstan-param array{
+	 *                    eTag?:            string,
 	 *                    url?:             string,
 	 *                    viewport_width?:  int,
 	 *                    viewport_height?: int,
@@ -77,6 +80,7 @@ trait Optimization_Detective_Test_Helpers {
 	public function get_sample_url_metric( array $params ): OD_URL_Metric {
 		$params = array_merge(
 			array(
+				'eTag'           => '',
 				'url'            => home_url( '/' ),
 				'viewport_width' => 480,
 				'elements'       => array(),
@@ -90,6 +94,7 @@ trait Optimization_Detective_Test_Helpers {
 
 		return new OD_URL_Metric(
 			array(
+				'eTag'      => $params['eTag'],
 				'url'       => home_url( '/' ),
 				'viewport'  => array(
 					'width'  => $params['viewport_width'],

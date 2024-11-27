@@ -8,7 +8,7 @@ return array(
 				'isLCP' => false,
 			);
 		}
-		$test_case->populate_url_metrics( $elements, false );
+		$test_case->populate_url_metrics( $elements, 'img,video', false );
 	},
 	'buffer'   => '
 		<html lang="en">
