@@ -57,7 +57,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					$params['cache_purge_post_id'] = self::factory()->post->create();
 					$params['url'] = get_permalink( $params['cache_purge_post_id'] );
 					$params['slug'] = od_get_url_metrics_slug( array( 'p' => $params['cache_purge_post_id'] ) );
-					$params['hmac'] = od_get_url_metrics_storage_hmac( $params['slug'], $params['url'], $params['cache_purge_post_id'] );
+					$params['hmac'] = od_get_url_metrics_storage_hmac( $params['slug'], $params['eTag'], $params['url'], $params['cache_purge_post_id'] );
 					return $params;
 				},
 			),
@@ -672,7 +672,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$data = array_merge(
 			array(
 				'slug' => $slug,
-				'hmac' => od_get_url_metrics_storage_hmac( $slug, '', $data['url'] ),
+				'hmac' => od_get_url_metrics_storage_hmac( $slug, $data['eTag'], $data['url'] ),
 			),
 			$data
 		);
