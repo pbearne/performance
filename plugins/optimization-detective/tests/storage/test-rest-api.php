@@ -525,6 +525,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		// Sanity check that the groups were constructed as expected.
 		$group_collection  = new OD_URL_Metric_Group_Collection(
 			OD_URL_Metrics_Post_Type::get_url_metrics_from_post( OD_URL_Metrics_Post_Type::get_post( od_get_url_metrics_slug( array() ) ) ),
+			$wider_viewport_params['eTag'],
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			HOUR_IN_SECONDS

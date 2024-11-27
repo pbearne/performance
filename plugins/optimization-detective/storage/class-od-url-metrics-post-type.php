@@ -219,6 +219,7 @@ class OD_URL_Metrics_Post_Type {
 
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
+			$new_url_metric->get_etag(),
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			od_get_url_metric_freshness_ttl()

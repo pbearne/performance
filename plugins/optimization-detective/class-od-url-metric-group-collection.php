@@ -36,6 +36,14 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	private $groups;
 
 	/**
+	 * The current Etag.
+	 *
+	 * @since n.e.x.t
+	 * @var string
+	 */
+	private $current_etag;
+
+	/**
 	 * Breakpoints in max widths.
 	 *
 	 * Valid values are from 1 to PHP_INT_MAX - 1. This is because:
@@ -94,11 +102,14 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * @throws InvalidArgumentException When an invalid argument is supplied.
 	 *
 	 * @param OD_URL_Metric[] $url_metrics   URL Metrics.
+	 * @param string          $current_etag  The current ETag.
 	 * @param int[]           $breakpoints   Breakpoints in max widths.
 	 * @param int             $sample_size   Sample size for the maximum number of viewports in a group between breakpoints.
 	 * @param int             $freshness_ttl Freshness age (TTL) for a given URL Metric.
 	 */
-	public function __construct( array $url_metrics, array $breakpoints, int $sample_size, int $freshness_ttl ) {
+	public function __construct( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl ) {
+		$this->current_etag = $current_etag;
+
 		// Set breakpoints.
 		sort( $breakpoints );
 		$breakpoints = array_values( array_unique( $breakpoints, SORT_NUMERIC ) );
@@ -158,6 +169,17 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 		foreach ( $url_metrics as $url_metric ) {
 			$this->add_url_metric( $url_metric );
 		}
+	}
+
+	/**
+	 * Gets the current ETag.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return string Current ETag.
+	 */
+	public function get_current_etag(): string {
+		return $this->current_etag;
 	}
 
 	/**
@@ -613,6 +635,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * @since 0.3.1
 	 *
 	 * @return array{
+	 *             current_etag: string,
 	 *             breakpoints: positive-int[],
 	 *             freshness_ttl: 0|positive-int,
 	 *             sample_size: positive-int,
@@ -631,6 +654,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 */
 	public function jsonSerialize(): array {
 		return array(
+			'current_etag'                        => $this->current_etag,
 			'breakpoints'                         => $this->breakpoints,
 			'freshness_ttl'                       => $this->freshness_ttl,
 			'sample_size'                         => $this->sample_size,

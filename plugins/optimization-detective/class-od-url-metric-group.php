@@ -222,18 +222,14 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 *
 	 * @since n.e.x.t If the current environment's generated ETag does not match the URL Metric's ETag, the URL Metric is considered stale.
 	 *
-	 * @global string $od_etag ETag for the current environment.
-	 *
 	 * @return bool Whether complete.
 	 */
 	public function is_complete(): bool {
-		global $od_etag;
-
 		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
 			return $this->result_cache[ __FUNCTION__ ];
 		}
 
-		$result = ( function () use ( $od_etag ) {
+		$result = ( function () {
 			if ( count( $this->url_metrics ) < $this->sample_size ) {
 				return false;
 			}
@@ -242,8 +238,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 				if (
 					$current_time > $url_metric->get_timestamp() + $this->freshness_ttl
 					||
-					// If the generated ETag does not match the URL metric's ETag, consider the URL metric as stale.
-					( $url_metric->get_etag() !== $od_etag )
+					// If the URL Metric's ETag doesn't match the current ETag, consider the URL metric as stale.
+					( null !== $this->collection && $url_metric->get_etag() !== $this->collection->get_current_etag() )
 				) {
 					return false;
 				}

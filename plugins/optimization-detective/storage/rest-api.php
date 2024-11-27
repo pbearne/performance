@@ -146,6 +146,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 
 	$url_metric_group_collection = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
+		$request->get_param( 'eTag' ),
 		od_get_breakpoint_max_widths(),
 		od_get_url_metrics_breakpoint_sample_size(),
 		od_get_url_metric_freshness_ttl()
