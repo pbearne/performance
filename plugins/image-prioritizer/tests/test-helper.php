@@ -205,7 +205,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @phpstan-param array{ xpath: string, isLCP: bool, intersectionRatio: int } $element_metrics
 	 */
 	public function test_auto_sizes( array $element_metrics, string $buffer, string $expected ): void {
-		$this->populate_url_metrics( array( $element_metrics ) );
+		$this->populate_url_metrics( array( $element_metrics ), 'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video' );
 
 		$html_start_doc = '<html lang="en"><head><meta charset="utf-8"><title>...</title></head><body>';
 		$html_end_doc   = '</body></html>';

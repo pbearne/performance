@@ -7,7 +7,8 @@ return array(
 					'isLCP' => true,
 					'xpath' => '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]',
 				),
-			)
+			),
+			'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video'
 		);
 	},
 	'buffer'   => '

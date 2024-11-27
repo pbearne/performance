@@ -25,6 +25,7 @@ return array(
 					$slug,
 					$test_case->get_sample_url_metric(
 						array(
+							'eTag'           => 'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video',
 							'viewport_width' => $viewport_width,
 							'element'        => array(
 								'xpath' => sprintf( '/*[1][self::HTML]/*[2][self::BODY]/*[%d][self::DIV]', $div_index + 1 ),
