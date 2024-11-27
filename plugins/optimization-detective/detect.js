@@ -442,7 +442,6 @@ export default async function detect( {
 	}
 
 	urlMetric = {
-		eTag: currentETag,
 		url: currentUrl,
 		viewport: {
 			width: win.innerWidth,
@@ -542,6 +541,7 @@ export default async function detect( {
 
 	const url = new URL( restApiEndpoint );
 	url.searchParams.set( 'slug', urlMetricSlug );
+	url.searchParams.set( 'eTag', currentETag );
 	if ( typeof cachePurgePostId === 'number' ) {
 		url.searchParams.set(
 			'cache_purge_post_id',

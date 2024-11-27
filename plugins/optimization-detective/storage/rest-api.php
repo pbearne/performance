@@ -46,6 +46,11 @@ function od_register_endpoint(): void {
 			'required'    => true,
 			'pattern'     => '^[0-9a-f]{32}$',
 		),
+		'eTag'                => array(
+			'type'        => 'string',
+			'description' => __( 'ETag for the current environment.', 'optimization-detective' ),
+			'required'    => true,
+		),
 		'cache_purge_post_id' => array(
 			'type'        => 'integer',
 			'description' => __( 'Cache purge post ID.', 'optimization-detective' ),
@@ -182,6 +187,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 					// Now supply the readonly args which were omitted from the REST API params due to being `readonly`.
 					'timestamp' => microtime( true ),
 					'uuid'      => wp_generate_uuid4(),
+					'eTag'      => $request->get_param( 'eTag' ),
 				)
 			)
 		);
