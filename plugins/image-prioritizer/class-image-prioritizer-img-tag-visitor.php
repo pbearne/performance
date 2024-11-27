@@ -20,6 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visitor {
 
 	/**
+	 * Flag to indicate whether we're within a `<picture>` element.
+	 *
+	 * @var bool
+	 */
+	private $is_within_picture = false;
+
+	/**
+	 * Collected `<source>` elements within the current `<picture>`.
+	 *
+	 * @var array<int, array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,crossorigin?: string|true|null}>
+	 */
+	private $collected_sources = array();
+
+	/**
 	 * Visits a tag.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
@@ -28,7 +42,36 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 */
 	public function __invoke( OD_Tag_Visitor_Context $context ): bool {
 		$processor = $context->processor;
-		if ( 'IMG' !== $processor->get_tag() ) {
+		$tag       = $processor->get_tag();
+
+		// Handle opening and closing `<picture>` tags.
+		if ( 'PICTURE' === $tag ) {
+			if ( ! $processor->is_tag_closer() ) {
+				// Opening <picture> tag.
+				$this->is_within_picture = true;
+				$this->collected_sources = array();
+			} else {
+				// Closing </picture> tag.
+				$this->is_within_picture = false;
+				$this->collected_sources = array();
+			}
+
+			return false;
+		}
+
+		// Collect `<source>` elements within `<picture>`.
+		if ( $this->is_within_picture && 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
+			$this->collected_sources[] = array(
+				'srcset'      => $processor->get_attribute( 'srcset' ),
+				'sizes'       => $processor->get_attribute( 'sizes' ),
+				'type'        => $processor->get_attribute( 'type' ),
+				'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
+			);
+
+			return false;
+		}
+
+		if ( 'IMG' !== $tag ) {
 			return false;
 		}
 
@@ -144,36 +187,73 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
-			$link_attributes = array_merge(
-				array(
-					'rel'           => 'preload',
-					'fetchpriority' => 'high',
-					'as'            => 'image',
-				),
-				array_filter(
-					array(
-						'href'        => (string) $processor->get_attribute( 'src' ),
-						'imagesrcset' => (string) $processor->get_attribute( 'srcset' ),
-						'imagesizes'  => (string) $processor->get_attribute( 'sizes' ),
-					),
-					static function ( string $value ): bool {
-						return '' !== $value;
+			if ( $this->is_within_picture && count( $this->collected_sources ) > 0 ) {
+				foreach ( $this->collected_sources as $source ) {
+					$link_attributes = array_merge(
+						array(
+							'rel'           => 'preload',
+							'fetchpriority' => 'high',
+							'as'            => 'image',
+						),
+						array_filter(
+							array(
+								'href'        => isset( $source['srcset'] ) && is_string( $source['srcset'] )
+													? explode( ' ', $source['srcset'] )[0]
+													: '',
+								'imagesrcset' => isset( $source['srcset'] ) && is_string( $source['srcset'] ) ? $source['srcset'] : '',
+								'imagesizes'  => isset( $source['sizes'] ) && is_string( $source['sizes'] ) ? $source['sizes'] : '',
+								'type'        => isset( $source['type'] ) && is_string( $source['type'] ) ? $source['type'] : '',
+							),
+							static function ( string $value ): bool {
+								return '' !== $value;
+							}
+						)
+					);
+
+					if ( isset( $source['crossorigin'] ) ) {
+						$link_attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
 					}
-				)
-			);
 
-			$crossorigin = $this->get_attribute_value( $processor, 'crossorigin' );
-			if ( null !== $crossorigin ) {
-				$link_attributes['crossorigin'] = 'use-credentials' === $crossorigin ? 'use-credentials' : 'anonymous';
+					$link_attributes['media'] = 'screen';
+
+					$context->link_collection->add_link(
+						$link_attributes,
+						$group->get_minimum_viewport_width(),
+						$group->get_maximum_viewport_width()
+					);
+				}
+			} else {
+				$link_attributes = array_merge(
+					array(
+						'rel'           => 'preload',
+						'fetchpriority' => 'high',
+						'as'            => 'image',
+					),
+					array_filter(
+						array(
+							'href'        => (string) $processor->get_attribute( 'src' ),
+							'imagesrcset' => (string) $processor->get_attribute( 'srcset' ),
+							'imagesizes'  => (string) $processor->get_attribute( 'sizes' ),
+						),
+						static function ( string $value ): bool {
+							return '' !== $value;
+						}
+					)
+				);
+
+				$crossorigin = $this->get_attribute_value( $processor, 'crossorigin' );
+				if ( null !== $crossorigin ) {
+					$link_attributes['crossorigin'] = 'use-credentials' === $crossorigin ? 'use-credentials' : 'anonymous';
+				}
+
+				$link_attributes['media'] = 'screen';
+
+				$context->link_collection->add_link(
+					$link_attributes,
+					$group->get_minimum_viewport_width(),
+					$group->get_maximum_viewport_width()
+				);
 			}
-
-			$link_attributes['media'] = 'screen';
-
-			$context->link_collection->add_link(
-				$link_attributes,
-				$group->get_minimum_viewport_width(),
-				$group->get_maximum_viewport_width()
-			);
 		}
 
 		return true;
