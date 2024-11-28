@@ -20,6 +20,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_Prioritizer_Tag_Visitor {
 
 	/**
+	 * Class name used to indicate a background image which is lazy-loaded.
+	 *
+	 * @since n.e.x.t
+	 * @var string
+	 */
+	const LAZY_BG_IMAGE_CLASS_NAME = 'od-lazy-bg-image';
+
+	/**
+	 * Whether the lazy-loading stylesheet was added to the head.
+	 *
+	 * @since n.e.x.t
+	 * @var bool
+	 */
+	private $added_lazy_stylesheet = false;
+
+	/**
 	 * Visits a tag.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
@@ -54,6 +70,11 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		$xpath = $processor->get_xpath();
 
+		// If this element is not in the initial viewport, lazy load its background image.
+		if ( false === $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath ) ) {
+			$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
+		}
+
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
 			$link_attributes = array(
@@ -69,6 +90,12 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 				$group->get_minimum_viewport_width(),
 				$group->get_maximum_viewport_width()
 			);
+		}
+
+		if ( ! $this->added_lazy_stylesheet ) {
+			$inline_style_tag = sprintf( '<style>%s</style>', image_prioritizer_get_lazy_load_stylesheet() );
+			$processor->append_head_html( $inline_style_tag );
+			$this->added_lazy_stylesheet = true;
 		}
 
 		return true;
