@@ -78,11 +78,6 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		$xpath = $processor->get_xpath();
 
-		// If this element is not in the initial viewport, lazy load its background image.
-		if ( false === $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath ) ) {
-			$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
-		}
-
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
 			$link_attributes = array(
@@ -99,6 +94,41 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 				$group->get_maximum_viewport_width()
 			);
 		}
+
+		$this->lazy_load_bg_images( $context );
+
+		return true;
+	}
+
+	/**
+	 * Optimizes an element with a background image based on whether it is displayed in any initial viewport.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param OD_Tag_Visitor_Context $context Tag visitor context, with the cursor currently at block with a background image.
+	 */
+	private function lazy_load_bg_images( OD_Tag_Visitor_Context $context ): void {
+		$processor = $context->processor;
+
+		// Lazy-loading can only be done once there are URL Metrics collected for both mobile and desktop.
+		if (
+			$context->url_metric_group_collection->get_first_group()->count() === 0
+			||
+			$context->url_metric_group_collection->get_last_group()->count() === 0
+		) {
+			return;
+		}
+
+		$xpath = $processor->get_xpath();
+
+		$in_any_initial_viewport = $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath );
+
+		// If the element is in the initial viewport, do not lazy load its background image.
+		if ( true === $in_any_initial_viewport || null === $in_any_initial_viewport ) {
+			return;
+		}
+
+		$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
 
 		if ( ! $this->added_lazy_styles ) {
 			$processor->append_head_html(
@@ -117,7 +147,5 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 			$processor->append_body_html( wp_get_inline_script_tag( image_prioritizer_get_lazy_load_bg_image_script(), array( 'type' => 'module' ) ) );
 			$this->added_lazy_script = true;
 		}
-
-		return true;
 	}
 }
