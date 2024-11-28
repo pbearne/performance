@@ -99,14 +99,14 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 		 * @param string $sizes The image sizes attribute value.
 		 * @param string $size  The image size data.
 		 */
-		$filter = static function ( $sizes, $size ) use ( $block ) {
+		$filter = static function ( $sizes, $size ) use ( $block, $parsed_block ) {
 			$id                   = $block->attributes['id'] ?? 0;
 			$alignment            = $block->attributes['align'] ?? '';
 			$width                = $block->attributes['width'] ?? '';
-			$is_parent_block      = $block->context['is_parent_block'] ?? false;
+			$has_parent_block     = isset( $parsed_block['parentLayout'] );
 			$ancestor_block_align = $block->context['ancestor_block_align'] ?? '';
 
-			return auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string) $alignment, (string) $width, (bool) $is_parent_block, (string) $ancestor_block_align );
+			return auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string) $alignment, (string) $width, $has_parent_block, (string) $ancestor_block_align );
 		};
 
 		// Hook this filter early, before default filters are run.
@@ -144,11 +144,11 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  * @param string $size                 The image size data.
  * @param string $align                The image alignment.
  * @param string $resize_width         Resize image width.
- * @param bool   $is_parent_block      Check if image block has parent block.
+ * @param bool   $has_parent_block     Check if image block has parent block.
  * @param string $ancestor_block_align The ancestor block alignment.
  * @return string The sizes attribute value.
  */
-function auto_sizes_calculate_better_sizes( int $id, string $size, string $align, string $resize_width, bool $is_parent_block, string $ancestor_block_align ): string {
+function auto_sizes_calculate_better_sizes( int $id, string $size, string $align, string $resize_width, bool $has_parent_block, string $ancestor_block_align ): string {
 	$image = wp_get_attachment_image_src( $id, $size );
 
 	if ( false === $image ) {
@@ -158,7 +158,7 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
 	// Retrieve width from the image tag itself.
 	$image_width = '' !== $resize_width ? (int) $resize_width : $image[1];
 
-	if ( $is_parent_block ) {
+	if ( $has_parent_block ) {
 		if ( 'full' === $ancestor_block_align && 'full' === $align ) {
 			return auto_sizes_get_sizes_by_block_alignments( $align, $image_width, true );
 		} elseif ( 'full' !== $ancestor_block_align && 'full' === $align ) {
@@ -236,7 +236,7 @@ function auto_sizes_get_sizes_by_block_alignments( string $alignment, int $image
 function auto_sizes_allowed_uses_context_for_image_blocks( array $uses_context, WP_Block_Type $block_type ): array {
 	if ( 'core/image' === $block_type->name ) {
 		// Use array_values to reset the array keys after merging.
-		return array_values( array_unique( array_merge( $uses_context, array( 'is_parent_block', 'ancestor_block_align' ) ) ) );
+		return array_values( array_unique( array_merge( $uses_context, array( 'ancestor_block_align' ) ) ) );
 	}
 	return $uses_context;
 }
@@ -252,7 +252,6 @@ function auto_sizes_allowed_uses_context_for_image_blocks( array $uses_context, 
  */
 function auto_sizes_modify_render_block_context( array $context, array $block ): array {
 	if ( 'core/group' === $block['blockName'] || 'core/columns' === $block['blockName'] ) {
-		$context['is_parent_block']      = true;
 		$context['ancestor_block_align'] = $block['attrs']['align'] ?? '';
 	}
 	return $context;
