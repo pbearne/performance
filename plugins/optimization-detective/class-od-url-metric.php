@@ -430,11 +430,11 @@ class OD_URL_Metric implements JsonSerializable {
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @return string ETag.
+	 * @return string|null ETag.
 	 */
-	public function get_etag(): string {
-		// Since the ETag is optional for now, return an empty string for old URL metrics that do not have one.
-		return $this->data['eTag'] ?? '';
+	public function get_etag(): ?string {
+		// Since the ETag is optional for now, return null for old URL Metrics that do not have one.
+		return $this->data['eTag'] ?? null;
 	}
 
 	/**
