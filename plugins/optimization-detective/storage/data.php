@@ -146,6 +146,7 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
  * @since 0.8.0
+ * @since n.e.x.t Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
@@ -166,6 +167,7 @@ function od_get_url_metrics_storage_hmac( string $slug, string $current_tag, str
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
  * @since 0.8.0
+ * @since n.e.x.t Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()
