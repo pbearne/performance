@@ -45,11 +45,16 @@ function od_register_endpoint(): void {
 			'description' => __( 'An MD5 hash of the query args.', 'optimization-detective' ),
 			'required'    => true,
 			'pattern'     => '^[0-9a-f]{32}$',
+			'minLength'   => 32,
+			'maxLength'   => 32,
 		),
 		'current_etag'        => array(
 			'type'        => 'string',
 			'description' => __( 'ETag for the current environment.', 'optimization-detective' ),
 			'required'    => true,
+			'pattern'     => '^[0-9a-f]{32}$',
+			'minLength'   => 32,
+			'maxLength'   => 32,
 		),
 		'cache_purge_post_id' => array(
 			'type'        => 'integer',
