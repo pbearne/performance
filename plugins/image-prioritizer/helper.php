@@ -114,24 +114,6 @@ function image_prioritizer_get_asset_path( string $src_path, ?string $min_path =
 }
 
 /**
- * Gets the stylesheet to lazy-load background images.
- *
- * Adds a class to elements with background images not in the initial viewport to lazy load them when JavaScript is enabled.
- *
- * @since n.e.x.t
- */
-function image_prioritizer_get_lazy_load_stylesheet(): string {
-	$path       = image_prioritizer_get_asset_path( 'lazy-load.css' );
-	$stylesheet = file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
-
-	if ( false === $stylesheet ) {
-		return '';
-	}
-
-	return $stylesheet;
-}
-
-/**
  * Gets the script to lazy-load background images.
  *
  * Load the background image when it approaches the viewport using an IntersectionObserver.

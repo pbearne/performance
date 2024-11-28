@@ -28,12 +28,12 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	const LAZY_BG_IMAGE_CLASS_NAME = 'od-lazy-bg-image';
 
 	/**
-	 * Whether the lazy-loading stylesheet was added to the head.
+	 * Whether the lazy-loading styles have been added to the head.
 	 *
 	 * @since n.e.x.t
 	 * @var bool
 	 */
-	private $added_lazy_stylesheet = false;
+	private $added_lazy_styles = false;
 
 	/**
 	 * Whether the lazy-loading script was added to the body.
@@ -100,10 +100,17 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 			);
 		}
 
-		if ( ! $this->added_lazy_stylesheet ) {
-			$inline_style_tag = sprintf( '<style>%s</style>', image_prioritizer_get_lazy_load_stylesheet() );
-			$processor->append_head_html( $inline_style_tag );
-			$this->added_lazy_stylesheet = true;
+		if ( ! $this->added_lazy_styles ) {
+			$processor->append_head_html(
+				'<style>
+					@media (scripting: enabled) {
+						.has-background.od-lazy-bg-image {
+							background-image: none !important;
+						}
+					}
+				</style>'
+			);
+			$this->added_lazy_styles = true;
 		}
 
 		if ( ! $this->added_lazy_script ) {
