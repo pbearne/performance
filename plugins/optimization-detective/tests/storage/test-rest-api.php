@@ -138,6 +138,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 */
 	public function data_provider_invalid_params(): array {
 		$valid_element = $this->get_valid_params()['elements'][0];
+		$current_etag  = od_compute_current_etag( new OD_Tag_Visitor_Registry() );
 
 		return array_map(
 			function ( $params ) {
@@ -156,10 +157,10 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					'hmac' => 'not even a hash',
 				),
 				'invalid_hmac'                             => array(
-					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), '', home_url( '/' ) ),
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), $current_etag, home_url( '/' ) ),
 				),
 				'invalid_hmac_with_queried_object'         => array(
-					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), home_url( '/' ), 1 ),
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), $current_etag, home_url( '/' ), 1 ),
 				),
 				'invalid_viewport_type'                    => array(
 					'viewport' => '640x480',

@@ -325,7 +325,8 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 	 * @param array<int, string> $expected_lcp_element_xpaths Expected XPaths.
 	 */
 	public function test_get_lcp_element( array $breakpoints, array $url_metrics, array $expected_lcp_element_xpaths ): void {
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, '', $breakpoints, 10, HOUR_IN_SECONDS );
+		$current_etag     = od_compute_current_etag( new OD_Tag_Visitor_Registry() );
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, 10, HOUR_IN_SECONDS );
 
 		$lcp_element_xpaths_by_minimum_viewport_widths = array();
 		foreach ( $group_collection as $group ) {

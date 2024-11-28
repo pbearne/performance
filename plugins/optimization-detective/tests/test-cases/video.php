@@ -1,6 +1,10 @@
 <?php
 return array(
 	'set_up'   => static function ( Test_OD_Optimization $test_case ): void {
+		$tag_visitor_registry = new OD_Tag_Visitor_Registry();
+		$tag_visitor_registry->register( 'img', static function (): void {} );
+		$tag_visitor_registry->register( 'video', static function (): void {} );
+
 		$test_case->populate_url_metrics(
 			array(
 				array(
@@ -8,7 +12,7 @@ return array(
 					'isLCP' => true,
 				),
 			),
-			'img,video',
+			od_compute_current_etag( $tag_visitor_registry ),
 			false
 		);
 	},

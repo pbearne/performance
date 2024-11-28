@@ -127,10 +127,11 @@ class Test_OD_Detection extends WP_UnitTestCase {
 	 */
 	public function test_od_get_detection_script_returns_script( Closure $set_up, array $expected_exports ): void {
 		$set_up();
-		$slug = od_get_url_metrics_slug( array( 'p' => '1' ) );
+		$slug         = od_get_url_metrics_slug( array( 'p' => '1' ) );
+		$current_etag = od_compute_current_etag( new OD_Tag_Visitor_Registry() );
 
 		$breakpoints      = array( 480, 600, 782 );
-		$group_collection = new OD_URL_Metric_Group_Collection( array(), '', $breakpoints, 3, HOUR_IN_SECONDS );
+		$group_collection = new OD_URL_Metric_Group_Collection( array(), $current_etag, $breakpoints, 3, HOUR_IN_SECONDS );
 
 		$script = od_get_detection_script( $slug, $group_collection );
 

@@ -8,7 +8,12 @@ return array(
 				'isLCP' => false,
 			);
 		}
-		$test_case->populate_url_metrics( $elements, 'img,video', false );
+
+		$tag_visitor_registry = new OD_Tag_Visitor_Registry();
+		$tag_visitor_registry->register( 'img', static function (): void {} );
+		$tag_visitor_registry->register( 'video', static function (): void {} );
+
+		$test_case->populate_url_metrics( $elements, od_compute_current_etag( $tag_visitor_registry ), false );
 	},
 	'buffer'   => '
 		<html lang="en">
