@@ -84,6 +84,13 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		$has_errors = true;
 	}
 
+	// Cache error for all standalone plugins.
+	if ( $has_errors ) {
+		foreach ( perflab_get_standalone_plugins() as $standalone_plugin ) {
+			$plugins[ $standalone_plugin ] = $plugins[ $plugin_slug ];
+		}
+	}
+
 	if ( ! $has_errors && is_object( $response ) && property_exists( $response, 'plugins' ) ) {
 		$plugin_queue = perflab_get_standalone_plugins();
 
@@ -123,7 +130,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 			$plugins[ $plugin_slug ] = array(
 				'error' => array(
 					'code'    => 'plugin_not_found',
-					'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
+					'message' => __( 'The requested plugin is not part of Performance Lab plugins.', 'performance-lab' ),
 				),
 			);
 
