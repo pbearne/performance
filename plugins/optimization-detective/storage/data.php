@@ -141,6 +141,26 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
+ * Computes the current ETag for URL Metrics.
+ *
+ * The ETag is a hash based on the IDs of the registered tag visitors
+ * in the current environment. It is used for marking the URL Metrics as stale
+ * when its value changes.
+ *
+ * @since n.e.x.t
+ * @access private
+ *
+ * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
+ * @return string Current ETag.
+ */
+function od_compute_current_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
+	$data = array(
+		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+	);
+	return md5( serialize( $data ) );  // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+}
+
+/**
  * Computes HMAC for storing URL Metrics for a specific slug.
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.

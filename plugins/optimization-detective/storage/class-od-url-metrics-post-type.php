@@ -224,7 +224,7 @@ class OD_URL_Metrics_Post_Type {
 			// However, in the context of this store_url_metric() method, which is called by the REST API callback,
 			// the ETag is a required field and should never be null. This usage satisfies PHPStan's requirements
 			// until a future release where get_etag() will always return a string.
-			$new_url_metric->get_etag() ?? '',
+			$new_url_metric->get_etag() ?? md5( '' ),
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			od_get_url_metric_freshness_ttl()

@@ -239,7 +239,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 					$current_time > $url_metric->get_timestamp() + $this->freshness_ttl
 					||
 					// If the URL Metric's ETag doesn't match the current ETag, consider the URL metric as stale.
-					( null !== $this->collection && $url_metric->get_etag() !== $this->collection->get_current_etag() )
+					( null !== $this->collection && ! hash_equals( $url_metric->get_etag() ?? md5( '' ), $this->collection->get_current_etag() ) )
 				) {
 					return false;
 				}

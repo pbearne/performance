@@ -206,9 +206,7 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	 */
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
-	$visitors     = iterator_to_array( $tag_visitor_registry );
-	$current_etag = implode( ',', array_keys( $visitors ) );
-
+	$current_etag         = od_compute_current_etag( $tag_visitor_registry );
 	$group_collection     = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
 		$current_etag,
@@ -219,6 +217,7 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	$link_collection      = new OD_Link_Collection();
 	$tag_visitor_context  = new OD_Tag_Visitor_Context( $processor, $group_collection, $link_collection );
 	$current_tag_bookmark = 'optimization_detective_current_tag';
+	$visitors             = iterator_to_array( $tag_visitor_registry );
 
 	// Whether we need to add the data-od-xpath attribute to elements and whether the detection script should be injected.
 	$needs_detection = ! $group_collection->is_every_group_complete();
