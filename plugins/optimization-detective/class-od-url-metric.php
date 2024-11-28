@@ -213,7 +213,7 @@ class OD_URL_Metric implements JsonSerializable {
 				'eTag'      => array(
 					'description' => __( 'The ETag for the URL Metric.', 'optimization-detective' ),
 					'type'        => 'string',
-					'required'    => false,
+					'required'    => false, // To be made required in a future release.
 					'readonly'    => true, // Omit from REST API.
 				),
 				'url'       => array(
