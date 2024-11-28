@@ -130,3 +130,21 @@ function image_prioritizer_get_lazy_load_stylesheet(): string {
 
 	return $stylesheet;
 }
+
+/**
+ * Gets the script to lazy-load background images.
+ *
+ * Load the background image when it approaches the viewport using an IntersectionObserver.
+ *
+ * @since n.e.x.t
+ */
+function image_prioritizer_get_lazy_load_bg_image_script(): string {
+	$path   = image_prioritizer_get_asset_path( 'lazy-load-bg-image.js' );
+	$script = file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+
+	if ( false === $script ) {
+		return '';
+	}
+
+	return $script;
+}

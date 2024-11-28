@@ -135,6 +135,10 @@ const imagePrioritizer = ( env ) => {
 						from: `${ pluginDir }/lazy-load.js`,
 						to: `${ pluginDir }/lazy-load.min.js`,
 					},
+					{
+						from: `${ pluginDir }/lazy-load-bg-image.js`,
+						to: `${ pluginDir }/lazy-load-bg-image.min.js`,
+					},
 				],
 			} ),
 			new WebpackBar( {
