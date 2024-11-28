@@ -188,7 +188,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 					// Now supply the readonly args which were omitted from the REST API params due to being `readonly`.
 					'timestamp' => microtime( true ),
 					'uuid'      => wp_generate_uuid4(),
-					'eTag'      => $request->get_param( 'eTag' ),
+					'etag'      => $request->get_param( 'eTag' ),
 				)
 			)
 		);
