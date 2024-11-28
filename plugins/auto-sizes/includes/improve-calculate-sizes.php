@@ -240,7 +240,6 @@ function auto_sizes_allowed_uses_context_for_image_blocks( array $uses_context, 
 	}
 	return $uses_context;
 }
-add_filter( 'get_block_type_uses_context', 'auto_sizes_allowed_uses_context_for_image_blocks', 10, 2 );
 
 /**
  * Modifies the block context during rendering to blocks.
@@ -258,4 +257,3 @@ function auto_sizes_modify_render_block_context( array $context, array $block ):
 	}
 	return $context;
 }
-add_filter( 'render_block_context', 'auto_sizes_modify_render_block_context', 10, 2 );
