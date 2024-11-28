@@ -38,3 +38,5 @@ if ( ! function_exists( 'wp_img_tag_add_auto_sizes' ) ) {
 add_filter( 'the_content', 'auto_sizes_prime_attachment_caches', 9 ); // This must run before 'do_blocks', which runs at priority 9.
 add_filter( 'render_block_core/image', 'auto_sizes_filter_image_tag', 10, 3 );
 add_filter( 'render_block_core/cover', 'auto_sizes_filter_image_tag', 10, 3 );
+add_filter( 'get_block_type_uses_context', 'auto_sizes_allowed_uses_context_for_image_blocks', 10, 2 );
+add_filter( 'render_block_context', 'auto_sizes_modify_render_block_context', 10, 2 );

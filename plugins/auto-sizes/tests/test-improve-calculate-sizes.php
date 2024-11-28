@@ -389,41 +389,146 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	/**
 	 * Test that the layout property of a group block is passed by context to the image block.
 	 *
-	 * @group test
+	 * @dataProvider data_ancestor_and_image_block_alignment
+	 *
+	 * @param string $ancestor_block_alignment Ancestor block alignment.
+	 * @param string $image_block_alignment    Image block alignment.
+	 * @param string $expected                 Expected output.
 	 */
-	public function test_ancestor_layout_is_passed_by_context(): void {
+	public function test_ancestor_layout_is_passed_by_context( string $ancestor_block_alignment, string $image_block_alignment, string $expected ): void {
 		$block_content = $this->get_group_block_markup(
-			$this->get_image_block_markup( self::$image_id, 'large', 'full' )
+			$this->get_image_block_markup( self::$image_id, 'large', $image_block_alignment ),
+			array(
+				'align' => $ancestor_block_alignment,
+			)
 		);
 
 		$result = apply_filters( 'the_content', $block_content );
 
-		$this->assertStringContainsString( 'sizes="(max-width: 620px) 100vw, 620px" ', $result );
+		$this->assertStringContainsString( $expected, $result );
 	}
 
+	/**
+	 * Data provider.
+	 *
+	 * @return array<string, array<int, bool|string>> The ancestor and image alignments.
+	 */
+	public function data_ancestor_and_image_block_alignment(): array {
+		return array(
+			// Parent default alignment.
+			'Return contentSize 620px, parent block default alignment, image block default alignment' => array(
+				'',
+				'',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return contentSize 620px, parent block default alignment, image block wide alignment'    => array(
+				'',
+				'wide',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return contentSize 620px, parent block default alignment, image block full alignment'    => array(
+				'',
+				'full',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return contentSize 620px, parent block default alignment, image block left alignment'    => array(
+				'',
+				'left',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return contentSize 620px, parent block default alignment, image block center alignment'  => array(
+				'',
+				'center',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return contentSize 620px, parent block default alignment, image block right alignment'   => array(
+				'',
+				'right',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+
+			// Parent wide alignment.
+			'Return contentSize 620px, parent block wide alignment, image block default alignment'    => array(
+				'wide',
+				'',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return wideSize 1280px, parent block wide alignment, image block wide alignment'         => array(
+				'wide',
+				'wide',
+				'sizes="(max-width: 1280px) 100vw, 1280px" ',
+			),
+			'Return wideSize 1280px, parent block wide alignment, image block full alignment'         => array(
+				'wide',
+				'full',
+				'sizes="(max-width: 1280px) 100vw, 1280px" ',
+			),
+			'Return image size 1024px, parent block wide alignment, image block left alignment'       => array(
+				'wide',
+				'left',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+			'Return image size 1024px, parent block wide alignment, image block center alignment'     => array(
+				'wide',
+				'center',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+			'Return image size 1024px, parent block wide alignment, image block right alignment'      => array(
+				'wide',
+				'right',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+
+			// Parent full alignment.
+			'Return contentSize 620px, parent block full alignment, image block default alignment'    => array(
+				'full',
+				'',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
+			),
+			'Return wideSize 1280px, parent block full alignment, image block wide alignment'         => array(
+				'full',
+				'wide',
+				'sizes="(max-width: 1280px) 100vw, 1280px" ',
+			),
+			'Return full size, parent block full alignment, image block full alignment'               => array(
+				'full',
+				'full',
+				'sizes="100vw" ',
+			),
+			'Return image size 1024px, parent block full alignment, image block left alignment'       => array(
+				'full',
+				'left',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+			'Return image size 1024px, parent block full alignment, image block center alignment'     => array(
+				'full',
+				'center',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+			'Return image size 1024px, parent block full alignment, image block right alignment'      => array(
+				'full',
+				'right',
+				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+			),
+		);
+	}
 
 	/**
 	 * Helper to generate image block markup.
 	 *
 	 * @param int    $attachment_id Attachment ID.
 	 * @param string $size          Optional. Image size. Default 'full'.
-	 * @param string $align         Optional.  Image alignment. Default null.
+	 * @param string $align         Optional. Image alignment. Default null.
 	 * @return string Image block markup.
 	 */
 	public function get_image_block_markup( int $attachment_id, string $size = 'full', string $align = null ): string {
 		$image_url = wp_get_attachment_image_url( $attachment_id, $size );
 
-		$atts = wp_parse_args(
-			array(
-				'id'       => $attachment_id,
-				'sizeSlug' => $size,
-				'align'    => $align,
-			),
-			array(
-				'id'              => $attachment_id,
-				'sizeSlug'        => 'large',
-				'linkDestination' => 'none',
-			)
+		$atts = array(
+			'id'              => $attachment_id,
+			'sizeSlug'        => $size,
+			'align'           => $align,
+			'linkDestination' => 'none',
 		);
 
 		return '<!-- wp:image ' . wp_json_encode( $atts ) . ' --><figure class="wp-block-image size-' . $size . '"><img src="' . $image_url . '" alt="" class="wp-image-' . $attachment_id . '"/></figure><!-- /wp:image -->';
