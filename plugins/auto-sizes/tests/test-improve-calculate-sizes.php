@@ -389,8 +389,6 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	/**
 	 * Test that the layout property of a group block is passed by context to the image block.
 	 *
-	 * @group test
-	 *
 	 * @dataProvider data_ancestor_and_image_block_alignment
 	 *
 	 * @param string $ancestor_block_alignment Ancestor block alignment.
