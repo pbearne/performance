@@ -86,17 +86,19 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 
 	$current_url = od_get_current_url();
 
+	$current_etag = $group_collection->get_current_etag();
+
 	$detect_args = array(
 		'minViewportAspectRatio' => od_get_minimum_viewport_aspect_ratio(),
 		'maxViewportAspectRatio' => od_get_maximum_viewport_aspect_ratio(),
 		'isDebug'                => WP_DEBUG,
 		'extensionModuleUrls'    => $extension_module_urls,
 		'restApiEndpoint'        => rest_url( OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE ),
-		'currentETag'            => $group_collection->get_current_etag(),
+		'currentETag'            => $current_etag,
 		'currentUrl'             => $current_url,
 		'urlMetricSlug'          => $slug,
 		'cachePurgePostId'       => od_get_cache_purge_post_id(),
-		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $group_collection->get_current_etag(), $current_url, $cache_purge_post_id ),
+		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_etag, $current_url, $cache_purge_post_id ),
 		'urlMetricGroupStatuses' => array_map(
 			static function ( OD_URL_Metric_Group $group ): array {
 				return array(

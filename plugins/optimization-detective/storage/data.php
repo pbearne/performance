@@ -152,13 +152,13 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @see od_get_url_metrics_slug()
  *
  * @param string   $slug                Slug (hash of normalized query vars).
- * @param string   $etag                ETag.
+ * @param string   $current_tag         Current ETag.
  * @param string   $url                 URL.
  * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return string HMAC.
  */
-function od_get_url_metrics_storage_hmac( string $slug, string $etag, string $url, ?int $cache_purge_post_id = null ): string {
-	$action = "store_url_metric:$slug:$etag:$url:$cache_purge_post_id";
+function od_get_url_metrics_storage_hmac( string $slug, string $current_tag, string $url, ?int $cache_purge_post_id = null ): string {
+	$action = "store_url_metric:$slug:$current_tag:$url:$cache_purge_post_id";
 	return wp_hash( $action, 'nonce' );
 }
 
@@ -173,13 +173,13 @@ function od_get_url_metrics_storage_hmac( string $slug, string $etag, string $ur
  *
  * @param string   $hmac                HMAC.
  * @param string   $slug                Slug (hash of normalized query vars).
- * @param string   $etag                ETag.
+ * @param string   $current_etag        Current ETag.
  * @param String   $url                 URL.
  * @param int|null $cache_purge_post_id Cache purge post ID.
  * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $etag, string $url, ?int $cache_purge_post_id = null ): bool {
-	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $etag, $url, $cache_purge_post_id ), $hmac );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $current_etag, string $url, ?int $cache_purge_post_id = null ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $current_etag, $url, $cache_purge_post_id ), $hmac );
 }
 
 /**
