@@ -46,7 +46,7 @@ function od_register_endpoint(): void {
 			'required'    => true,
 			'pattern'     => '^[0-9a-f]{32}$',
 		),
-		'eTag'                => array(
+		'current_etag'        => array(
 			'type'        => 'string',
 			'description' => __( 'ETag for the current environment.', 'optimization-detective' ),
 			'required'    => true,
@@ -63,7 +63,7 @@ function od_register_endpoint(): void {
 			'required'          => true,
 			'pattern'           => '^[0-9a-f]+$',
 			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
-				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['eTag'], $request['url'], $request['cache_purge_post_id'] ?? null ) ) {
+				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['current_etag'], $request['url'], $request['cache_purge_post_id'] ?? null ) ) {
 					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );
 				}
 				return true;
@@ -146,7 +146,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 
 	$url_metric_group_collection = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
-		$request->get_param( 'eTag' ),
+		$request->get_param( 'current_etag' ),
 		od_get_breakpoint_max_widths(),
 		od_get_url_metrics_breakpoint_sample_size(),
 		od_get_url_metric_freshness_ttl()
@@ -188,7 +188,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 					// Now supply the readonly args which were omitted from the REST API params due to being `readonly`.
 					'timestamp' => microtime( true ),
 					'uuid'      => wp_generate_uuid4(),
-					'etag'      => $request->get_param( 'eTag' ),
+					'etag'      => $request->get_param( 'current_etag' ),
 				)
 			)
 		);
