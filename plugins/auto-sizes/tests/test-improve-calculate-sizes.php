@@ -524,13 +524,11 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	public function get_image_block_markup( int $attachment_id, string $size = 'full', string $align = null ): string {
 		$image_url = wp_get_attachment_image_url( $attachment_id, $size );
 
-		$atts = wp_parse_args(
-			array(
-				'id'              => $attachment_id,
-				'sizeSlug'        => $size,
-				'align'           => $align,
-				'linkDestination' => 'none',
-			)
+		$atts = array(
+			'id'              => $attachment_id,
+			'sizeSlug'        => $size,
+			'align'           => $align,
+			'linkDestination' => 'none',
 		);
 
 		return '<!-- wp:image ' . wp_json_encode( $atts ) . ' --><figure class="wp-block-image size-' . $size . '"><img src="' . $image_url . '" alt="" class="wp-image-' . $attachment_id . '"/></figure><!-- /wp:image -->';
