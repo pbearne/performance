@@ -35,7 +35,7 @@ trait Optimization_Detective_Test_Helpers {
 					$slug,
 					$this->get_sample_url_metric(
 						array(
-							'eTag'           => $etag,
+							'etag'           => $etag,
 							'viewport_width' => $viewport_width,
 							'elements'       => $elements,
 						)
@@ -67,7 +67,7 @@ trait Optimization_Detective_Test_Helpers {
 	 * Gets a sample URL metric.
 	 *
 	 * @phpstan-param array{
-	 *                    eTag?:            string,
+	 *                    etag?:            string,
 	 *                    url?:             string,
 	 *                    viewport_width?:  int,
 	 *                    viewport_height?: int,
@@ -80,7 +80,7 @@ trait Optimization_Detective_Test_Helpers {
 	public function get_sample_url_metric( array $params ): OD_URL_Metric {
 		$params = array_merge(
 			array(
-				'eTag'           => '',
+				'etag'           => '',
 				'url'            => home_url( '/' ),
 				'viewport_width' => 480,
 				'elements'       => array(),
@@ -94,7 +94,7 @@ trait Optimization_Detective_Test_Helpers {
 
 		return new OD_URL_Metric(
 			array(
-				'eTag'      => $params['eTag'],
+				'etag'      => $params['etag'],
 				'url'       => home_url( '/' ),
 				'viewport'  => array(
 					'width'  => $params['viewport_width'],
