@@ -134,7 +134,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 			$processor->append_head_html(
 				'<style>
 					@media (scripting: enabled) {
-						.has-background.od-lazy-bg-image {
+						.od-lazy-bg-image {
 							background-image: none !important;
 						}
 					}

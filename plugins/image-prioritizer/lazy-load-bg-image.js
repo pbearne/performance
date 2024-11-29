@@ -16,9 +16,7 @@ const lazyBgImageObserver = new IntersectionObserver(
 	}
 );
 
-const bgImageElements = document.querySelectorAll(
-	'.has-background.od-lazy-bg-image'
-);
+const bgImageElements = document.querySelectorAll( '.od-lazy-bg-image' );
 for ( const bgImageElement of bgImageElements ) {
 	lazyBgImageObserver.observe( bgImageElement );
 }
