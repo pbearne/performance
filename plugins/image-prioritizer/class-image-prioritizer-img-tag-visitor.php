@@ -22,8 +22,8 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Visits a tag.
 	 *
-	 * @since n.e.x.t Separate the processing of <img> and <picture> elements.
 	 * @since 0.1.0
+	 * @since n.e.x.t Separate the processing of <img> and <picture> elements.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 *
@@ -34,8 +34,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 		$tag       = $processor->get_tag();
 
 		if ( 'PICTURE' === $tag ) {
-			$this->process_picture( $processor, $context );
-			return false;
+			return $this->process_picture( $processor, $context );
 		}
 
 		if ( 'IMG' !== $tag ) {
@@ -87,9 +86,6 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
-		// Set a bookmark to return to after processing.
-		$processor->set_bookmark( 'img-prioritizer-picture' );
-
 		$collected_sources = array();
 		$img_xpath         = null;
 
@@ -127,18 +123,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			}
 		}
 
-		// Reset the processor back to the bookmark and release it.
-		$processor->seek( 'img-prioritizer-picture' );
-		$processor->release_bookmark( 'img-prioritizer-picture' );
-
-		if ( null === $img_xpath ) {
-			return false;
-		}
-
-		// If no <source> elements were found, add a preload link for the <img> element.
-		if ( 0 === count( $collected_sources ) ) {
-			$processor->next_tag();
-			$this->add_preload_link_for_img( $processor, $context, $img_xpath );
+		if ( null === $img_xpath || 0 === count( $collected_sources ) ) {
 			return false;
 		}
 
