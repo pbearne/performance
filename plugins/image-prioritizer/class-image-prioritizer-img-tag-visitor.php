@@ -100,11 +100,18 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 			// Collect <source> elements.
 			if ( 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
+				$media = $processor->get_attribute( 'media' );
+				$type  = $processor->get_attribute( 'type' );
+
+				// Ensure that all <source> elements have a type attribute and no media attribute.
+				if ( null !== $media || null === $type ) {
+					return false;
+				}
+
 				$collected_sources[] = array(
 					'srcset'      => $processor->get_attribute( 'srcset' ),
 					'sizes'       => $processor->get_attribute( 'sizes' ),
-					'type'        => $processor->get_attribute( 'type' ),
-					'media'       => $processor->get_attribute( 'media' ),
+					'type'        => $type,
 					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
 				);
 			}
@@ -127,7 +134,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			return false;
 		}
 
-		$this->add_preload_link_for_picture( $context, $img_xpath, $collected_sources );
+		$this->add_preload_link_for_picture( $context, $img_xpath, $collected_sources[0] );
 
 		return true;
 	}
@@ -250,46 +257,42 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @param OD_Tag_Visitor_Context                                                                                                                                $context           Tag visitor context.
-	 * @param string                                                                                                                                                $xpath             XPath of the element.
-	 * @param array<int, array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,media?: string|true|null,crossorigin?: string|true|null}> $collected_sources Collected sources from the <source> elements.
+	 * @param OD_Tag_Visitor_Context                                                                                                                    $context Tag visitor context.
+	 * @param string                                                                                                                                    $xpath   XPath of the element.
+	 * @param array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,media?: string|true|null,crossorigin?: string|true|null} $source  Collected sources from the <source> elements.
 	 */
-	private function add_preload_link_for_picture( OD_Tag_Visitor_Context $context, string $xpath, array $collected_sources ): void {
+	private function add_preload_link_for_picture( OD_Tag_Visitor_Context $context, string $xpath, array $source ): void {
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
-			foreach ( $collected_sources as $source ) {
-				$link_attributes = array_merge(
+			$link_attributes = array_merge(
+				array(
+					'rel'           => 'preload',
+					'fetchpriority' => 'high',
+					'as'            => 'image',
+				),
+				array_filter(
 					array(
-						'rel'           => 'preload',
-						'fetchpriority' => 'high',
-						'as'            => 'image',
+						'href'        => isset( $source['srcset'] ) && is_string( $source['srcset'] )
+						? explode( ' ', $source['srcset'] )[0]
+						: '',
+						'imagesrcset' => isset( $source['srcset'] ) && is_string( $source['srcset'] ) ? $source['srcset'] : '',
+						'imagesizes'  => isset( $source['sizes'] ) && is_string( $source['sizes'] ) ? $source['sizes'] : '',
+						'type'        => isset( $source['type'] ) && is_string( $source['type'] ) ? $source['type'] : '',
+						'media'       => isset( $source['media'] ) && is_string( $source['media'] ) ? 'screen and ' . $source['media'] : 'screen',
 					),
-					array_filter(
-						array(
-							'href'        => isset( $source['srcset'] ) && is_string( $source['srcset'] )
-							? explode( ' ', $source['srcset'] )[0]
-							: '',
-							'imagesrcset' => isset( $source['srcset'] ) && is_string( $source['srcset'] ) ? $source['srcset'] : '',
-							'imagesizes'  => isset( $source['sizes'] ) && is_string( $source['sizes'] ) ? $source['sizes'] : '',
-							'type'        => isset( $source['type'] ) && is_string( $source['type'] ) ? $source['type'] : '',
-							'media'       => isset( $source['media'] ) && is_string( $source['media'] ) ? 'screen and ' . $source['media'] : 'screen',
-						),
-						static function ( string $value ): bool {
-							return '' !== $value;
-						}
-					)
-				);
-
-				if ( isset( $source['crossorigin'] ) ) {
-					$link_attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
-				}
-
-				$context->link_collection->add_link(
-					$link_attributes,
-					$group->get_minimum_viewport_width(),
-					$group->get_maximum_viewport_width()
-				);
+					static function ( string $value ): bool {
+						return '' !== $value;
+					}
+				)
+			);
+			if ( isset( $source['crossorigin'] ) ) {
+				$link_attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
 			}
+			$context->link_collection->add_link(
+				$link_attributes,
+				$group->get_minimum_viewport_width(),
+				$group->get_maximum_viewport_width()
+			);
 		}
 	}
 
