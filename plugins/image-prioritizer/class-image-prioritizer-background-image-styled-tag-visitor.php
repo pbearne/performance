@@ -129,7 +129,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 		$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
 
 		if ( ! $this->added_lazy_stylesheet ) {
-			$processor->append_head_html( sprintf( '<style>%s</style>', image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
+			$processor->append_head_html( sprintf( "<style>\n%s\n</style>\n", image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
 			$this->added_lazy_stylesheet = true;
 		}
 
