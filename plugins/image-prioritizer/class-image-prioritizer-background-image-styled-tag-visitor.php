@@ -121,10 +121,8 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		$xpath = $processor->get_xpath();
 
-		$in_any_initial_viewport = $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath );
-
 		// If the element is in the initial viewport, do not lazy load its background image.
-		if ( true === $in_any_initial_viewport || null === $in_any_initial_viewport ) {
+		if ( false !== $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath ) ) {
 			return;
 		}
 
