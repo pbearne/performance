@@ -130,3 +130,19 @@ function image_prioritizer_get_lazy_load_bg_image_script(): string {
 
 	return $script;
 }
+
+/**
+ * Gets the stylesheet to lazy-load background images.
+ *
+ * @since n.e.x.t
+ */
+function image_prioritizer_get_lazy_load_bg_image_stylesheet(): string {
+	$path       = image_prioritizer_get_asset_path( 'lazy-load-bg-image.css' );
+	$stylesheet = file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+
+	if ( false === $stylesheet ) {
+		return '';
+	}
+
+	return $stylesheet;
+}
