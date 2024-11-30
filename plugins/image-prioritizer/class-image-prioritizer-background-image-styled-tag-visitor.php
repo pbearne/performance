@@ -28,20 +28,12 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	const LAZY_BG_IMAGE_CLASS_NAME = 'od-lazy-bg-image';
 
 	/**
-	 * Whether the lazy-loading stylesheet has been added to the head.
+	 * Whether the lazy-loading script and stylesheet have been added.
 	 *
 	 * @since n.e.x.t
 	 * @var bool
 	 */
-	private $added_lazy_stylesheet = false;
-
-	/**
-	 * Whether the lazy-loading script was added to the body.
-	 *
-	 * @since n.e.x.t
-	 * @var bool
-	 */
-	private $added_lazy_script = false;
+	private $added_lazy_assets = false;
 
 	/**
 	 * Visits a tag.
@@ -128,14 +120,10 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
 
-		if ( ! $this->added_lazy_stylesheet ) {
+		if ( ! $this->added_lazy_assets ) {
 			$processor->append_head_html( sprintf( "<style>\n%s\n</style>\n", image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
-			$this->added_lazy_stylesheet = true;
-		}
-
-		if ( ! $this->added_lazy_script ) {
 			$processor->append_body_html( wp_get_inline_script_tag( image_prioritizer_get_lazy_load_bg_image_script(), array( 'type' => 'module' ) ) );
-			$this->added_lazy_script = true;
+			$this->added_lazy_assets = true;
 		}
 	}
 }
