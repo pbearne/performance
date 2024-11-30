@@ -25,6 +25,7 @@ nbproject/
 build
 .wp-env.override.json
 *.min.js
+*.min.css
 *.asset.php
 
 ############

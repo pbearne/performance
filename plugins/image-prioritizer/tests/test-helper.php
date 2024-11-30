@@ -97,6 +97,8 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 					$matches[1] = '/* import detect ... */';
 				} elseif ( false !== strpos( $matches[1], 'const lazyVideoObserver' ) ) {
 					$matches[1] = '/* const lazyVideoObserver ... */';
+				} elseif ( false !== strpos( $matches[1], 'const lazyBgImageObserver' ) ) {
+					$matches[1] = '/* const lazyBgImageObserver ... */';
 				}
 				return implode( '', $matches );
 			},
@@ -219,5 +221,32 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
+	}
+
+	/**
+	 * Test image_prioritizer_get_video_lazy_load_script.
+	 *
+	 * @covers ::image_prioritizer_get_video_lazy_load_script
+	 */
+	public function test_image_prioritizer_get_video_lazy_load_script(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_video_lazy_load_script() ) );
+	}
+
+	/**
+	 * Test image_prioritizer_get_lazy_load_bg_image_script.
+	 *
+	 * @covers ::image_prioritizer_get_lazy_load_bg_image_script
+	 */
+	public function test_image_prioritizer_get_lazy_load_bg_image_script(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_script() ) );
+	}
+
+	/**
+	 * Test image_prioritizer_get_lazy_load_bg_image_stylesheet.
+	 *
+	 * @covers ::image_prioritizer_get_lazy_load_bg_image_stylesheet
+	 */
+	public function test_image_prioritizer_get_lazy_load_bg_image_stylesheet(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
 	}
 }
