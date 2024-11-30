@@ -97,6 +97,8 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 					$matches[1] = '/* import detect ... */';
 				} elseif ( false !== strpos( $matches[1], 'const lazyVideoObserver' ) ) {
 					$matches[1] = '/* const lazyVideoObserver ... */';
+				} elseif ( false !== strpos( $matches[1], 'const lazyBgImageObserver' ) ) {
+					$matches[1] = '/* const lazyBgImageObserver ... */';
 				}
 				return implode( '', $matches );
 			},
