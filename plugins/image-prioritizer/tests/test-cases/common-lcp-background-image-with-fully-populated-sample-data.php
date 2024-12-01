@@ -8,7 +8,7 @@ return array(
 					'isLCP' => true,
 				),
 			),
-			'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video'
+			md5( 'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video' )
 		);
 	},
 	'buffer'   => '

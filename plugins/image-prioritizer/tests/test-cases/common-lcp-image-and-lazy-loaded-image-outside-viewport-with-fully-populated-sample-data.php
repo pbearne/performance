@@ -15,7 +15,7 @@ return array(
 					$slug,
 					$test_case->get_sample_url_metric(
 						array(
-							'etag'           => 'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video',
+							'etag'           => md5( 'image-prioritizer/img,image-prioritizer/background-image,image-prioritizer/video' ),
 							'viewport_width' => $viewport_width,
 							'elements'       => array(
 								array(

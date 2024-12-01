@@ -26,7 +26,7 @@ return array(
 					'intersectionRatio' => 0,
 				),
 			),
-			false
+			null
 		);
 
 		// This tests how the Embed Optimizer plugin plays along with other tag visitors.

@@ -10,7 +10,7 @@ return array(
 					'resizedBoundingClientRect' => array_merge( $test_case->get_sample_dom_rect(), array( 'height' => 500 ) ),
 				),
 			),
-			false
+			null
 		);
 	},
 	'buffer'   => '

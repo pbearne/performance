@@ -68,7 +68,7 @@ trait Optimization_Detective_Test_Helpers {
 	 * Gets a sample URL metric.
 	 *
 	 * @phpstan-param array{
-	 *                    etag?:            string,
+	 *                    etag?:            non-empty-string,
 	 *                    url?:             string,
 	 *                    viewport_width?:  int,
 	 *                    viewport_height?: int,

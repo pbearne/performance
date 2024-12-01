@@ -22,7 +22,7 @@ return array(
 					od_get_url_metrics_slug( od_get_normalized_query_vars() ),
 					$test_case->get_sample_url_metric(
 						array(
-							'etag'           => 'embeds',
+							'etag'           => md5( 'embeds' ),
 							'viewport_width' => $viewport_width,
 							'elements'       => $elements,
 						)

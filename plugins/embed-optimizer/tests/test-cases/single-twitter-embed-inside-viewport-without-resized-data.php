@@ -10,7 +10,7 @@ return array(
 					// Intentionally omitting resizedBoundingClientRect here to test behavior when data isn't supplied.
 				),
 			),
-			'embeds'
+			md5( 'embeds' )
 		);
 	},
 	'buffer'   => '

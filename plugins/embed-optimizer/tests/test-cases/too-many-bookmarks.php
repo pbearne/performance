@@ -11,7 +11,7 @@ return array(
 					'intersectionRatio' => 0.0,
 				),
 			),
-			false
+			null
 		);
 
 		// Check what happens when there are too many bookmarks.
