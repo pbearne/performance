@@ -8,7 +8,6 @@ return array(
 				'isLCP' => false,
 			);
 		}
-
 		$test_case->populate_url_metrics( $elements, false );
 	},
 	'buffer'   => '
