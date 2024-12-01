@@ -28,7 +28,8 @@ return array(
 					'intersectionRect'   => $outside_viewport_rect,
 					'boundingClientRect' => $outside_viewport_rect,
 				),
-			)
+			),
+			null
 		);
 	},
 	'buffer'   => '
