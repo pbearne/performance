@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                            }
  * @phpstan-type Data         array{
  *                                uuid: non-empty-string,
- *                                etag?: string,
+ *                                etag?: non-empty-string,
  *                                url: non-empty-string,
  *                                timestamp: float,
  *                                viewport: ViewportRect,
@@ -433,7 +433,7 @@ class OD_URL_Metric implements JsonSerializable {
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @return string|null ETag.
+	 * @return non-empty-string|null ETag.
 	 */
 	public function get_etag(): ?string {
 		// Since the ETag is optional for now, return null for old URL Metrics that do not have one.

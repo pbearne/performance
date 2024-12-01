@@ -36,10 +36,10 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	private $groups;
 
 	/**
-	 * The current Etag.
+	 * The current ETag.
 	 *
 	 * @since n.e.x.t
-	 * @var string
+	 * @var non-empty-string
 	 */
 	private $current_etag;
 
@@ -101,11 +101,11 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 *
 	 * @throws InvalidArgumentException When an invalid argument is supplied.
 	 *
-	 * @param OD_URL_Metric[] $url_metrics   URL Metrics.
-	 * @param string          $current_etag  The current ETag.
-	 * @param int[]           $breakpoints   Breakpoints in max widths.
-	 * @param int             $sample_size   Sample size for the maximum number of viewports in a group between breakpoints.
-	 * @param int             $freshness_ttl Freshness age (TTL) for a given URL Metric.
+	 * @param OD_URL_Metric[]  $url_metrics   URL Metrics.
+	 * @param non-empty-string $current_etag  The current ETag.
+	 * @param int[]            $breakpoints   Breakpoints in max widths.
+	 * @param int              $sample_size   Sample size for the maximum number of viewports in a group between breakpoints.
+	 * @param int              $freshness_ttl Freshness age (TTL) for a given URL Metric.
 	 */
 	public function __construct( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl ) {
 		$this->current_etag = $current_etag;
@@ -176,7 +176,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @return string Current ETag.
+	 * @return non-empty-string Current ETag.
 	 */
 	public function get_current_etag(): string {
 		return $this->current_etag;

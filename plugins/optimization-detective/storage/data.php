@@ -151,7 +151,7 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @access private
  *
  * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
- * @return string Current ETag.
+ * @return non-empty-string Current ETag.
  */
 function od_compute_current_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
 	$data = array(
