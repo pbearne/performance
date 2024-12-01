@@ -78,6 +78,14 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				'freshness_ttl' => -HOUR_IN_SECONDS,
 				'exception'     => InvalidArgumentException::class,
 			),
+			'invalid_current_etag_bad'   => array(
+				'url_metrics'   => array(),
+				'current_etag'  => 'invalid_etag',
+				'breakpoints'   => array( 400 ),
+				'sample_size'   => 3,
+				'freshness_ttl' => HOUR_IN_SECONDS,
+				'exception'     => InvalidArgumentException::class,
+			),
 			'invalid_url_metrics_bad'    => array(
 				'url_metrics'   => array( 'bad' ),
 				'current_etag'  => $current_etag,
