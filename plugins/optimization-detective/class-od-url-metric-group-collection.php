@@ -108,6 +108,18 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * @param int              $freshness_ttl Freshness age (TTL) for a given URL Metric.
 	 */
 	public function __construct( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl ) {
+		// Set current ETag.
+		if ( 1 !== preg_match( '/^[a-f0-9]{32}$/', $current_etag ) ) {
+			throw new InvalidArgumentException(
+				esc_html(
+					sprintf(
+						/* translators: %s is the invalid ETag */
+						__( 'The current ETag must be a valid MD5 hash, but provided: %s', 'optimization-detective' ),
+						$current_etag
+					)
+				)
+			);
+		}
 		$this->current_etag = $current_etag;
 
 		// Set breakpoints.
