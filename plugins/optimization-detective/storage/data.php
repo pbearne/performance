@@ -157,7 +157,7 @@ function od_get_current_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): s
 	$data = array(
 		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
 	);
-	return md5( serialize( $data ) );  // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+	return md5( (string) wp_json_encode( $data ) );
 }
 
 /**
