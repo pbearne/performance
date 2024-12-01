@@ -259,6 +259,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 * @covers ::get_viewport_width
 	 * @covers ::get_timestamp
 	 * @covers ::get_elements
+	 * @covers ::get_url
 	 * @covers ::get_etag
 	 * @covers ::jsonSerialize
 	 * @covers ::get
