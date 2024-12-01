@@ -31,6 +31,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 		return array(
 			'valid_minimal'                   => array(
 				'data' => array(
+					// Note: The 'etag' field is currently optional, so this data is still valid without it.
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -40,6 +41,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'valid_with_element'              => array(
 				'data' => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -51,6 +53,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			// This tests that sanitization converts values into their expected PHP types.
 			'valid_but_props_are_strings'     => array(
 				'data' => array(
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => array_map( 'strval', $viewport ),
 					'timestamp' => (string) microtime( true ),
@@ -71,6 +74,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'bad_uuid'                        => array(
 				'data'  => array(
 					'uuid'      => 'foo',
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -78,9 +82,53 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 				),
 				'error' => 'OD_URL_Metric[uuid] is not a valid UUID.',
 			),
+			'etag_too_short'                  => array(
+				'data'  => array(
+					'uuid'      => wp_generate_uuid4(),
+					'etag'      => 'foo',
+					'url'       => home_url( '/' ),
+					'viewport'  => $viewport,
+					'timestamp' => microtime( true ),
+					'elements'  => array(),
+				),
+				'error' => 'OD_URL_Metric[etag] must be at least 32 characters long.',
+			),
+			'etag_too_long'                   => array(
+				'data'  => array(
+					'uuid'      => wp_generate_uuid4(),
+					'etag'      => 'd41d8cd98f00b204e9800998ecf8427e1',
+					'url'       => home_url( '/' ),
+					'viewport'  => $viewport,
+					'timestamp' => microtime( true ),
+					'elements'  => array(),
+				),
+				'error' => 'OD_URL_Metric[etag] must be at most 32 characters long.',
+			),
+			'bad_etag'                        => array(
+				'data'  => array(
+					'uuid'      => wp_generate_uuid4(),
+					'etag'      => 'd41d8cd98f00b204e9800998ecf8427$',
+					'url'       => home_url( '/' ),
+					'viewport'  => $viewport,
+					'timestamp' => microtime( true ),
+					'elements'  => array(),
+				),
+				'error' => 'OD_URL_Metric[etag] does not match pattern ^[0-9a-f]{32}$.',
+			),
+			'missing_etag'                    => array(
+				'data' => array(
+					'uuid'      => wp_generate_uuid4(),
+					'url'       => home_url( '/' ),
+					'viewport'  => $viewport,
+					'timestamp' => microtime( true ),
+					'elements'  => array(),
+				),
+				// Note: Add error message 'etag is a required property of OD_URL_Metric.' when 'etag' becomes mandatory.
+			),
 			'missing_viewport'                => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'timestamp' => microtime( true ),
 					'elements'  => array(),
@@ -90,6 +138,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'missing_viewport_width'          => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => array( 'height' => 640 ),
 					'timestamp' => microtime( true ),
@@ -100,6 +149,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'bad_viewport'                    => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => array(
 						'height' => 'tall',
@@ -113,6 +163,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'viewport_aspect_ratio_too_small' => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => array(
 						'width'  => 1000,
@@ -126,6 +177,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'viewport_aspect_ratio_too_large' => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => array(
 						'width'  => 10000,
@@ -139,6 +191,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'missing_timestamp'               => array(
 				'data'  => array(
 					'uuid'     => wp_generate_uuid4(),
+					'etag'     => md5( '' ),
 					'url'      => home_url( '/' ),
 					'viewport' => $viewport,
 					'elements' => array(),
@@ -148,6 +201,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'missing_elements'                => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -157,6 +211,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'missing_url'                     => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
 					'elements'  => array(),
@@ -166,6 +221,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'bad_elements'                    => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -180,6 +236,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 			'bad_intersection_width'          => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ),
 					'url'       => home_url( '/' ),
 					'viewport'  => $viewport,
 					'timestamp' => microtime( true ),
@@ -202,6 +259,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 * @covers ::get_viewport_width
 	 * @covers ::get_timestamp
 	 * @covers ::get_elements
+	 * @covers ::get_etag
 	 * @covers ::jsonSerialize
 	 * @covers ::get
 	 * @covers ::get_json_schema
@@ -256,6 +314,15 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 
 		$this->assertSame( $data['url'], $url_metric->get_url() );
 		$this->assertSame( $data['url'], $url_metric->get( 'url' ) );
+
+		// Note: When the 'etag' field becomes required, the else statement can be removed.
+		if ( array_key_exists( 'etag', $data ) ) {
+			$this->assertSame( $data['etag'], $url_metric->get_etag() );
+			$this->assertSame( $data['etag'], $url_metric->get( 'etag' ) );
+			$this->assertTrue( 1 === preg_match( '/^[a-f0-9]{32}$/', $url_metric->get_etag() ) );
+		} else {
+			$this->assertNull( $url_metric->get_etag() );
+		}
 
 		$this->assertTrue( wp_is_uuid( $url_metric->get_uuid() ) );
 		$this->assertSame( $url_metric->get_uuid(), $url_metric->get( 'uuid' ) );
