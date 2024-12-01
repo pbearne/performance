@@ -9,10 +9,6 @@ return array(
 			);
 		}
 
-		$tag_visitor_registry = new OD_Tag_Visitor_Registry();
-		$tag_visitor_registry->register( 'img', static function (): void {} );
-		$tag_visitor_registry->register( 'video', static function (): void {} );
-
 		$test_case->populate_url_metrics( $elements, false );
 	},
 	'buffer'   => '

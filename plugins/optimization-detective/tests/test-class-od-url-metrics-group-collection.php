@@ -196,7 +196,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @dataProvider data_provider_sample_size_and_breakpoints
 	 */
 	public function test_add_url_metric( int $sample_size, array $breakpoints, array $viewport_widths, array $expected_counts ): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection( array(), $current_etag, $breakpoints, $sample_size, HOUR_IN_SECONDS );
 
 		// Over-populate the sample size for the breakpoints by a dozen.
@@ -225,7 +225,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @covers ::add_url_metric
 	 */
 	public function test_adding_pushes_out_old_metrics(): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$sample_size      = 3;
 		$breakpoints      = array( 400, 600 );
 		$group_collection = new OD_URL_Metric_Group_Collection( array(), $current_etag, $breakpoints, $sample_size, HOUR_IN_SECONDS );
@@ -349,7 +349,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			$viewport_widths
 		);
 
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, 3, HOUR_IN_SECONDS );
 
 		$this->assertCount(
@@ -602,7 +602,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(
 				// Group 1: 0-480 viewport widths.
@@ -645,7 +645,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	public function test_get_common_lcp_element(): void {
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(),
 			$current_etag,
@@ -759,7 +759,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @param array<string, float> $expected    Expected.
 	 */
 	public function test_get_all_element_max_intersection_ratios( array $url_metrics, array $expected ): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$breakpoints      = array( 480, 600, 782 );
 		$sample_size      = 3;
 		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, 0 );
@@ -937,7 +937,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @param array<string, bool>  $expected    Expected.
 	 */
 	public function test_get_all_elements_positioned_in_any_initial_viewport( array $url_metrics, array $expected ): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$breakpoints      = array( 480, 600, 782 );
 		$sample_size      = 3;
 		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, 0 );
@@ -964,7 +964,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
-			od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() ),
+			md5( '' ),
 			array( 500, 700 ),
 			3,
 			HOUR_IN_SECONDS
@@ -992,7 +992,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
-			od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() ),
+			md5( '' ),
 			array( 500, 700 ),
 			3,
 			HOUR_IN_SECONDS

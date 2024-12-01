@@ -346,7 +346,7 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 	 * @param array<int, string> $expected_lcp_element_xpaths Expected XPaths.
 	 */
 	public function test_get_lcp_element( array $breakpoints, array $url_metrics, array $expected_lcp_element_xpaths ): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, 10, HOUR_IN_SECONDS );
 
 		$lcp_element_xpaths_by_minimum_viewport_widths = array();
@@ -377,8 +377,7 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 		);
 
 		$collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, array( 1000 ), 1, HOUR_IN_SECONDS );
-		$group      = iterator_to_array( $collection )[0];
-		$this->assertInstanceOf( OD_URL_Metric_Group::class, $group );
+		$group      = $collection->get_first_group();
 
 		$json          = wp_json_encode( $group );
 		$parsed_json   = json_decode( $json, true );
