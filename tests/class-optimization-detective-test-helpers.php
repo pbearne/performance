@@ -28,7 +28,7 @@ trait Optimization_Detective_Test_Helpers {
 	 */
 	public function populate_url_metrics( array $elements, ?string $etag, bool $complete = true ): void {
 		$slug        = od_get_url_metrics_slug( od_get_normalized_query_vars() );
-		$etag        = $etag ?? od_compute_current_etag( new OD_Tag_Visitor_Registry() );
+		$etag        = $etag ?? od_get_current_etag( new OD_Tag_Visitor_Registry() );
 		$sample_size = $complete ? od_get_url_metrics_breakpoint_sample_size() : 1;
 		foreach ( array_merge( od_get_breakpoint_max_widths(), array( 1000 ) ) as $viewport_width ) {
 			for ( $i = 0; $i < $sample_size; $i++ ) {
@@ -81,7 +81,7 @@ trait Optimization_Detective_Test_Helpers {
 	public function get_sample_url_metric( array $params ): OD_URL_Metric {
 		$params = array_merge(
 			array(
-				'etag'           => od_compute_current_etag( new OD_Tag_Visitor_Registry() ),
+				'etag'           => od_get_current_etag( new OD_Tag_Visitor_Registry() ),
 				'url'            => home_url( '/' ),
 				'viewport_width' => 480,
 				'elements'       => array(),

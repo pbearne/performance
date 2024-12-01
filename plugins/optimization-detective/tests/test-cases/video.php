@@ -12,7 +12,7 @@ return array(
 					'isLCP' => true,
 				),
 			),
-			od_compute_current_etag( $tag_visitor_registry ),
+			od_get_current_etag( $tag_visitor_registry ),
 			false
 		);
 	},
