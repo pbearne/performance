@@ -235,11 +235,21 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			}
 			$current_time = microtime( true );
 			foreach ( $this->url_metrics as $url_metric ) {
+				// The URL Metric is too old to be fresh.
+				if ( $current_time > $url_metric->get_timestamp() + $this->freshness_ttl ) {
+					return false;
+				}
+
+				// The ETag is not populated yet, so this is stale. Eventually this will be required.
+				if ( $url_metric->get_etag() === null ) {
+					return false;
+				}
+
+				// The ETag of the URL Metric does not match the current ETag for the collection, so it is stale.
 				if (
-					$current_time > $url_metric->get_timestamp() + $this->freshness_ttl
-					||
-					// If the URL Metric's ETag doesn't match the current ETag, consider the URL metric as stale.
-					( null !== $this->collection && ! hash_equals( $url_metric->get_etag() ?? md5( '' ), $this->collection->get_current_etag() ) )
+					$this->collection instanceof OD_URL_Metric_Group_Collection
+					&&
+					! hash_equals( $url_metric->get_etag(), $this->collection->get_current_etag() )
 				) {
 					return false;
 				}
