@@ -217,14 +217,18 @@ class OD_URL_Metrics_Post_Type {
 			$url_metrics            = array();
 		}
 
+		$etag = $new_url_metric->get_etag();
+		if ( null === $etag ) {
+			// This case actually will never occur in practice because the store_url_metric function is only called
+			// in the REST API endpoint where the ETag parameter is required. It is here exclusively for the sake of
+			// PHPStan's static analysis. This entire condition can be removed in a future release when the 'etag'
+			// property becomes required.
+			return new WP_Error( 'missing_etag' );
+		}
+
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
-			// The null coalescing operator (??) is used here to handle cases where the get_etag() method returns null.
-			// This can occur because the ETag is currently optional and may not exist for some URL Metrics.
-			// However, in the context of this store_url_metric() method, which is called by the REST API callback,
-			// the ETag is a required field and should never be null. This usage satisfies PHPStan's requirements
-			// until a future release where get_etag() will always return a string.
-			$new_url_metric->get_etag() ?? md5( '' ),
+			$etag,
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			od_get_url_metric_freshness_ttl()
