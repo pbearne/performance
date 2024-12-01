@@ -13,7 +13,7 @@ return array(
 		$tag_visitor_registry->register( 'img', static function (): void {} );
 		$tag_visitor_registry->register( 'video', static function (): void {} );
 
-		$test_case->populate_url_metrics( $elements, od_get_current_etag( $tag_visitor_registry ), false );
+		$test_case->populate_url_metrics( $elements, false );
 	},
 	'buffer'   => '
 		<html lang="en">

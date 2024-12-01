@@ -153,10 +153,20 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
  * @return non-empty-string Current ETag.
  */
-function od_get_current_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
+function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
 	$data = array(
 		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
 	);
+
+	/**
+	 * Filters the data that goes into computing the current ETag for URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param array<string, mixed> $data Data.
+	 */
+	$data = (array) apply_filters( 'od_current_url_metrics_etag_data', $data );
+
 	return md5( (string) wp_json_encode( $data ) );
 }
 

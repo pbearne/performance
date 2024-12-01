@@ -138,7 +138,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 */
 	public function data_provider_invalid_params(): array {
 		$valid_element = $this->get_valid_params()['elements'][0];
-		$current_etag  = od_get_current_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag  = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
 
 		return array_map(
 			function ( $params ) {

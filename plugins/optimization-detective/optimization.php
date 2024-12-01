@@ -206,7 +206,7 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	 */
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
-	$current_etag         = od_get_current_etag( $tag_visitor_registry );
+	$current_etag         = od_get_current_url_metrics_etag( $tag_visitor_registry );
 	$group_collection     = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
 		$current_etag,
