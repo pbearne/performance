@@ -95,7 +95,7 @@ trait Optimization_Detective_Test_Helpers {
 		return new OD_URL_Metric(
 			array(
 				'etag'      => $params['etag'],
-				'url'       => home_url( '/' ),
+				'url'       => $params['url'],
 				'viewport'  => array(
 					'width'  => $params['viewport_width'],
 					'height' => $params['viewport_height'] ?? ceil( $params['viewport_width'] / 2 ),
