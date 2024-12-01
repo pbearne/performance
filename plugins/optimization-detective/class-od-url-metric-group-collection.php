@@ -635,7 +635,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * @since 0.3.1
 	 *
 	 * @return array{
-	 *             current_etag: string,
+	 *             current_etag: non-empty-string,
 	 *             breakpoints: positive-int[],
 	 *             freshness_ttl: 0|positive-int,
 	 *             sample_size: positive-int,

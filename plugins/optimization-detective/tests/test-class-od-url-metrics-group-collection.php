@@ -105,12 +105,12 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 *
 	 * @dataProvider data_provider_test_construction
 	 *
-	 * @param OD_URL_Metric[] $url_metrics   URL Metrics.
-	 * @param string          $current_etag  Current ETag.
-	 * @param int[]           $breakpoints   Breakpoints.
-	 * @param int             $sample_size   Sample size.
-	 * @param int             $freshness_ttl Freshness TTL.
-	 * @param string          $exception     Expected exception.
+	 * @param OD_URL_Metric[]  $url_metrics   URL Metrics.
+	 * @param non-empty-string $current_etag  Current ETag.
+	 * @param int[]            $breakpoints   Breakpoints.
+	 * @param int              $sample_size   Sample size.
+	 * @param int              $freshness_ttl Freshness TTL.
+	 * @param string           $exception     Expected exception.
 	 */
 	public function test_construction( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl, string $exception ): void {
 		if ( '' !== $exception ) {
