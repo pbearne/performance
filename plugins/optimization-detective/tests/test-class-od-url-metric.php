@@ -104,7 +104,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 				),
 				'error' => 'OD_URL_Metric[etag] must be at most 32 characters long.',
 			),
-			'bad_etag'                        => array(
+			'bad_etag1'                       => array(
 				'data'  => array(
 					'uuid'      => wp_generate_uuid4(),
 					'etag'      => 'd41d8cd98f00b204e9800998ecf8427$',
@@ -113,7 +113,18 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 					'timestamp' => microtime( true ),
 					'elements'  => array(),
 				),
-				'error' => 'OD_URL_Metric[etag] does not match pattern ^[0-9a-f]{32}$.',
+				'error' => 'OD_URL_Metric[etag] does not match pattern ^[0-9a-f]{32}\z.',
+			),
+			'bad_etag2'                       => array(
+				'data'  => array(
+					'uuid'      => wp_generate_uuid4(),
+					'etag'      => md5( '' ) . "\n",
+					'url'       => home_url( '/' ),
+					'viewport'  => $viewport,
+					'timestamp' => microtime( true ),
+					'elements'  => array(),
+				),
+				'error' => 'OD_URL_Metric[etag] must be at most 32 characters long.',
 			),
 			'missing_etag'                    => array(
 				'data' => array(
@@ -281,10 +292,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 		$this->assertNull( $url_metric->get_group() );
 		$current_etag = md5( '' );
 		$collection   = new OD_URL_Metric_Group_Collection( array(), $current_etag, array(), 1, DAY_IN_SECONDS );
-		$groups       = iterator_to_array( $collection );
-		$this->assertCount( 1, $groups );
-		$this->assertInstanceOf( OD_URL_Metric_Group::class, $groups[0] );
-		$group = $groups[0];
+		$group        = $collection->get_first_group();
 		$url_metric->set_group( $group );
 		$this->assertSame( $group, $url_metric->get_group() );
 

@@ -44,7 +44,7 @@ function od_register_endpoint(): void {
 			'type'        => 'string',
 			'description' => __( 'An MD5 hash of the query args.', 'optimization-detective' ),
 			'required'    => true,
-			'pattern'     => '^[0-9a-f]{32}$',
+			'pattern'     => '^[0-9a-f]{32}\z',
 			'minLength'   => 32,
 			'maxLength'   => 32,
 		),
@@ -52,7 +52,7 @@ function od_register_endpoint(): void {
 			'type'        => 'string',
 			'description' => __( 'ETag for the current environment.', 'optimization-detective' ),
 			'required'    => true,
-			'pattern'     => '^[0-9a-f]{32}$',
+			'pattern'     => '^[0-9a-f]{32}\z',
 			'minLength'   => 32,
 			'maxLength'   => 32,
 		),
@@ -66,7 +66,7 @@ function od_register_endpoint(): void {
 			'type'              => 'string',
 			'description'       => __( 'HMAC originally computed by server required to authorize the request.', 'optimization-detective' ),
 			'required'          => true,
-			'pattern'           => '^[0-9a-f]+$',
+			'pattern'           => '^[0-9a-f]+\z',
 			'validate_callback' => static function ( string $hmac, WP_REST_Request $request ) {
 				if ( ! od_verify_url_metrics_storage_hmac( $hmac, $request['slug'], $request['current_etag'], $request['url'], $request['cache_purge_post_id'] ?? null ) ) {
 					return new WP_Error( 'invalid_hmac', __( 'URL Metrics HMAC verification failure.', 'optimization-detective' ) );

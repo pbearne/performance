@@ -92,7 +92,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * @param int                            $maximum_viewport_width Maximum possible viewport width for the group. Must be greater than zero and the minimum viewport width.
 	 * @param int                            $sample_size            Sample size for the maximum number of viewports in a group between breakpoints.
 	 * @param int                            $freshness_ttl          Freshness age (TTL) for a given URL Metric.
-	 * @param OD_URL_Metric_Group_Collection $collection             Collection that this instance belongs to. Optional.
+	 * @param OD_URL_Metric_Group_Collection $collection             Collection that this instance belongs to.
 	 */
 	public function __construct( array $url_metrics, int $minimum_viewport_width, int $maximum_viewport_width, int $sample_size, int $freshness_ttl, OD_URL_Metric_Group_Collection $collection ) {
 		if ( $minimum_viewport_width < 0 ) {

@@ -109,7 +109,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 */
 	public function __construct( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl ) {
 		// Set current ETag.
-		if ( 1 !== preg_match( '/^[a-f0-9]{32}$/', $current_etag ) ) {
+		if ( 1 !== preg_match( '/^[a-f0-9]{32}\z/', $current_etag ) ) {
 			throw new InvalidArgumentException(
 				esc_html(
 					sprintf(

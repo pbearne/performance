@@ -86,6 +86,14 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				'freshness_ttl' => HOUR_IN_SECONDS,
 				'exception'     => InvalidArgumentException::class,
 			),
+			'invalid_current_etag_bad2'  => array(
+				'url_metrics'   => array(),
+				'current_etag'  => md5( '' ) . PHP_EOL, // Note that /^[a-f0-9]{32}$/ would erroneously validate this. So the \z is required instead in /^[a-f0-9]{32}\z/.
+				'breakpoints'   => array( 400 ),
+				'sample_size'   => 3,
+				'freshness_ttl' => HOUR_IN_SECONDS,
+				'exception'     => InvalidArgumentException::class,
+			),
 			'invalid_url_metrics_bad'    => array(
 				'url_metrics'   => array( 'bad' ),
 				'current_etag'  => $current_etag,

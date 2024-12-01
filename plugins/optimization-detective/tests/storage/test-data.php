@@ -282,7 +282,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$second = od_get_url_metrics_slug( array( 'p' => 1 ) );
 		$this->assertNotEquals( $second, $first );
 		foreach ( array( $first, $second ) as $slug ) {
-			$this->assertMatchesRegularExpression( '/^[0-9a-f]{32}$/', $slug );
+			$this->assertMatchesRegularExpression( '/^[0-9a-f]{32}\z/', $slug );
 		}
 	}
 
@@ -328,7 +328,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		list( $url, $slug, $cache_purge_post_id ) = $set_up();
 		$this->go_to( $url );
 		$hmac = od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id );
-		$this->assertMatchesRegularExpression( '/^[0-9a-f]+$/', $hmac );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]+\z/', $hmac );
 		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url, $cache_purge_post_id ) );
 	}
 
