@@ -220,7 +220,12 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 		}
 		$url_metric = new OD_URL_Metric( $data );
 		$this->assertNull( $url_metric->get_group() );
-		$group = new OD_URL_Metric_Group( array( $url_metric ), 0, PHP_INT_MAX, 1, DAY_IN_SECONDS );
+		$current_etag = md5( '' );
+		$collection   = new OD_URL_Metric_Group_Collection( array(), $current_etag, array(), 1, DAY_IN_SECONDS );
+		$groups       = iterator_to_array( $collection );
+		$this->assertCount( 1, $groups );
+		$this->assertInstanceOf( OD_URL_Metric_Group::class, $groups[0] );
+		$group = $groups[0];
 		$url_metric->set_group( $group );
 		$this->assertSame( $group, $url_metric->get_group() );
 
