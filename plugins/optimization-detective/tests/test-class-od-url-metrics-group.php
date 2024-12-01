@@ -247,6 +247,60 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 	 *
 	 * @return array<string, mixed> Data.
 	 */
+	public function data_provider_test_is_complete(): array {
+		// Note: Test cases for empty URL Metrics and for exact sample size are already covered in the test_add_url_metric() method.
+		return array(
+			'old_url_metric' => array(
+				'url_metric'                 => $this->get_sample_url_metric( array( 'timestamp' => microtime( true ) - ( HOUR_IN_SECONDS + 1 ) ) ),
+				'expected_is_group_complete' => false,
+			),
+			// Note: The following test case will not be required once the ETag is mandatory in a future release.
+			'etag_missing'   => array(
+				'url_metric'                 => new OD_URL_Metric(
+					array(
+						'url'       => home_url( '/' ),
+						'viewport'  => array(
+							'width'  => 400,
+							'height' => 700,
+						),
+						'timestamp' => microtime( true ),
+						'elements'  => array(),
+					)
+				),
+				'expected_is_group_complete' => false,
+			),
+			'etag_mismatch'  => array(
+				'url_metric'                 => $this->get_sample_url_metric( array( 'etag' => md5( 'different_etag' ) ) ),
+				'expected_is_group_complete' => false,
+			),
+			'etag_match'     => array(
+				'url_metric'                 => $this->get_sample_url_metric( array( 'etag' => md5( '' ) ) ),
+				'expected_is_group_complete' => true,
+			),
+		);
+	}
+
+	/**
+	 * Test is_complete().
+	 *
+	 * @covers ::is_complete
+	 *
+	 * @dataProvider data_provider_test_is_complete
+	 */
+	public function test_is_complete( OD_URL_Metric $url_metric, bool $expected_is_group_complete ): void {
+		$collection = new OD_URL_Metric_Group_Collection( array(), md5( '' ), array( 768 ), 1, HOUR_IN_SECONDS );
+		$group      = $collection->get_first_group();
+
+		$group->add_url_metric( $url_metric );
+
+		$this->assertSame( $expected_is_group_complete, $group->is_complete() );
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed> Data.
+	 */
 	public function data_provider_test_get_lcp_element(): array {
 		$get_sample_url_metric = function ( int $viewport_width, array $breadcrumbs, $is_lcp = true ) {
 			return $this->get_sample_url_metric(
