@@ -199,13 +199,19 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 		if ( '' !== $exception ) {
 			$this->expectException( $exception );
 		}
-		$group = new OD_URL_Metric_Group( array(), 480, 799, 1, HOUR_IN_SECONDS );
+
+		$etag       = md5( '' );
+		$collection = new OD_URL_Metric_Group_Collection( array(), $etag, array( 480, 800 ), 1, HOUR_IN_SECONDS );
+		$groups     = iterator_to_array( $collection );
+		$this->assertCount( 3, $groups );
+		$group = $groups[1];
 
 		$this->assertFalse( $group->is_complete() );
 		$group->add_url_metric(
 			new OD_URL_Metric(
 				array(
 					'url'       => home_url( '/' ),
+					'etag'      => $etag,
 					'viewport'  => array(
 						'width'  => $viewport_width,
 						'height' => ceil( $viewport_width / 2 ),
