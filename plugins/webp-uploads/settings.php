@@ -207,7 +207,7 @@ function webp_uploads_generate_webp_jpeg_setting_callback(): void {
  * @since n.e.x.t
  */
 function webp_uploads_generate_all_fallback_sizes_callback(): void {
-	$all_fallback_sizes_enabled   = 1 === (int) get_option( 'perflab_generate_all_fallback_sizes', 0 );
+	$all_fallback_sizes_enabled   = webp_uploads_should_generate_all_fallback_sizes();
 	$fallback_enabled             = webp_uploads_is_fallback_enabled();
 	$all_fallback_sizes_hidden_id = 'perflab_generate_all_fallback_sizes_hidden';
 
