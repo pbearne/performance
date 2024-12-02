@@ -12,6 +12,7 @@ const { plugins: standalonePlugins } = require( './plugins.json' );
 const {
 	createPluginZip,
 	assetDataTransformer,
+	cssMinifyTransformer,
 	deleteFileOrDirectory,
 	generateBuildManifest,
 } = require( './tools/webpack/utils' );
@@ -136,8 +137,20 @@ const imagePrioritizer = ( env ) => {
 						to: `${ pluginDir }/detect.min.js`,
 					},
 					{
-						from: `${ pluginDir }/lazy-load.js`,
-						to: `${ pluginDir }/lazy-load.min.js`,
+						from: `${ pluginDir }/lazy-load-video.js`,
+						to: `${ pluginDir }/lazy-load-video.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load-bg-image.js`,
+						to: `${ pluginDir }/lazy-load-bg-image.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load-bg-image.css`,
+						to: `${ pluginDir }/lazy-load-bg-image.min.css`,
+						transform: {
+							transformer: cssMinifyTransformer,
+							cache: false,
+						},
 					},
 				],
 			} ),

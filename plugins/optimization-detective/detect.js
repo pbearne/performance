@@ -243,6 +243,7 @@ function extendElementData( xpath, properties ) {
  * @param {number}                 args.maxViewportAspectRatio     Maximum aspect ratio allowed for the viewport.
  * @param {boolean}                args.isDebug                    Whether to show debug messages.
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
+ * @param {string}                 args.currentETag                Current ETag.
  * @param {string}                 args.currentUrl                 Current URL.
  * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
  * @param {number|null}            args.cachePurgePostId           Cache purge post ID.
@@ -258,6 +259,7 @@ export default async function detect( {
 	isDebug,
 	extensionModuleUrls,
 	restApiEndpoint,
+	currentETag,
 	currentUrl,
 	urlMetricSlug,
 	cachePurgePostId,
@@ -614,6 +616,7 @@ export default async function detect( {
 
 	const url = new URL( restApiEndpoint );
 	url.searchParams.set( 'slug', urlMetricSlug );
+	url.searchParams.set( 'current_etag', currentETag );
 	if ( typeof cachePurgePostId === 'number' ) {
 		url.searchParams.set(
 			'cache_purge_post_id',

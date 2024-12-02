@@ -241,7 +241,7 @@ final class Image_Prioritizer_Video_Tag_Visitor extends Image_Prioritizer_Tag_Vi
 		}
 
 		if ( ! $this->added_lazy_script ) {
-			$processor->append_body_html( wp_get_inline_script_tag( image_prioritizer_get_lazy_load_script(), array( 'type' => 'module' ) ) );
+			$processor->append_body_html( wp_get_inline_script_tag( image_prioritizer_get_video_lazy_load_script(), array( 'type' => 'module' ) ) );
 			$this->added_lazy_script = true;
 		}
 	}

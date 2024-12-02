@@ -11,6 +11,19 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	use Optimization_Detective_Test_Helpers;
 
 	/**
+	 * Runs the routine before each test is executed.
+	 */
+	public function set_up(): void {
+		parent::set_up();
+
+		// Normalize the data for computing the current URL Metrics ETag to work around the issue where there is no
+		// global variable storing the OD_Tag_Visitor_Registry instance along with any registered tag visitors, so
+		// during set up we do not know what the ETag will look like. The current ETag is only established when
+		// the output begins to be processed by od_optimize_template_output_buffer().
+		add_filter( 'od_current_url_metrics_etag_data', '__return_empty_array' );
+	}
+
+	/**
 	 * @return array<string, array<string, mixed>>
 	 */
 	public function data_provider_to_test_image_prioritizer_init(): array {
@@ -97,6 +110,8 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 					$matches[1] = '/* import detect ... */';
 				} elseif ( false !== strpos( $matches[1], 'const lazyVideoObserver' ) ) {
 					$matches[1] = '/* const lazyVideoObserver ... */';
+				} elseif ( false !== strpos( $matches[1], 'const lazyBgImageObserver' ) ) {
+					$matches[1] = '/* const lazyBgImageObserver ... */';
 				}
 				return implode( '', $matches );
 			},
@@ -219,5 +234,32 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
+	}
+
+	/**
+	 * Test image_prioritizer_get_video_lazy_load_script.
+	 *
+	 * @covers ::image_prioritizer_get_video_lazy_load_script
+	 */
+	public function test_image_prioritizer_get_video_lazy_load_script(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_video_lazy_load_script() ) );
+	}
+
+	/**
+	 * Test image_prioritizer_get_lazy_load_bg_image_script.
+	 *
+	 * @covers ::image_prioritizer_get_lazy_load_bg_image_script
+	 */
+	public function test_image_prioritizer_get_lazy_load_bg_image_script(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_script() ) );
+	}
+
+	/**
+	 * Test image_prioritizer_get_lazy_load_bg_image_stylesheet.
+	 *
+	 * @covers ::image_prioritizer_get_lazy_load_bg_image_stylesheet
+	 */
+	public function test_image_prioritizer_get_lazy_load_bg_image_stylesheet(): void {
+		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
 	}
 }

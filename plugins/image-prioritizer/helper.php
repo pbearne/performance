@@ -248,3 +248,45 @@ function image_prioritizer_get_asset_path( string $src_path, ?string $min_path =
 
 	return $min_path;
 }
+
+/**
+ * Gets the script to lazy-load videos.
+ *
+ * Load a video and its poster image when it approaches the viewport using an IntersectionObserver.
+ *
+ * Handles 'autoplay' and 'preload' attributes accordingly.
+ *
+ * @since 0.2.0
+ *
+ * @return string Lazy load script.
+ */
+function image_prioritizer_get_video_lazy_load_script(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-video.js' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}
+
+/**
+ * Gets the script to lazy-load background images.
+ *
+ * Load the background image when it approaches the viewport using an IntersectionObserver.
+ *
+ * @since n.e.x.t
+ *
+ * @return string Lazy load script.
+ */
+function image_prioritizer_get_lazy_load_bg_image_script(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-bg-image.js' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}
+
+/**
+ * Gets the stylesheet to lazy-load background images.
+ *
+ * @since n.e.x.t
+ *
+ * @return string Lazy load stylesheet.
+ */
+function image_prioritizer_get_lazy_load_bg_image_stylesheet(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-bg-image.css' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}
