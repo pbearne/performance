@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Tag visitor that optimizes IMG tags.
  *
+ * @phpstan-import-type LinkAttributes from OD_Link_Collection
+ *
  * @since 0.1.0
  * @access private
  */
@@ -164,19 +166,16 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 		$parent_tag = $this->get_parent_tag_name( $context );
 		if ( 'PICTURE' !== $parent_tag ) {
-			$attributes = array(
-				'href'        => (string) $processor->get_attribute( 'src' ),
-				'imagesrcset' => (string) $processor->get_attribute( 'srcset' ),
-				'imagesizes'  => (string) $processor->get_attribute( 'sizes' ),
-				'media'       => 'screen',
+			$this->add_image_preload_link_for_lcp_element_groups(
+				$context,
+				$xpath,
+				array(
+					'href'        => $processor->get_attribute( 'src' ),
+					'imagesrcset' => $processor->get_attribute( 'srcset' ),
+					'imagesizes'  => $processor->get_attribute( 'sizes' ),
+					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
+				)
 			);
-
-			$crossorigin = $this->get_attribute_value( $processor, 'crossorigin' );
-			if ( null !== $crossorigin ) {
-				$attributes['crossorigin'] = 'use-credentials' === $crossorigin ? 'use-credentials' : 'anonymous';
-			}
-
-			$this->add_preload_link( $context, $xpath, $attributes );
 		}
 
 		return true;
@@ -239,52 +238,62 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			return false;
 		}
 
-		$source     = $collected_sources[0];
-		$attributes = array(
-			'href'        => explode( ' ', (string) $source['srcset'] )[0],
-			'imagesrcset' => (string) $source['srcset'],
-			'imagesizes'  => (string) $source['sizes'],
-			'type'        => (string) $source['type'],
-			'media'       => 'screen',
+		$source = $collected_sources[0];
+		$this->add_image_preload_link_for_lcp_element_groups(
+			$context,
+			$img_xpath,
+			array(
+				'imagesrcset' => $source['srcset'],
+				'imagesizes'  => $source['sizes'],
+				'type'        => $source['type'],
+				'crossorigin' => $source['crossorigin'],
+			)
 		);
-
-		if ( null !== $source['crossorigin'] ) {
-			$attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
-		}
-
-		$this->add_preload_link( $context, $img_xpath, $attributes );
 
 		return false;
 	}
 
 	/**
-	 * Adds a preload link.
+	 * Adds a LINK with the supplied attributes for each viewport group when the provided XPath is the LCP element.
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @param OD_Tag_Visitor_Context                                                                                                                  $context Tag visitor context.
-	 * @param string                                                                                                                                  $xpath XPath of the element.
-	 * @param array{href: string, imagesrcset: string, imagesizes: string, type?: string, media: string, crossorigin?: 'anonymous'|'use-credentials'} $attributes Attributes to add to the link.
+	 * @param OD_Tag_Visitor_Context          $context    Tag visitor context.
+	 * @param string                          $xpath      XPath of the element.
+	 * @param array<string, string|true|null> $attributes Attributes to add to the link.
 	 */
-	private function add_preload_link( OD_Tag_Visitor_Context $context, string $xpath, array $attributes ): void {
-		// If this element is the LCP (for a breakpoint group), add a preload link for it.
-		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
-			$link_attributes = array_merge(
-				array(
-					'rel'           => 'preload',
-					'fetchpriority' => 'high',
-					'as'            => 'image',
-				),
-				array_filter(
-					$attributes,
-					static function ( string $value ): bool {
-						return '' !== $value;
-					}
-				)
-			);
+	private function add_image_preload_link_for_lcp_element_groups( OD_Tag_Visitor_Context $context, string $xpath, array $attributes ): void {
+		$attributes = array_filter(
+			$attributes,
+			static function ( $attribute_value ) {
+				return is_string( $attribute_value ) && '' !== $attribute_value;
+			}
+		);
 
+		/**
+		 * Link attributes.
+		 *
+		 * This type is needed because PHPStan isn't apparently aware of the new keys added after the array_merge().
+		 * Note that there is no type checking being done on the attributes above other than ensuring they are
+		 * non-empty-strings.
+		 *
+		 * @var LinkAttributes $attributes
+		 */
+		$attributes = array_merge(
+			array(
+				'rel'           => 'preload',
+				'fetchpriority' => 'high',
+				'as'            => 'image',
+			),
+			$attributes,
+			array(
+				'media' => 'screen',
+			)
+		);
+
+		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
 			$context->link_collection->add_link(
-				$link_attributes,
+				$attributes,
 				$group->get_minimum_viewport_width(),
 				$group->get_maximum_viewport_width()
 			);
@@ -292,12 +301,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	}
 
 	/**
-	 * Extracts the parent tag name from the XPath.
+	 * Gets the parent tag name.
 	 *
 	 * @since n.e.x.t
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 *
 	 * @return string|null The parent tag name or null if not found.
 	 */
 	private function get_parent_tag_name( OD_Tag_Visitor_Context $context ): ?string {
