@@ -25,7 +25,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * Visits a tag.
 	 *
 	 * @since 0.1.0
-	 * @since n.e.x.t Separate the processing of <img> and <picture> elements.
+	 * @since n.e.x.t Separate the processing of IMG and PICTURE elements.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 *
@@ -45,7 +45,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	}
 
 	/**
-	 * Process an <img> element.
+	 * Process an IMG element.
 	 *
 	 * @since n.e.x.t
 	 *
@@ -184,7 +184,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	}
 
 	/**
-	 * Process a <picture> element.
+	 * Process a PICTURE element.
 	 *
 	 * @since n.e.x.t
 	 *
@@ -228,7 +228,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				}
 			}
 
-			// Process the <img> element within the <picture>.
+			// Process the IMG element within the PICTURE.
 			if ( 'IMG' === $tag && ! $processor->is_tag_closer() ) {
 				// Skip empty src attributes and data: URLs.
 				$src = trim( (string) $processor->get_attribute( 'src' ) );
