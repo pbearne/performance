@@ -287,6 +287,58 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test od_get_current_url_metrics_etag().
+	 *
+	 * @covers ::od_get_current_url_metrics_etag
+	 */
+	public function test_od_get_current_url_metrics_etag(): void {
+		remove_all_filters( 'od_current_url_metrics_etag_data' );
+		$registry = new OD_Tag_Visitor_Registry();
+
+		$captured_etag_data = array();
+		add_filter(
+			'od_current_url_metrics_etag_data',
+			static function ( array $data ) use ( &$captured_etag_data ) {
+				$captured_etag_data[] = $data;
+				return $data;
+			},
+			PHP_INT_MAX
+		);
+		$etag1 = od_get_current_url_metrics_etag( $registry );
+		$this->assertMatchesRegularExpression( '/^[a-z0-9]{32}\z/', $etag1 );
+		$etag2 = od_get_current_url_metrics_etag( $registry );
+		$this->assertSame( $etag1, $etag2 );
+		$this->assertCount( 2, $captured_etag_data );
+		$this->assertSame( array( 'tag_visitors' => array() ), $captured_etag_data[0] );
+		$this->assertSame( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+
+		$registry->register( 'foo', static function (): void {} );
+		$registry->register( 'bar', static function (): void {} );
+		$registry->register( 'baz', static function (): void {} );
+		$etag3 = od_get_current_url_metrics_etag( $registry );
+		$this->assertNotEquals( $etag2, $etag3 );
+		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		$this->assertSame( array( 'tag_visitors' => array( 'foo', 'bar', 'baz' ) ), $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		add_filter(
+			'od_current_url_metrics_etag_data',
+			static function ( $data ): array {
+				$data['last_modified'] = '2024-03-02T01:00:00';
+				return $data;
+			}
+		);
+		$etag4 = od_get_current_url_metrics_etag( $registry );
+		$this->assertNotEquals( $etag3, $etag4 );
+		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		$this->assertSame(
+			array(
+				'tag_visitors'  => array( 'foo', 'bar', 'baz' ),
+				'last_modified' => '2024-03-02T01:00:00',
+			),
+			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
+		);
+	}
+
+	/**
 	 * Data provider.
 	 *
 	 * @return array<string, mixed> Data.
