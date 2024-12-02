@@ -127,12 +127,6 @@ function recursiveFreeze( obj ) {
 	Object.freeze( obj );
 }
 
-// This needs to be captured early in case the user later resizes the window.
-const viewport = {
-	width: win.innerWidth,
-	height: win.innerHeight,
-};
-
 /**
  * URL Metric being assembled for submission.
  *
@@ -331,6 +325,16 @@ export default async function detect( {
 		return;
 	}
 
+	// Keep track of whether the window resized. If it resized, we abort sending the URLMetric.
+	let didWindowResize = false;
+	window.addEventListener(
+		'resize',
+		() => {
+			didWindowResize = true;
+		},
+		{ once: true }
+	);
+
 	// TODO: Does this make sense here?
 	// Prevent detection when page is not scrolled to the initial viewport.
 	if ( doc.documentElement.scrollTop > 0 ) {
@@ -449,7 +453,10 @@ export default async function detect( {
 
 	urlMetric = {
 		url: currentUrl,
-		viewport,
+		viewport: {
+			width: win.innerWidth,
+			height: win.innerHeight,
+		},
 		elements: [],
 	};
 
@@ -512,10 +519,7 @@ export default async function detect( {
 
 	// Only proceed with submitting the URL Metric if viewport stayed the same size. Changing the viewport size (e.g. due
 	// to resizing a window or changing the orientation of a device) will result in unexpected metrics being collected.
-	if (
-		window.innerWidth !== urlMetric.viewport.width ||
-		window.innerHeight !== urlMetric.viewport.height
-	) {
+	if ( didWindowResize ) {
 		if ( isDebug ) {
 			log(
 				'Aborting URL Metric collection due to viewport size change.'
