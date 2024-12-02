@@ -296,7 +296,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 				$i = array_search( 'P', $this->open_stack_tags, true );
 				if ( false !== $i ) {
 					array_splice( $this->open_stack_tags, (int) $i );
-					array_splice( $this->open_stack_indices, count( $this->open_stack_tags ) );
+					array_splice( $this->open_stack_indices, count( $this->open_stack_tags ) + 1 );
 				}
 			}
 
