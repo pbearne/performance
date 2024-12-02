@@ -59,97 +59,10 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			return false;
 		}
 
-		$xpath = $processor->get_xpath();
-
-		$parent_tag = $this->get_parent_tag_name( $context );
-		if ( 'PICTURE' === $parent_tag ) {
-			return true;
-		}
-
-		$this->pre_img_process( $processor, $context, $xpath );
-
-		$this->add_preload_link_for_img( $processor, $context, $xpath );
-
-		return true;
-	}
-
-	/**
-	 * Process a <picture> element.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
-	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 *
-	 * @return bool Whether the tag should be tracked in URL Metrics.
-	 */
-	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
-		$collected_sources = array();
-		$img_xpath         = null;
-
-		// Loop through child tags until we reach the closing </picture> tag.
-		while ( $processor->next_tag() ) {
-			$tag = $processor->get_tag();
-
-			// If we reached the closing </picture> tag, break.
-			if ( 'PICTURE' === $tag && $processor->is_tag_closer() ) {
-				break;
-			}
-
-			// Collect <source> elements.
-			if ( 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
-				$media = $processor->get_attribute( 'media' );
-				$type  = $processor->get_attribute( 'type' );
-
-				// Ensure that all <source> elements have a type attribute and no media attribute.
-				if ( null !== $media || null === $type ) {
-					return false;
-				}
-
-				$collected_sources[] = array(
-					'srcset'      => $processor->get_attribute( 'srcset' ),
-					'sizes'       => $processor->get_attribute( 'sizes' ),
-					'type'        => $type,
-					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
-				);
-			}
-
-			// Process the <img> element within the <picture>.
-			if ( 'IMG' === $tag && ! $processor->is_tag_closer() ) {
-				// Skip empty src attributes and data: URLs.
-				$src = trim( (string) $processor->get_attribute( 'src' ) );
-				if ( '' === $src || $this->is_data_url( $src ) ) {
-					return false;
-				}
-
-				$img_xpath = $processor->get_xpath();
-
-				$this->pre_img_process( $processor, $context, $img_xpath );
-			}
-		}
-
-		if ( null === $img_xpath || 0 === count( $collected_sources ) ) {
-			return false;
-		}
-
-		$this->add_preload_link_for_picture( $context, $img_xpath, $collected_sources[0] );
-
-		return true;
-	}
-
-	/**
-	 * Preprocesses an <img> element.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
-	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 * @param string                 $xpath XPath of the element.
-	 */
-	private function pre_img_process( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context, string $xpath ): void {
 		$current_fetchpriority = $this->get_attribute_value( $processor, 'fetchpriority' );
 		$is_lazy_loaded        = 'lazy' === $this->get_attribute_value( $processor, 'loading' );
 		$updated_fetchpriority = null;
+		$xpath                 = $processor->get_xpath();
 
 		/*
 		 * When the same LCP element is common/shared among all viewport groups, make sure that the element has
@@ -248,6 +161,75 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				);
 			}
 		}
+
+		$parent_tag = $this->get_parent_tag_name( $context );
+		if ( 'PICTURE' !== $parent_tag ) {
+			$this->add_preload_link_for_img( $processor, $context, $xpath );
+		}
+
+		return true;
+	}
+
+	/**
+	 * Process a <picture> element.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
+	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
+	 *
+	 * @return bool Whether the tag should be tracked in URL Metrics.
+	 */
+	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
+		$collected_sources = array();
+		$img_xpath         = null;
+
+		// Loop through child tags until we reach the closing </picture> tag.
+		while ( $processor->next_tag() ) {
+			$tag = $processor->get_tag();
+
+			// If we reached the closing </picture> tag, break.
+			if ( 'PICTURE' === $tag && $processor->is_tag_closer() ) {
+				break;
+			}
+
+			// Collect <source> elements.
+			if ( 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
+				$media = $processor->get_attribute( 'media' );
+				$type  = $processor->get_attribute( 'type' );
+
+				// Ensure that all <source> elements have a type attribute and no media attribute.
+				if ( null !== $media || null === $type ) {
+					return false;
+				}
+
+				$collected_sources[] = array(
+					'srcset'      => $processor->get_attribute( 'srcset' ),
+					'sizes'       => $processor->get_attribute( 'sizes' ),
+					'type'        => $type,
+					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
+				);
+			}
+
+			// Process the <img> element within the <picture>.
+			if ( 'IMG' === $tag && ! $processor->is_tag_closer() ) {
+				// Skip empty src attributes and data: URLs.
+				$src = trim( (string) $processor->get_attribute( 'src' ) );
+				if ( '' === $src || $this->is_data_url( $src ) ) {
+					return false;
+				}
+
+				$img_xpath = $processor->get_xpath();
+			}
+		}
+
+		if ( null === $img_xpath || 0 === count( $collected_sources ) ) {
+			return false;
+		}
+
+		$this->add_preload_link_for_picture( $context, $img_xpath, $collected_sources[0] );
+
+		return false;
 	}
 
 	/**
