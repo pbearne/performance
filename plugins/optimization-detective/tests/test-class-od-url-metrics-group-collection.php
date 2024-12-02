@@ -19,7 +19,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @return array<string, mixed> Data.
 	 */
 	public function data_provider_test_construction(): array {
-		$current_etag = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag = md5( '' );
 
 		return array(
 			'no_breakpoints_ok'          => array(
@@ -402,16 +402,22 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 */
 	public function data_provider_test_get_group_for_viewport_width(): array {
 		$current_time = microtime( true );
+		$current_etag = md5( '' );
 
 		$none_needed_data = array(
-			'url_metrics'   => ( function () use ( $current_time ): array {
+			'url_metrics'   => ( function () use ( $current_time, $current_etag ): array {
 				return array_merge(
 					array_fill(
 						0,
 						3,
 						new OD_URL_Metric(
 							array_merge(
-								$this->get_sample_url_metric( array( 'viewport_width' => 400 ) )->jsonSerialize(),
+								$this->get_sample_url_metric(
+									array(
+										'viewport_width' => 400,
+										'etag'           => $current_etag,
+									)
+								)->jsonSerialize(),
 								array( 'timestamp' => $current_time )
 							)
 						)
@@ -421,7 +427,12 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 						3,
 						new OD_URL_Metric(
 							array_merge(
-								$this->get_sample_url_metric( array( 'viewport_width' => 600 ) )->jsonSerialize(),
+								$this->get_sample_url_metric(
+									array(
+										'viewport_width' => 600,
+										'etag'           => $current_etag,
+									)
+								)->jsonSerialize(),
 								array( 'timestamp' => $current_time )
 							)
 						)
@@ -429,6 +440,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				);
 			} )(),
 			'current_time'  => $current_time,
+			'current_etag'  => $current_etag,
 			'breakpoints'   => array( 480 ),
 			'sample_size'   => 3,
 			'freshness_ttl' => HOUR_IN_SECONDS,
@@ -508,6 +520,34 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 					),
 				)
 			),
+
+			'url-metric-stale-etag'  => array_merge(
+				( static function ( $data ): array {
+					$url_metrics_data = $data['url_metrics'][ count( $data['url_metrics'] ) - 1 ]->jsonSerialize();
+					$url_metrics_data['etag'] = md5( 'something new!' );
+					$data['url_metrics'][ count( $data['url_metrics'] ) - 1 ] = new OD_URL_Metric( $url_metrics_data );
+					return $data;
+				} )( $none_needed_data ),
+				array(
+					'expected_return'            => array(
+						array(
+							'minimumViewportWidth' => 0,
+							'complete'             => true,
+						),
+						array(
+							'minimumViewportWidth' => 481,
+							'complete'             => false,
+						),
+					),
+					'expected_is_group_complete' => array(
+						200 => true,
+						400 => true,
+						480 => true,
+						481 => false,
+						500 => false,
+					),
+				)
+			),
 		);
 	}
 
@@ -523,14 +563,14 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 *
 	 * @param OD_URL_Metric[]   $url_metrics URL Metrics.
 	 * @param float             $current_time Current time.
+	 * @param non-empty-string  $current_etag Current ETag.
 	 * @param int[]             $breakpoints Breakpoints.
 	 * @param int               $sample_size Sample size.
 	 * @param int               $freshness_ttl Freshness TTL.
 	 * @param array<int, mixed> $expected_return Expected return.
 	 * @param array<int, bool>  $expected_is_group_complete Expected is group complete.
 	 */
-	public function test_get_group_for_viewport_width( array $url_metrics, float $current_time, array $breakpoints, int $sample_size, int $freshness_ttl, array $expected_return, array $expected_is_group_complete ): void {
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+	public function test_get_group_for_viewport_width( array $url_metrics, float $current_time, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl, array $expected_return, array $expected_is_group_complete ): void {
 		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, $freshness_ttl );
 		$this->assertSame(
 			$expected_return,
@@ -563,7 +603,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	public function test_is_every_group_populated(): void {
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
-		$current_etag     = od_get_current_url_metrics_etag( new OD_Tag_Visitor_Registry() );
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(),
 			$current_etag,
@@ -573,20 +613,48 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 200 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 200,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 500 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 500,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 900 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 900,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertTrue( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
 
 		// Now finish completing all the groups.
 		foreach ( array_merge( $breakpoints, array( 1000 ) ) as $viewport_width ) {
 			for ( $i = 0; $i < $sample_size; $i++ ) {
-				$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => $viewport_width ) ) );
+				$group_collection->add_url_metric(
+					$this->get_sample_url_metric(
+						array(
+							'viewport_width' => $viewport_width,
+							'etag'           => $current_etag,
+						)
+					)
+				);
 			}
 		}
 		$this->assertTrue( $group_collection->is_every_group_complete() );
