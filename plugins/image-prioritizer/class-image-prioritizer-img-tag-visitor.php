@@ -164,7 +164,19 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 		$parent_tag = $this->get_parent_tag_name( $context );
 		if ( 'PICTURE' !== $parent_tag ) {
-			$this->add_preload_link_for_img( $processor, $context, $xpath );
+			$attributes = array(
+				'href'        => (string) $processor->get_attribute( 'src' ),
+				'imagesrcset' => (string) $processor->get_attribute( 'srcset' ),
+				'imagesizes'  => (string) $processor->get_attribute( 'sizes' ),
+				'media'       => 'screen',
+			);
+
+			$crossorigin = $this->get_attribute_value( $processor, 'crossorigin' );
+			if ( null !== $crossorigin ) {
+				$attributes['crossorigin'] = 'use-credentials' === $crossorigin ? 'use-credentials' : 'anonymous';
+			}
+
+			$this->add_preload_link( $context, $xpath, $attributes );
 		}
 
 		return true;
@@ -227,21 +239,34 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			return false;
 		}
 
-		$this->add_preload_link_for_picture( $context, $img_xpath, $collected_sources[0] );
+		$source     = $collected_sources[0];
+		$attributes = array(
+			'href'        => explode( ' ', (string) $source['srcset'] )[0],
+			'imagesrcset' => (string) $source['srcset'],
+			'imagesizes'  => (string) $source['sizes'],
+			'type'        => (string) $source['type'],
+			'media'       => 'screen',
+		);
+
+		if ( null !== $source['crossorigin'] ) {
+			$attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
+		}
+
+		$this->add_preload_link( $context, $img_xpath, $attributes );
 
 		return false;
 	}
 
 	/**
-	 * Adds a preload link for a <picture> element.
+	 * Adds a preload link.
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @param OD_Tag_Visitor_Context                                                                                                                    $context Tag visitor context.
-	 * @param string                                                                                                                                    $xpath   XPath of the element.
-	 * @param array{srcset?: string|true|null,sizes?: string|true|null,type?: string|true|null,media?: string|true|null,crossorigin?: string|true|null} $source  Collected sources from the <source> elements.
+	 * @param OD_Tag_Visitor_Context                                                                                                                  $context Tag visitor context.
+	 * @param string                                                                                                                                  $xpath XPath of the element.
+	 * @param array{href: string, imagesrcset: string, imagesizes: string, type?: string, media: string, crossorigin?: 'anonymous'|'use-credentials'} $attributes Attributes to add to the link.
 	 */
-	private function add_preload_link_for_picture( OD_Tag_Visitor_Context $context, string $xpath, array $source ): void {
+	private function add_preload_link( OD_Tag_Visitor_Context $context, string $xpath, array $attributes ): void {
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
 			$link_attributes = array_merge(
@@ -251,67 +276,12 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 					'as'            => 'image',
 				),
 				array_filter(
-					array(
-						'href'        => isset( $source['srcset'] ) && is_string( $source['srcset'] )
-						? explode( ' ', $source['srcset'] )[0]
-						: '',
-						'imagesrcset' => isset( $source['srcset'] ) && is_string( $source['srcset'] ) ? $source['srcset'] : '',
-						'imagesizes'  => isset( $source['sizes'] ) && is_string( $source['sizes'] ) ? $source['sizes'] : '',
-						'type'        => isset( $source['type'] ) && is_string( $source['type'] ) ? $source['type'] : '',
-						'media'       => isset( $source['media'] ) && is_string( $source['media'] ) ? 'screen and ' . $source['media'] : 'screen',
-					),
+					$attributes,
 					static function ( string $value ): bool {
 						return '' !== $value;
 					}
 				)
 			);
-			if ( isset( $source['crossorigin'] ) ) {
-				$link_attributes['crossorigin'] = 'use-credentials' === $source['crossorigin'] ? 'use-credentials' : 'anonymous';
-			}
-			$context->link_collection->add_link(
-				$link_attributes,
-				$group->get_minimum_viewport_width(),
-				$group->get_maximum_viewport_width()
-			);
-		}
-	}
-
-	/**
-	 * Adds a preload link for an <img> element.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
-	 * @param OD_Tag_Visitor_Context $context   Tag visitor context.
-	 * @param string                 $xpath     XPath of the element.
-	 */
-	private function add_preload_link_for_img( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context, string $xpath ): void {
-		// If this element is the LCP (for a breakpoint group), add a preload link for it.
-		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
-			$link_attributes = array_merge(
-				array(
-					'rel'           => 'preload',
-					'fetchpriority' => 'high',
-					'as'            => 'image',
-				),
-				array_filter(
-					array(
-						'href'        => (string) $processor->get_attribute( 'src' ),
-						'imagesrcset' => (string) $processor->get_attribute( 'srcset' ),
-						'imagesizes'  => (string) $processor->get_attribute( 'sizes' ),
-					),
-					static function ( string $value ): bool {
-						return '' !== $value;
-					}
-				)
-			);
-
-			$crossorigin = $this->get_attribute_value( $processor, 'crossorigin' );
-			if ( null !== $crossorigin ) {
-				$link_attributes['crossorigin'] = 'use-credentials' === $crossorigin ? 'use-credentials' : 'anonymous';
-			}
-
-			$link_attributes['media'] = 'screen';
 
 			$context->link_collection->add_link(
 				$link_attributes,
