@@ -238,6 +238,14 @@ add_filter(
 
 See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L128-L144) in Embed Optimizer. Note in particular the structure of the plugin’s [detect.js](https://github.com/WordPress/performance/blob/trunk/plugins/embed-optimizer/detect.js) script module, how it exports `initialize` and `finalize` functions which Optimization Detective then calls when the page loads and when the page unloads, at which time the URL Metric is constructed and sent to the server for storage. Refer also to the [TypeScript type definitions](https://github.com/WordPress/performance/blob/trunk/plugins/optimization-detective/types.ts).
 
+**Filter:** `od_current_url_metrics_etag_data` (default: array with `tag_visitors` key)
+
+Filters the data that goes into computing the current ETag for URL Metrics.
+
+The ETag is a unique identifier that changes whenever the underlying data used to generate it changes. By default, the ETag calculation includes the names of registered tag visitors. This ensures that when a new Optimization Detective-dependent plugin is activated (like Image Prioritizer or Embed Optimizer), any existing URL Metrics are immediately considered stale. This happens because the newly registered tag visitors alter the ETag calculation, making it different from the stored ones.
+
+When the ETag for URL Metrics in a complete viewport group no longer matches the current environment's ETag, new URL Metrics will then begin to be collected until there are no more stored URL Metrics with the old ETag. These new URL Metrics will include data relevant to the newly activated plugins and their tag visitors.
+
 **Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
 
 Fires whenever a URL Metric was successfully stored.

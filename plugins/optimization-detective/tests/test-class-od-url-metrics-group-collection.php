@@ -19,9 +19,12 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @return array<string, mixed> Data.
 	 */
 	public function data_provider_test_construction(): array {
+		$current_etag = md5( '' );
+
 		return array(
 			'no_breakpoints_ok'          => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array(),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -29,6 +32,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'negative_breakpoint_bad'    => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( -1 ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -36,6 +40,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'zero_breakpoint_bad'        => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 0 ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -43,6 +48,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'max_breakpoint_bad'         => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( PHP_INT_MAX ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -50,6 +56,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'string_breakpoint_bad'      => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 'narrow' ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -57,6 +64,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'negative_sample_size_bad'   => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 400 ),
 				'sample_size'   => -3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -64,13 +72,31 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'negative_freshness_tll_bad' => array(
 				'url_metrics'   => array(),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 400 ),
 				'sample_size'   => 3,
 				'freshness_ttl' => -HOUR_IN_SECONDS,
 				'exception'     => InvalidArgumentException::class,
 			),
+			'invalid_current_etag_bad'   => array(
+				'url_metrics'   => array(),
+				'current_etag'  => 'invalid_etag',
+				'breakpoints'   => array( 400 ),
+				'sample_size'   => 3,
+				'freshness_ttl' => HOUR_IN_SECONDS,
+				'exception'     => InvalidArgumentException::class,
+			),
+			'invalid_current_etag_bad2'  => array(
+				'url_metrics'   => array(),
+				'current_etag'  => md5( '' ) . PHP_EOL, // Note that /^[a-f0-9]{32}$/ would erroneously validate this. So the \z is required instead in /^[a-f0-9]{32}\z/.
+				'breakpoints'   => array( 400 ),
+				'sample_size'   => 3,
+				'freshness_ttl' => HOUR_IN_SECONDS,
+				'exception'     => InvalidArgumentException::class,
+			),
 			'invalid_url_metrics_bad'    => array(
 				'url_metrics'   => array( 'bad' ),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 400 ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -81,6 +107,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 					$this->get_sample_url_metric( array( 'viewport_width' => 200 ) ),
 					$this->get_sample_url_metric( array( 'viewport_width' => 400 ) ),
 				),
+				'current_etag'  => $current_etag,
 				'breakpoints'   => array( 400 ),
 				'sample_size'   => 3,
 				'freshness_ttl' => HOUR_IN_SECONDS,
@@ -94,15 +121,18 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 *
 	 * @dataProvider data_provider_test_construction
 	 *
-	 * @param OD_URL_Metric[] $url_metrics URL Metrics.
-	 * @param int[]           $breakpoints Breakpoints.
-	 * @param int             $sample_size Sample size.
+	 * @param OD_URL_Metric[]  $url_metrics   URL Metrics.
+	 * @param non-empty-string $current_etag  Current ETag.
+	 * @param int[]            $breakpoints   Breakpoints.
+	 * @param int              $sample_size   Sample size.
+	 * @param int              $freshness_ttl Freshness TTL.
+	 * @param string           $exception     Expected exception.
 	 */
-	public function test_construction( array $url_metrics, array $breakpoints, int $sample_size, int $freshness_ttl, string $exception ): void {
+	public function test_construction( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl, string $exception ): void {
 		if ( '' !== $exception ) {
 			$this->expectException( $exception );
 		}
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $breakpoints, $sample_size, $freshness_ttl );
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, $freshness_ttl );
 		$this->assertCount( count( $breakpoints ) + 1, $group_collection );
 	}
 
@@ -182,7 +212,8 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @dataProvider data_provider_sample_size_and_breakpoints
 	 */
 	public function test_add_url_metric( int $sample_size, array $breakpoints, array $viewport_widths, array $expected_counts ): void {
-		$group_collection = new OD_URL_Metric_Group_Collection( array(), $breakpoints, $sample_size, HOUR_IN_SECONDS );
+		$current_etag     = md5( '' );
+		$group_collection = new OD_URL_Metric_Group_Collection( array(), $current_etag, $breakpoints, $sample_size, HOUR_IN_SECONDS );
 
 		// Over-populate the sample size for the breakpoints by a dozen.
 		foreach ( $viewport_widths as $viewport_width => $count ) {
@@ -210,9 +241,10 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @covers ::add_url_metric
 	 */
 	public function test_adding_pushes_out_old_metrics(): void {
+		$current_etag     = md5( '' );
 		$sample_size      = 3;
 		$breakpoints      = array( 400, 600 );
-		$group_collection = new OD_URL_Metric_Group_Collection( array(), $breakpoints, $sample_size, HOUR_IN_SECONDS );
+		$group_collection = new OD_URL_Metric_Group_Collection( array(), $current_etag, $breakpoints, $sample_size, HOUR_IN_SECONDS );
 
 		// Populate the groups with stale URL Metrics.
 		$viewport_widths = array( 300, 500, 700 );
@@ -333,7 +365,8 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			$viewport_widths
 		);
 
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $breakpoints, 3, HOUR_IN_SECONDS );
+		$current_etag     = md5( '' );
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, 3, HOUR_IN_SECONDS );
 
 		$this->assertCount(
 			count( $breakpoints ) + 1,
@@ -369,16 +402,22 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 */
 	public function data_provider_test_get_group_for_viewport_width(): array {
 		$current_time = microtime( true );
+		$current_etag = md5( '' );
 
 		$none_needed_data = array(
-			'url_metrics'   => ( function () use ( $current_time ): array {
+			'url_metrics'   => ( function () use ( $current_time, $current_etag ): array {
 				return array_merge(
 					array_fill(
 						0,
 						3,
 						new OD_URL_Metric(
 							array_merge(
-								$this->get_sample_url_metric( array( 'viewport_width' => 400 ) )->jsonSerialize(),
+								$this->get_sample_url_metric(
+									array(
+										'viewport_width' => 400,
+										'etag'           => $current_etag,
+									)
+								)->jsonSerialize(),
 								array( 'timestamp' => $current_time )
 							)
 						)
@@ -388,7 +427,12 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 						3,
 						new OD_URL_Metric(
 							array_merge(
-								$this->get_sample_url_metric( array( 'viewport_width' => 600 ) )->jsonSerialize(),
+								$this->get_sample_url_metric(
+									array(
+										'viewport_width' => 600,
+										'etag'           => $current_etag,
+									)
+								)->jsonSerialize(),
 								array( 'timestamp' => $current_time )
 							)
 						)
@@ -396,6 +440,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				);
 			} )(),
 			'current_time'  => $current_time,
+			'current_etag'  => $current_etag,
 			'breakpoints'   => array( 480 ),
 			'sample_size'   => 3,
 			'freshness_ttl' => HOUR_IN_SECONDS,
@@ -475,6 +520,34 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 					),
 				)
 			),
+
+			'url-metric-stale-etag'  => array_merge(
+				( static function ( $data ): array {
+					$url_metrics_data = $data['url_metrics'][ count( $data['url_metrics'] ) - 1 ]->jsonSerialize();
+					$url_metrics_data['etag'] = md5( 'something new!' );
+					$data['url_metrics'][ count( $data['url_metrics'] ) - 1 ] = new OD_URL_Metric( $url_metrics_data );
+					return $data;
+				} )( $none_needed_data ),
+				array(
+					'expected_return'            => array(
+						array(
+							'minimumViewportWidth' => 0,
+							'complete'             => true,
+						),
+						array(
+							'minimumViewportWidth' => 481,
+							'complete'             => false,
+						),
+					),
+					'expected_is_group_complete' => array(
+						200 => true,
+						400 => true,
+						480 => true,
+						481 => false,
+						500 => false,
+					),
+				)
+			),
 		);
 	}
 
@@ -490,14 +563,15 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 *
 	 * @param OD_URL_Metric[]   $url_metrics URL Metrics.
 	 * @param float             $current_time Current time.
+	 * @param non-empty-string  $current_etag Current ETag.
 	 * @param int[]             $breakpoints Breakpoints.
 	 * @param int               $sample_size Sample size.
 	 * @param int               $freshness_ttl Freshness TTL.
 	 * @param array<int, mixed> $expected_return Expected return.
 	 * @param array<int, bool>  $expected_is_group_complete Expected is group complete.
 	 */
-	public function test_get_group_for_viewport_width( array $url_metrics, float $current_time, array $breakpoints, int $sample_size, int $freshness_ttl, array $expected_return, array $expected_is_group_complete ): void {
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $breakpoints, $sample_size, $freshness_ttl );
+	public function test_get_group_for_viewport_width( array $url_metrics, float $current_time, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl, array $expected_return, array $expected_is_group_complete ): void {
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, $freshness_ttl );
 		$this->assertSame(
 			$expected_return,
 			array_map(
@@ -529,28 +603,58 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	public function test_is_every_group_populated(): void {
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(),
+			$current_etag,
 			$breakpoints,
 			$sample_size,
 			HOUR_IN_SECONDS
 		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 200 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 200,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 500 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 500,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertFalse( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
-		$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => 900 ) ) );
+		$group_collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'viewport_width' => 900,
+					'etag'           => $current_etag,
+				)
+			)
+		);
 		$this->assertTrue( $group_collection->is_every_group_populated() );
 		$this->assertFalse( $group_collection->is_every_group_complete() );
 
 		// Now finish completing all the groups.
 		foreach ( array_merge( $breakpoints, array( 1000 ) ) as $viewport_width ) {
 			for ( $i = 0; $i < $sample_size; $i++ ) {
-				$group_collection->add_url_metric( $this->get_sample_url_metric( array( 'viewport_width' => $viewport_width ) ) );
+				$group_collection->add_url_metric(
+					$this->get_sample_url_metric(
+						array(
+							'viewport_width' => $viewport_width,
+							'etag'           => $current_etag,
+						)
+					)
+				);
 			}
 		}
 		$this->assertTrue( $group_collection->is_every_group_complete() );
@@ -582,6 +686,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(
 				// Group 1: 0-480 viewport widths.
@@ -594,6 +699,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				$get_url_metric_with_one_lcp_element( 820, $first_child_image_xpath ),
 				$get_url_metric_with_one_lcp_element( 900, $first_child_image_xpath ),
 			),
+			$current_etag,
 			$breakpoints,
 			$sample_size,
 			HOUR_IN_SECONDS
@@ -623,8 +729,10 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	public function test_get_common_lcp_element(): void {
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
+		$current_etag     = md5( '' );
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			array(),
+			$current_etag,
 			$breakpoints,
 			$sample_size,
 			HOUR_IN_SECONDS
@@ -735,9 +843,10 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @param array<string, float> $expected    Expected.
 	 */
 	public function test_get_all_element_max_intersection_ratios( array $url_metrics, array $expected ): void {
+		$current_etag     = md5( '' );
 		$breakpoints      = array( 480, 600, 782 );
 		$sample_size      = 3;
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $breakpoints, $sample_size, 0 );
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, 0 );
 		$actual           = $group_collection->get_all_element_max_intersection_ratios();
 		$this->assertSame( $actual, $group_collection->get_all_element_max_intersection_ratios(), 'Cached result is identical.' );
 		$this->assertSame( $expected, $actual );
@@ -912,9 +1021,10 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @param array<string, bool>  $expected    Expected.
 	 */
 	public function test_get_all_elements_positioned_in_any_initial_viewport( array $url_metrics, array $expected ): void {
+		$current_etag     = md5( '' );
 		$breakpoints      = array( 480, 600, 782 );
 		$sample_size      = 3;
-		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $breakpoints, $sample_size, 0 );
+		$group_collection = new OD_URL_Metric_Group_Collection( $url_metrics, $current_etag, $breakpoints, $sample_size, 0 );
 		$actual           = $group_collection->get_all_elements_positioned_in_any_initial_viewport();
 		$this->assertSame( $actual, $group_collection->get_all_elements_positioned_in_any_initial_viewport(), 'Cached result is identical.' );
 		$this->assertSame( $expected, $actual );
@@ -938,6 +1048,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
+			md5( '' ),
 			array( 500, 700 ),
 			3,
 			HOUR_IN_SECONDS
@@ -965,6 +1076,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
+			md5( '' ),
 			array( 500, 700 ),
 			3,
 			HOUR_IN_SECONDS
@@ -973,6 +1085,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		$json          = wp_json_encode( $group_collection );
 		$parsed_json   = json_decode( $json, true );
 		$expected_keys = array(
+			'current_etag',
 			'breakpoints',
 			'freshness_ttl',
 			'sample_size',
