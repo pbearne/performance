@@ -251,7 +251,12 @@ class Test_OD_URL_Metric_Group extends WP_UnitTestCase {
 		// Note: Test cases for empty URL Metrics and for exact sample size are already covered in the test_add_url_metric() method.
 		return array(
 			'old_url_metric' => array(
-				'url_metric'                 => $this->get_sample_url_metric( array( 'timestamp' => microtime( true ) - ( HOUR_IN_SECONDS + 1 ) ) ),
+				'url_metric'                 => $this->get_sample_url_metric(
+					array(
+						'timestamp' => microtime( true ) - ( HOUR_IN_SECONDS + 1 ),
+						'etag'      => md5( '' ),
+					)
+				),
 				'expected_is_group_complete' => false,
 			),
 			// Note: The following test case will not be required once the ETag is mandatory in a future release.

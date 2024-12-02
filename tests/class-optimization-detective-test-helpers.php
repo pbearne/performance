@@ -67,6 +67,7 @@ trait Optimization_Detective_Test_Helpers {
 	 * Gets a sample URL metric.
 	 *
 	 * @phpstan-param array{
+	 *                    timestamp?:       float,
 	 *                    etag?:            non-empty-string,
 	 *                    url?:             string,
 	 *                    viewport_width?:  int,
@@ -84,6 +85,7 @@ trait Optimization_Detective_Test_Helpers {
 				'url'            => home_url( '/' ),
 				'viewport_width' => 480,
 				'elements'       => array(),
+				'timestamp'      => microtime( true ),
 			),
 			$params
 		);
@@ -100,7 +102,7 @@ trait Optimization_Detective_Test_Helpers {
 					'width'  => $params['viewport_width'],
 					'height' => $params['viewport_height'] ?? ceil( $params['viewport_width'] / 2 ),
 				),
-				'timestamp' => microtime( true ),
+				'timestamp' => $params['timestamp'],
 				'elements'  => array_map(
 					function ( array $element ): array {
 						return array_merge(
