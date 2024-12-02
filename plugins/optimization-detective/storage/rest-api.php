@@ -210,35 +210,6 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		);
 	}
 
-	/**
-	 * Filters whether a URL Metric is valid for storage.
-	 *
-	 * This allows for custom validation constraints to be applied beyond what can be expressed in JSON Schema. This is
-	 * also necessary because the 'validate_callback' key in a JSON Schema is not respected when gathering the REST API
-	 * endpoint args via the {@see rest_get_endpoint_args_for_schema()} function. Besides this, the REST API doesn't
-	 * support 'validate_callback' for any nested arguments in any case, meaning that custom constraints would be able
-	 * to be applied to multidimensional objects, such as the items inside 'elements'.
-	 *
-	 * This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric
-	 * loaded from the od_url_metric post type. This means that validation logic enforced via this filter can be more
-	 * expensive, such as doing filesystem checks or HTTP requests.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param bool|WP_Error        $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
-	 * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
-	 */
-	$validity = apply_filters( 'od_store_url_metric_validity', true, $url_metric );
-	if ( false === $validity || ( $validity instanceof WP_Error && $validity->has_errors() ) ) {
-		if ( false === $validity ) {
-			$validity = new WP_Error( 'invalid_url_metric', __( 'Validity of URL Metric was rejected by filter.', 'optimization-detective' ) );
-		}
-		if ( ! isset( $validity->error_data['code'] ) ) {
-			$validity->error_data['code'] = 400;
-		}
-		return $validity;
-	}
-
 	// TODO: This should be changed from store_url_metric($slug, $url_metric) instead be update_post( $slug, $group_collection ). As it stands, store_url_metric() is duplicating logic here.
 	$result = OD_URL_Metrics_Post_Type::store_url_metric(
 		$request->get_param( 'slug' ),
