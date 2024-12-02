@@ -61,7 +61,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 		$xpath = $processor->get_xpath();
 
-		$parent_tag = $this->get_parent_tag_name( $xpath );
+		$parent_tag = $this->get_parent_tag_name( $context );
 		if ( 'PICTURE' === $parent_tag ) {
 			return true;
 		}
@@ -344,21 +344,17 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @param string $xpath The XPath of the current element.
+	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 *
 	 * @return string|null The parent tag name or null if not found.
 	 */
-	private function get_parent_tag_name( string $xpath ): ?string {
-		$steps = explode( '/', $xpath );
-		if ( count( $steps ) < 3 ) {
-			// There is no parent.
+	private function get_parent_tag_name( OD_Tag_Visitor_Context $context ): ?string {
+		$breadcrumbs = $context->processor->get_breadcrumbs();
+		$length      = count( $breadcrumbs );
+		if ( $length < 2 ) {
 			return null;
 		}
-		$second_last_step = $steps[ count( $steps ) - 2 ];
-		if ( (bool) preg_match( '/\[self::([^\]]+)\]/', $second_last_step, $matches ) ) {
-			return $matches[1];
-		}
-		return null;
+		return $breadcrumbs[ $length - 2 ];
 	}
 
 	/**
