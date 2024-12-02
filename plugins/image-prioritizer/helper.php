@@ -137,6 +137,66 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 }
 
 /**
+ * Validates that the provided background image URL is valid.
+ *
+ * @since n.e.x.t
+ *
+ * @param bool|WP_Error|mixed  $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
+ * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
+ * @return bool|WP_Error Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
+ */
+function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Strict_URL_Metric $url_metric ) {
+	if ( ! is_bool( $validity ) && ! ( $validity instanceof WP_Error ) ) {
+		$validity = (bool) $validity;
+	}
+
+	$data = $url_metric->get( 'lcpElementExternalBackgroundImage' );
+	if ( ! is_array( $data ) ) {
+		return $validity;
+	}
+
+	$r = wp_safe_remote_head(
+		$data['url'],
+		array(
+			'redirection' => 3, // Allow up to 3 redirects.
+		)
+	);
+	if ( $r instanceof WP_Error ) {
+		return new WP_Error(
+			WP_DEBUG ? $r->get_error_code() : 'head_request_failure',
+			__( 'HEAD request for background image URL failed.', 'image-prioritizer' ) . ( WP_DEBUG ? ' ' . $r->get_error_message() : '' ),
+			array(
+				'code' => 500,
+			)
+		);
+	}
+	$response_code = wp_remote_retrieve_response_code( $r );
+	if ( $response_code < 200 || $response_code >= 400 ) {
+		return new WP_Error(
+			'background_image_response_not_ok',
+			__( 'HEAD request for background image URL did not return with a success status code.', 'image-prioritizer' ),
+			array(
+				'code' => WP_DEBUG ? $response_code : 400,
+			)
+		);
+	}
+
+	$content_type = wp_remote_retrieve_header( $r, 'Content-Type' );
+	if ( ! is_string( $content_type ) || ! str_starts_with( $content_type, 'image/' ) ) {
+		return new WP_Error(
+			'background_image_response_not_image',
+			__( 'HEAD request for background image URL did not return an image Content-Type.', 'image-prioritizer' ),
+			array(
+				'code' => 400,
+			)
+		);
+	}
+
+	// TODO: Check for the Content-Length and return invalid if it is gigantic?
+	return $validity;
+}
+
+/**
  * Gets the path to a script or stylesheet.
  *
  * @since n.e.x.t
