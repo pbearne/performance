@@ -157,7 +157,8 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		$processor = $context->processor;
 		$tag_name  = strtoupper( (string) $processor->get_tag() );
-		foreach ( $this->group_common_lcp_element_external_background_images as $i => list( $group, $common ) ) {
+		foreach ( array_keys( $this->group_common_lcp_element_external_background_images ) as $i ) {
+			list( $group, $common ) = $this->group_common_lcp_element_external_background_images[ $i ];
 			if (
 				// Note that the browser may send a lower-case tag name in the case of XHTML or embedded SVG/MathML, but
 				// the HTML Tag Processor is currently normalizing to all upper-case. The HTML Processor on the other
