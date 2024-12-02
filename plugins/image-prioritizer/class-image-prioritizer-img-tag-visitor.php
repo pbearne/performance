@@ -194,8 +194,8 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
-		$collected_sources = array();
-		$img_xpath         = null;
+		$first_source = null;
+		$img_xpath    = null;
 
 		$referrerpolicy = null;
 		$crossorigin    = null;
@@ -219,11 +219,13 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 					return false;
 				}
 
-				$collected_sources[] = array(
-					'srcset' => $processor->get_attribute( 'srcset' ),
-					'sizes'  => $processor->get_attribute( 'sizes' ),
-					'type'   => $type,
-				);
+				if ( null === $first_source ) {
+					$first_source = array(
+						'srcset' => $processor->get_attribute( 'srcset' ),
+						'sizes'  => $processor->get_attribute( 'sizes' ),
+						'type'   => $type,
+					);
+				}
 			}
 
 			// Process the <img> element within the <picture>.
@@ -244,18 +246,17 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			}
 		}
 
-		if ( null === $img_xpath || 0 === count( $collected_sources ) ) {
+		if ( null === $img_xpath || null === $first_source ) {
 			return false;
 		}
 
-		$source = $collected_sources[0];
 		$this->add_image_preload_link_for_lcp_element_groups(
 			$context,
 			$img_xpath,
 			array(
-				'imagesrcset'    => $source['srcset'],
-				'imagesizes'     => $source['sizes'],
-				'type'           => $source['type'],
+				'imagesrcset'    => $first_source['srcset'],
+				'imagesizes'     => $first_source['sizes'],
+				'type'           => $first_source['type'],
 				'crossorigin'    => $crossorigin,
 				'referrerpolicy' => $referrerpolicy,
 			)
