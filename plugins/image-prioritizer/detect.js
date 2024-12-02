@@ -153,8 +153,8 @@ function handleLCPMetric( metric, isDebug ) {
 			return;
 		}
 
-		// Also skip Custom Elements which have excessively long tag names.
-		if ( entry.element.tagName.length > 25 ) {
+		// Also skip Custom Elements which have excessively long tag names. This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
+		if ( entry.element.tagName.length > 100 ) {
 			if ( isDebug ) {
 				log(
 					`Skipping very long tag name: ${ entry.element.tagName }`
@@ -164,6 +164,7 @@ function handleLCPMetric( metric, isDebug ) {
 		}
 
 		// Note that getAttribute() is used instead of properties so that null can be returned in case of an absent attribute.
+		// The maxLengths are defined in image_prioritizer_add_element_item_schema_properties().
 		const id = entry.element.getAttribute( 'id' );
 		if ( typeof id === 'string' && id.length > 100 ) {
 			if ( isDebug ) {

@@ -135,8 +135,11 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 				'type'      => 'string',
 				'required'  => true,
 				'minLength' => 1,
-				'maxLength' => 25, // The longest HTML tag name is 10 characters (BLOCKQUOTE and FIGCAPTION). This maxLength accounts for possible Custom Elements that are even longer.
-				'pattern'   => '^[a-zA-Z0-9\-]+$', // Technically emoji can be allowed in a custom element's tag name, but this is not supported here.
+				// The longest HTML tag name is 10 characters (BLOCKQUOTE and FIGCAPTION), but SVG tag names can be longer
+				// (e.g. feComponentTransfer). This maxLength accounts for possible Custom Elements that are even longer,
+				// although the longest known Custom Element from HTTP Archive is 32 characters. See data from <https://almanac.httparchive.org/en/2024/markup#fig-18>.
+				'maxLength' => 100,
+				'pattern'   => '^[a-zA-Z0-9\-]+\z', // Technically emoji can be allowed in a custom element's tag name, but this is not supported here.
 			),
 			'id'    => array(
 				'type'      => array( 'string', 'null' ),
