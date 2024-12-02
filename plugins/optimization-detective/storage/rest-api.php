@@ -233,8 +233,8 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		if ( false === $validity ) {
 			$validity = new WP_Error( 'invalid_url_metric', __( 'Validity of URL Metric was rejected by filter.', 'optimization-detective' ) );
 		}
-		if ( ! isset( $validity->error_data['code'] ) ) {
-			$validity->error_data['code'] = 400;
+		if ( ! isset( $validity->error_data['status'] ) ) {
+			$validity->error_data['status'] = 400;
 		}
 		return $validity;
 	}
