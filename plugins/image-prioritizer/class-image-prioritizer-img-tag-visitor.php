@@ -35,13 +35,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 		if ( 'PICTURE' === $tag ) {
 			return $this->process_picture( $processor, $context );
+		} elseif ( 'IMG' === $tag ) {
+			return $this->process_img( $processor, $context );
 		}
 
-		if ( 'IMG' !== $tag ) {
-			return false;
-		}
-
-		return $this->process_img( $processor, $context );
+		return false;
 	}
 
 	/**
