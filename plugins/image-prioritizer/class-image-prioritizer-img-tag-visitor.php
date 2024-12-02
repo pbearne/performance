@@ -171,10 +171,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				$context,
 				$xpath,
 				array(
-					'href'        => $processor->get_attribute( 'src' ),
-					'imagesrcset' => $processor->get_attribute( 'srcset' ),
-					'imagesizes'  => $processor->get_attribute( 'sizes' ),
-					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
+					'href'           => $processor->get_attribute( 'src' ),
+					'imagesrcset'    => $processor->get_attribute( 'srcset' ),
+					'imagesizes'     => $processor->get_attribute( 'sizes' ),
+					'crossorigin'    => $this->get_attribute_value( $processor, 'crossorigin' ),
+					'referrerpolicy' => $this->get_attribute_value( $processor, 'referrerpolicy' ),
 				)
 			);
 		}
@@ -196,6 +197,9 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 		$collected_sources = array();
 		$img_xpath         = null;
 
+		$referrerpolicy = null;
+		$crossorigin    = null;
+
 		// Loop through child tags until we reach the closing </picture> tag.
 		while ( $processor->next_tag() ) {
 			$tag = $processor->get_tag();
@@ -216,10 +220,9 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				}
 
 				$collected_sources[] = array(
-					'srcset'      => $processor->get_attribute( 'srcset' ),
-					'sizes'       => $processor->get_attribute( 'sizes' ),
-					'type'        => $type,
-					'crossorigin' => $this->get_attribute_value( $processor, 'crossorigin' ),
+					'srcset' => $processor->get_attribute( 'srcset' ),
+					'sizes'  => $processor->get_attribute( 'sizes' ),
+					'type'   => $type,
 				);
 			}
 
@@ -231,6 +234,12 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 					return false;
 				}
 
+				// These attributes are only defined on the IMG itself.
+				$referrerpolicy = $this->get_attribute_value( $processor, 'referrerpolicy' );
+				$crossorigin    = $this->get_attribute_value( $processor, 'crossorigin' );
+
+				// Capture the XPath for the IMG since the browser captures it as the LCP element, so we need this to
+				// look up whether it is the LCP element in the URL Metric groups.
 				$img_xpath = $processor->get_xpath();
 			}
 		}
@@ -244,10 +253,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			$context,
 			$img_xpath,
 			array(
-				'imagesrcset' => $source['srcset'],
-				'imagesizes'  => $source['sizes'],
-				'type'        => $source['type'],
-				'crossorigin' => $source['crossorigin'],
+				'imagesrcset'    => $source['srcset'],
+				'imagesizes'     => $source['sizes'],
+				'type'           => $source['type'],
+				'crossorigin'    => $crossorigin,
+				'referrerpolicy' => $referrerpolicy,
 			)
 		);
 
