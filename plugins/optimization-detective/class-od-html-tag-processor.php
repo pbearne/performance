@@ -508,11 +508,14 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	}
 
 	/**
-	 * Gets breadcrumbs for the current open tag.
+	 * Computes the HTML breadcrumbs for the currently-matched node, if matched.
+	 *
+	 * Breadcrumbs start at the outermost parent and descend toward the matched element.
+	 * They always include the entire path from the root HTML node to the matched element.
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @return string[] Breadcrumb.
+	 * @return string[] Array of tag names representing path to matched node.
 	 */
 	public function get_breadcrumbs(): array {
 		return $this->open_stack_tags;
