@@ -61,10 +61,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			return false;
 		}
 
+		$xpath = $processor->get_xpath();
+
 		$current_fetchpriority = $this->get_attribute_value( $processor, 'fetchpriority' );
 		$is_lazy_loaded        = 'lazy' === $this->get_attribute_value( $processor, 'loading' );
 		$updated_fetchpriority = null;
-		$xpath                 = $processor->get_xpath();
 
 		/*
 		 * When the same LCP element is common/shared among all viewport groups, make sure that the element has
