@@ -190,7 +190,7 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
 function auto_sizes_get_sizes_by_block_alignments( string $alignment, int $image_width, bool $print_sizes = false ): string {
 	$sizes = '';
 
-	$layout = wp_get_global_settings( array( 'layout' ) );
+	$layout = auto_sizes_get_layout_settings();
 
 	// Handle different alignment use cases.
 	switch ( $alignment ) {
@@ -255,4 +255,19 @@ function auto_sizes_modify_render_block_context( array $context, array $block ):
 		$context['ancestor_block_align'] = $block['attrs']['align'] ?? '';
 	}
 	return $context;
+}
+
+/**
+ * Retrieves the layout settings defined in theme.json.
+ *
+ * @since n.e.x.t
+ *
+ * @return array<string, mixed> Associative array of layout settings.
+ */
+function auto_sizes_get_layout_settings(): array {
+	static $layout = array();
+	if ( count( $layout ) === 0 ) {
+		$layout = wp_get_global_settings( array( 'layout' ) );
+	}
+	return $layout;
 }
