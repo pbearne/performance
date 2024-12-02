@@ -38,6 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                            }
  * @phpstan-type Data         array{
  *                                uuid: non-empty-string,
+ *                                etag?: non-empty-string,
  *                                url: non-empty-string,
  *                                timestamp: float,
  *                                viewport: ViewportRect,
@@ -155,6 +156,7 @@ class OD_URL_Metric implements JsonSerializable {
 	 * Gets JSON schema for URL Metric.
 	 *
 	 * @since 0.1.0
+	 * @since n.e.x.t Added the 'etag' property to the schema.
 	 *
 	 * @todo Cache the return value?
 	 *
@@ -206,6 +208,15 @@ class OD_URL_Metric implements JsonSerializable {
 					'type'        => 'string',
 					'format'      => 'uuid',
 					'required'    => true,
+					'readonly'    => true, // Omit from REST API.
+				),
+				'etag'      => array(
+					'description' => __( 'The ETag for the URL Metric.', 'optimization-detective' ),
+					'type'        => 'string',
+					'pattern'     => '^[0-9a-f]{32}\z',
+					'minLength'   => 32,
+					'maxLength'   => 32,
+					'required'    => false, // To be made required in a future release.
 					'readonly'    => true, // Omit from REST API.
 				),
 				'url'       => array(
@@ -309,7 +320,7 @@ class OD_URL_Metric implements JsonSerializable {
 			$schema['properties']['elements']['items']['properties'] = self::extend_schema_with_optional_properties(
 				$schema['properties']['elements']['items']['properties'],
 				$additional_properties,
-				'od_url_metric_schema_root_additional_properties'
+				'od_url_metric_schema_element_item_additional_properties'
 			);
 		}
 
@@ -415,6 +426,18 @@ class OD_URL_Metric implements JsonSerializable {
 	 */
 	public function get_uuid(): string {
 		return $this->data['uuid'];
+	}
+
+	/**
+	 * Gets ETag.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return non-empty-string|null ETag.
+	 */
+	public function get_etag(): ?string {
+		// Since the ETag is optional for now, return null for old URL Metrics that do not have one.
+		return $this->data['etag'] ?? null;
 	}
 
 	/**
