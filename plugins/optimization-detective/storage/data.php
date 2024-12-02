@@ -141,24 +141,55 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
+ * Gets the current ETag for URL Metrics.
+ *
+ * The ETag is a hash based on the IDs of the registered tag visitors
+ * in the current environment. It is used for marking the URL Metrics as stale
+ * when its value changes.
+ *
+ * @since n.e.x.t
+ * @access private
+ *
+ * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
+ * @return non-empty-string Current ETag.
+ */
+function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
+	$data = array(
+		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+	);
+
+	/**
+	 * Filters the data that goes into computing the current ETag for URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param array<string, mixed> $data Data.
+	 */
+	$data = (array) apply_filters( 'od_current_url_metrics_etag_data', $data );
+
+	return md5( (string) wp_json_encode( $data ) );
+}
+
+/**
  * Computes HMAC for storing URL Metrics for a specific slug.
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
  * @since 0.8.0
+ * @since n.e.x.t Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
- * @todo This should also include an ETag as a parameter. See <https://github.com/WordPress/performance/issues/1466>.
  *
- * @param string   $slug                Slug (hash of normalized query vars).
- * @param string   $url                 URL.
- * @param int|null $cache_purge_post_id Cache purge post ID.
+ * @param string           $slug                Slug (hash of normalized query vars).
+ * @param non-empty-string $current_etag        Current ETag.
+ * @param string           $url                 URL.
+ * @param int|null         $cache_purge_post_id Cache purge post ID.
  * @return string HMAC.
  */
-function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache_purge_post_id = null ): string {
-	$action = "store_url_metric:$slug:$url:$cache_purge_post_id";
+function od_get_url_metrics_storage_hmac( string $slug, string $current_etag, string $url, ?int $cache_purge_post_id = null ): string {
+	$action = "store_url_metric:$slug:$current_etag:$url:$cache_purge_post_id";
 	return wp_hash( $action, 'nonce' );
 }
 
@@ -166,19 +197,21 @@ function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
  * @since 0.8.0
+ * @since n.e.x.t Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
- * @param string   $hmac                HMAC.
- * @param string   $slug                Slug (hash of normalized query vars).
- * @param String   $url                 URL.
- * @param int|null $cache_purge_post_id Cache purge post ID.
+ * @param string           $hmac                HMAC.
+ * @param string           $slug                Slug (hash of normalized query vars).
+ * @param non-empty-string $current_etag        Current ETag.
+ * @param string           $url                 URL.
+ * @param int|null         $cache_purge_post_id Cache purge post ID.
  * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url, ?int $cache_purge_post_id = null ): bool {
-	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id ), $hmac );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $current_etag, string $url, ?int $cache_purge_post_id = null ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $current_etag, $url, $cache_purge_post_id ), $hmac );
 }
 
 /**
