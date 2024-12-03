@@ -199,14 +199,14 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  * @return void
  */
 function dominant_color_admin_inline_style() {
-    $handle = 'dominant-color-admin-styles';
+	$handle = 'dominant-color-admin-styles';
 	// PHPCS ignore reason: Version not used since this handle is only registered for adding an inline style.
 	// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
 	wp_register_style( $handle, false );
 	wp_enqueue_style( $handle );
 	$custom_css = '.wp-core-ui .attachment-preview[data-dominant-color]:not(.has-transparency) { background-color: var(--dominant-color); }';
 	wp_add_inline_style( $handle, $custom_css );
-};
+}
 add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
 
 /**
@@ -230,7 +230,7 @@ function dominant_color_admin_script() {
 		}());
 	</script>
 	<?php
-};
+}
 add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
 
 /**
@@ -245,7 +245,6 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  * @param array   $response   The current response array for the attachment.
  * @param WP_Post $attachment The attachment post object.
  * @param array   $meta       The attachment metadata.
- *
  * @return array The modified response array with added dominant color and transparency information.
  */
 function dominant_color_prepare_attachment_for_js( $response, $attachment, $meta ) {
@@ -262,5 +261,5 @@ function dominant_color_prepare_attachment_for_js( $response, $attachment, $meta
 	}
 
 	return $response;
-};
+}
 add_filter( 'wp_prepare_attachment_for_js', 'dominant_color_prepare_attachment_for_js', 10, 3 );
