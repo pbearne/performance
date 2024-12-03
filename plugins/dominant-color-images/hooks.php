@@ -195,8 +195,6 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  * in the WordPress admin interface.
  *
  * @since 1.1.3
- *
- * @return void
  */
 function dominant_color_admin_inline_style(): void {
 	$handle = 'dominant-color-admin-styles';
@@ -217,8 +215,6 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  * to the template, allowing these properties to be displayed in the media library.
  *
  * @since 1.1.3
- *
- * @return void
  */
 function dominant_color_admin_script(): void {
 	?>
