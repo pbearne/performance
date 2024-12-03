@@ -241,7 +241,7 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  * @param array<mixed> $response   The current response array for the attachment.
  * @param WP_Post      $attachment The attachment post object.
  * @param array<mixed> $meta       The attachment metadata.
- * @return array The modified response array with added dominant color and transparency information.
+ * @return array<mixed> The modified response array with added dominant color and transparency information.
  */
 function dominant_color_prepare_attachment_for_js( array $response, WP_Post $attachment, array $meta ): array {
 	unset( $attachment );
