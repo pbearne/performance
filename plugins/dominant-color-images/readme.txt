@@ -1,8 +1,8 @@
 === Image Placeholders ===
 
 Contributors: wordpressdotorg
-Tested up to: 6.6
-Stable tag:   1.1.2
+Tested up to: 6.7
+Stable tag:   1.1.3
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Tags:         performance, images, dominant color
@@ -47,11 +47,22 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 == Changelog ==
 
-= 1.1.2 =
+= 1.1.3 =
 
 **Enhancements**
 
 * Added support for placeholder images to the admin Media Model. ([354](https://github.com/WordPress/performance/issues/354))
+
+= 1.1.2 =
+
+**Enhancements**
+
+* Use more robust HTML Tag Processor for Image Placeholders. ([1477](https://github.com/WordPress/performance/pull/1477))
+
+**Bug Fixes**
+
+* Re-remove unneeded phpcs:ignore. ([1231](https://github.com/WordPress/performance/pull/1231))
+* Update PHPStan to 1.11.5. ([1318](https://github.com/WordPress/performance/pull/1318))
 
 = 1.1.1 =
 

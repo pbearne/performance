@@ -1,4 +1,12 @@
-/** @typedef {import("web-vitals").LCPMetric} LCPMetric */
+/**
+ * @typedef {import("web-vitals").LCPMetric} LCPMetric
+ * @typedef {import("./types.ts").ElementData} ElementData
+ * @typedef {import("./types.ts").URLMetric} URLMetric
+ * @typedef {import("./types.ts").URLMetricGroupStatus} URLMetricGroupStatus
+ * @typedef {import("./types.ts").Extension} Extension
+ * @typedef {import("./types.ts").ExtendedRootData} ExtendedRootData
+ * @typedef {import("./types.ts").ExtendedElementData} ExtendedElementData
+ */
 
 const win = window;
 const doc = win.document;
@@ -33,7 +41,7 @@ function isStorageLocked( currentTime, storageLockTTL ) {
 }
 
 /**
- * Set the storage lock.
+ * Sets the storage lock.
  *
  * @param {number} currentTime - Current time in milliseconds.
  */
@@ -47,7 +55,7 @@ function setStorageLock( currentTime ) {
 }
 
 /**
- * Log a message.
+ * Logs a message.
  *
  * @param {...*} message
  */
@@ -57,7 +65,7 @@ function log( ...message ) {
 }
 
 /**
- * Log a warning.
+ * Logs a warning.
  *
  * @param {...*} message
  */
@@ -67,7 +75,7 @@ function warn( ...message ) {
 }
 
 /**
- * Log an error.
+ * Logs an error.
  *
  * @param {...*} message
  */
@@ -77,43 +85,15 @@ function error( ...message ) {
 }
 
 /**
- * @typedef {Object} ElementMetrics
- * @property {boolean}         isLCP              - Whether it is the LCP candidate.
- * @property {boolean}         isLCPCandidate     - Whether it is among the LCP candidates.
- * @property {string}          xpath              - XPath.
- * @property {number}          intersectionRatio  - Intersection ratio.
- * @property {DOMRectReadOnly} intersectionRect   - Intersection rectangle.
- * @property {DOMRectReadOnly} boundingClientRect - Bounding client rectangle.
- */
-
-/**
- * @typedef {Object} URLMetrics
- * @property {string}           url             - URL of the page.
- * @property {Object}           viewport        - Viewport.
- * @property {number}           viewport.width  - Viewport width.
- * @property {number}           viewport.height - Viewport height.
- * @property {ElementMetrics[]} elements        - Metrics for the elements observed on the page.
- */
-
-/**
- * @typedef {Object} URLMetricsGroupStatus
- * @property {number}  minimumViewportWidth - Minimum viewport width.
- * @property {boolean} complete             - Whether viewport group is complete.
- */
-
-/**
- * Checks whether the URL metric(s) for the provided viewport width is needed.
+ * Checks whether the URL Metric(s) for the provided viewport width is needed.
  *
- * @param {number}                  viewportWidth           - Current viewport width.
- * @param {URLMetricsGroupStatus[]} urlMetricsGroupStatuses - Viewport group statuses.
- * @return {boolean} Whether URL metrics are needed.
+ * @param {number}                 viewportWidth          - Current viewport width.
+ * @param {URLMetricGroupStatus[]} urlMetricGroupStatuses - Viewport group statuses.
+ * @return {boolean} Whether URL Metrics are needed.
  */
-function isViewportNeeded( viewportWidth, urlMetricsGroupStatuses ) {
+function isViewportNeeded( viewportWidth, urlMetricGroupStatuses ) {
 	let lastWasLacking = false;
-	for ( const {
-		minimumViewportWidth,
-		complete,
-	} of urlMetricsGroupStatuses ) {
+	for ( const { minimumViewportWidth, complete } of urlMetricGroupStatuses ) {
 		if ( viewportWidth >= minimumViewportWidth ) {
 			lastWasLacking = ! complete;
 		} else {
@@ -133,59 +113,178 @@ function getCurrentTime() {
 }
 
 /**
+ * Recursively freezes an object to prevent mutation.
+ *
+ * @param {Object} obj Object to recursively freeze.
+ */
+function recursiveFreeze( obj ) {
+	for ( const prop of Object.getOwnPropertyNames( obj ) ) {
+		const value = obj[ prop ];
+		if ( null !== value && typeof value === 'object' ) {
+			recursiveFreeze( value );
+		}
+	}
+	Object.freeze( obj );
+}
+
+/**
+ * URL Metric being assembled for submission.
+ *
+ * @type {URLMetric}
+ */
+let urlMetric;
+
+/**
+ * Reserved root property keys.
+ *
+ * @see {URLMetric}
+ * @see {ExtendedElementData}
+ * @type {Set<string>}
+ */
+const reservedRootPropertyKeys = new Set( [ 'url', 'viewport', 'elements' ] );
+
+/**
+ * Gets root URL Metric data.
+ *
+ * @return {URLMetric} URL Metric.
+ */
+function getRootData() {
+	const immutableUrlMetric = structuredClone( urlMetric );
+	recursiveFreeze( immutableUrlMetric );
+	return immutableUrlMetric;
+}
+
+/**
+ * Extends root URL Metric data.
+ *
+ * @param {ExtendedRootData} properties
+ */
+function extendRootData( properties ) {
+	for ( const key of Object.getOwnPropertyNames( properties ) ) {
+		if ( reservedRootPropertyKeys.has( key ) ) {
+			throw new Error( `Disallowed setting of key '${ key }' on root.` );
+		}
+	}
+	Object.assign( urlMetric, properties );
+}
+
+/**
+ * Mapping of XPath to element data.
+ *
+ * @type {Map<string, ElementData>}
+ */
+const elementsByXPath = new Map();
+
+/**
+ * Reserved element property keys.
+ *
+ * @see {ElementData}
+ * @see {ExtendedRootData}
+ * @type {Set<string>}
+ */
+const reservedElementPropertyKeys = new Set( [
+	'isLCP',
+	'isLCPCandidate',
+	'xpath',
+	'intersectionRatio',
+	'intersectionRect',
+	'boundingClientRect',
+] );
+
+/**
+ * Gets element data.
+ *
+ * @param {string} xpath XPath.
+ * @return {ElementData|null} Element data, or null if no element for the XPath exists.
+ */
+function getElementData( xpath ) {
+	const elementData = elementsByXPath.get( xpath );
+	if ( elementData ) {
+		const cloned = structuredClone( elementData );
+		recursiveFreeze( cloned );
+		return cloned;
+	}
+	return null;
+}
+
+/**
+ * Extends element data.
+ *
+ * @param {string}              xpath      XPath.
+ * @param {ExtendedElementData} properties Properties.
+ */
+function extendElementData( xpath, properties ) {
+	if ( ! elementsByXPath.has( xpath ) ) {
+		throw new Error( `Unknown element with XPath: ${ xpath }` );
+	}
+	for ( const key of Object.getOwnPropertyNames( properties ) ) {
+		if ( reservedElementPropertyKeys.has( key ) ) {
+			throw new Error(
+				`Disallowed setting of key '${ key }' on element.`
+			);
+		}
+	}
+	const elementData = elementsByXPath.get( xpath );
+	Object.assign( elementData, properties );
+}
+
+/**
  * Detects the LCP element, loaded images, client viewport and store for future optimizations.
  *
- * @param {Object}                  args                             Args.
- * @param {number}                  args.serveTime                   The serve time of the page in milliseconds from PHP via `microtime( true ) * 1000`.
- * @param {number}                  args.detectionTimeWindow         The number of milliseconds between now and when the page was first generated in which detection should proceed.
- * @param {boolean}                 args.isDebug                     Whether to show debug messages.
- * @param {string}                  args.restApiEndpoint             URL for where to send the detection data.
- * @param {string}                  args.restApiNonce                Nonce for writing to the REST API.
- * @param {string}                  args.currentUrl                  Current URL.
- * @param {string}                  args.urlMetricsSlug              Slug for URL metrics.
- * @param {string}                  args.urlMetricsNonce             Nonce for URL metrics storage.
- * @param {URLMetricsGroupStatus[]} args.urlMetricsGroupStatuses     URL metrics group statuses.
- * @param {number}                  args.storageLockTTL              The TTL (in seconds) for the URL metric storage lock.
- * @param {string}                  args.webVitalsLibrarySrc         The URL for the web-vitals library.
- * @param {Object}                  [args.urlMetricsGroupCollection] URL metrics group collection, when in debug mode.
+ * @param {Object}                 args                            Args.
+ * @param {string[]}               args.extensionModuleUrls        URLs for extension script modules to import.
+ * @param {number}                 args.minViewportAspectRatio     Minimum aspect ratio allowed for the viewport.
+ * @param {number}                 args.maxViewportAspectRatio     Maximum aspect ratio allowed for the viewport.
+ * @param {boolean}                args.isDebug                    Whether to show debug messages.
+ * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
+ * @param {string}                 args.currentETag                Current ETag.
+ * @param {string}                 args.currentUrl                 Current URL.
+ * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
+ * @param {number|null}            args.cachePurgePostId           Cache purge post ID.
+ * @param {string}                 args.urlMetricHMAC              HMAC for URL Metric storage.
+ * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL Metric group statuses.
+ * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL Metric storage lock.
+ * @param {string}                 args.webVitalsLibrarySrc        The URL for the web-vitals library.
+ * @param {Object}                 [args.urlMetricGroupCollection] URL Metric group collection, when in debug mode.
  */
 export default async function detect( {
-	serveTime,
-	detectionTimeWindow,
+	minViewportAspectRatio,
+	maxViewportAspectRatio,
 	isDebug,
+	extensionModuleUrls,
 	restApiEndpoint,
-	restApiNonce,
+	currentETag,
 	currentUrl,
-	urlMetricsSlug,
-	urlMetricsNonce,
-	urlMetricsGroupStatuses,
+	urlMetricSlug,
+	cachePurgePostId,
+	urlMetricHMAC,
+	urlMetricGroupStatuses,
 	storageLockTTL,
 	webVitalsLibrarySrc,
-	urlMetricsGroupCollection,
+	urlMetricGroupCollection,
 } ) {
-	const currentTime = getCurrentTime();
-
 	if ( isDebug ) {
-		log(
-			'Stored URL metrics group collection:',
-			urlMetricsGroupCollection
-		);
+		log( 'Stored URL Metric group collection:', urlMetricGroupCollection );
 	}
 
-	// Abort running detection logic if it was served in a cached page.
-	if ( currentTime - serveTime > detectionTimeWindow ) {
+	// Abort if the current viewport is not among those which need URL Metrics.
+	if ( ! isViewportNeeded( win.innerWidth, urlMetricGroupStatuses ) ) {
 		if ( isDebug ) {
-			warn(
-				'Aborted detection due to being outside detection time window.'
-			);
+			log( 'No need for URL Metrics from the current viewport.' );
 		}
 		return;
 	}
 
-	// Abort if the current viewport is not among those which need URL metrics.
-	if ( ! isViewportNeeded( win.innerWidth, urlMetricsGroupStatuses ) ) {
+	// Abort if the viewport aspect ratio is not in a common range.
+	const aspectRatio = win.innerWidth / win.innerHeight;
+	if (
+		aspectRatio < minViewportAspectRatio ||
+		aspectRatio > maxViewportAspectRatio
+	) {
 		if ( isDebug ) {
-			log( 'No need for URL metrics from the current viewport.' );
+			warn(
+				`Viewport aspect ratio (${ aspectRatio }) is not in the accepted range of ${ minViewportAspectRatio } to ${ maxViewportAspectRatio }.`
+			);
 		}
 		return;
 	}
@@ -215,16 +314,18 @@ export default async function detect( {
 		} );
 	}
 
+	// TODO: Does this make sense here? Should it be moved up above the isViewportNeeded condition?
 	// As an alternative to this, the od_print_detection_script() function can short-circuit if the
 	// od_is_url_metric_storage_locked() function returns true. However, the downside with that is page caching could
 	// result in metrics missed from being gathered when a user navigates around a site and primes the page cache.
-	if ( isStorageLocked( currentTime, storageLockTTL ) ) {
+	if ( isStorageLocked( getCurrentTime(), storageLockTTL ) ) {
 		if ( isDebug ) {
 			warn( 'Aborted detection due to storage being locked.' );
 		}
 		return;
 	}
 
+	// TODO: Does this make sense here?
 	// Prevent detection when page is not scrolled to the initial viewport.
 	if ( doc.documentElement.scrollTop > 0 ) {
 		if ( isDebug ) {
@@ -239,9 +340,28 @@ export default async function detect( {
 		log( 'Proceeding with detection' );
 	}
 
+	/** @type {Map<string, Extension>} */
+	const extensions = new Map();
+	for ( const extensionModuleUrl of extensionModuleUrls ) {
+		try {
+			/** @type {Extension} */
+			const extension = await import( extensionModuleUrl );
+			extensions.set( extensionModuleUrl, extension );
+			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args. It's important to pass webVitalsLibrarySrc to the extension so that onLCP, onCLS, or onINP can be obtained.
+			if ( extension.initialize instanceof Function ) {
+				extension.initialize( { isDebug } );
+			}
+		} catch ( err ) {
+			error(
+				`Failed to initialize extension '${ extensionModuleUrl }':`,
+				err
+			);
+		}
+	}
+
 	const breadcrumbedElements = doc.body.querySelectorAll( '[data-od-xpath]' );
 
-	/** @type {Map<HTMLElement, string>} */
+	/** @type {Map<Element, string>} */
 	const breadcrumbedElementsMap = new Map(
 		[ ...breadcrumbedElements ].map(
 			/**
@@ -302,7 +422,7 @@ export default async function detect( {
 	// Obtain at least one LCP candidate. More may be reported before the page finishes loading.
 	await new Promise( ( resolve ) => {
 		onLCP(
-			( metric ) => {
+			( /** @type LCPMetric */ metric ) => {
 				lcpMetricCandidates.push( metric );
 				resolve();
 			},
@@ -321,11 +441,8 @@ export default async function detect( {
 		log( 'Detection is stopping.' );
 	}
 
-	/** @type {URLMetrics} */
-	const urlMetrics = {
+	urlMetric = {
 		url: currentUrl,
-		slug: urlMetricsSlug,
-		nonce: urlMetricsNonce,
 		viewport: {
 			width: win.innerWidth,
 			height: win.innerHeight,
@@ -344,16 +461,21 @@ export default async function detect( {
 			continue;
 		}
 
-		const isLCP =
-			elementIntersection.target === lcpMetric?.entries[ 0 ]?.element;
+		const element = /** @type {Element|null} */ (
+			lcpMetric?.entries[ 0 ]?.element
+		);
+		const isLCP = elementIntersection.target === element;
 
-		/** @type {ElementMetrics} */
-		const elementMetrics = {
+		/** @type {ElementData} */
+		const elementData = {
 			isLCP,
 			isLCPCandidate: !! lcpMetricCandidates.find(
-				( lcpMetricCandidate ) =>
-					lcpMetricCandidate.entries[ 0 ]?.element ===
-					elementIntersection.target
+				( lcpMetricCandidate ) => {
+					const candidateElement = /** @type {Element|null} */ (
+						lcpMetricCandidate.entries[ 0 ]?.element
+					);
+					return candidateElement === elementIntersection.target;
+				}
 			),
 			xpath,
 			intersectionRatio: elementIntersection.intersectionRatio,
@@ -361,45 +483,78 @@ export default async function detect( {
 			boundingClientRect: elementIntersection.boundingClientRect,
 		};
 
-		urlMetrics.elements.push( elementMetrics );
+		urlMetric.elements.push( elementData );
+		elementsByXPath.set( elementData.xpath, elementData );
 	}
 
 	if ( isDebug ) {
-		log( 'Current URL metrics:', urlMetrics );
+		log( 'Current URL Metric:', urlMetric );
 	}
 
-	// Yield to main before sending data to server to further break up task.
+	// Wait for the page to be hidden.
 	await new Promise( ( resolve ) => {
-		setTimeout( resolve, 0 );
+		win.addEventListener( 'pagehide', resolve, { once: true } );
+		win.addEventListener( 'pageswap', resolve, { once: true } );
+		doc.addEventListener(
+			'visibilitychange',
+			() => {
+				if ( document.visibilityState === 'hidden' ) {
+					// TODO: This will fire even when switching tabs.
+					resolve();
+				}
+			},
+			{ once: true }
+		);
 	} );
 
-	try {
-		const response = await fetch( restApiEndpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': restApiNonce,
-			},
-			body: JSON.stringify( urlMetrics ),
-		} );
-
-		if ( response.status === 200 ) {
-			setStorageLock( getCurrentTime() );
-		}
-
-		if ( isDebug ) {
-			const body = await response.json();
-			if ( response.status === 200 ) {
-				log( 'Response:', body );
-			} else {
-				error( 'Failure:', body );
+	if ( extensions.size > 0 ) {
+		for ( const [
+			extensionModuleUrl,
+			extension,
+		] of extensions.entries() ) {
+			if ( extension.finalize instanceof Function ) {
+				try {
+					await extension.finalize( {
+						isDebug,
+						getRootData,
+						getElementData,
+						extendElementData,
+						extendRootData,
+					} );
+				} catch ( err ) {
+					error(
+						`Unable to finalize module '${ extensionModuleUrl }':`,
+						err
+					);
+				}
 			}
 		}
-	} catch ( err ) {
-		if ( isDebug ) {
-			error( err );
-		}
 	}
+
+	// Even though the server may reject the REST API request, we still have to set the storage lock
+	// because we can't look at the response when sending a beacon.
+	setStorageLock( getCurrentTime() );
+
+	if ( isDebug ) {
+		log( 'Sending URL Metric:', urlMetric );
+	}
+
+	const url = new URL( restApiEndpoint );
+	url.searchParams.set( 'slug', urlMetricSlug );
+	url.searchParams.set( 'current_etag', currentETag );
+	if ( typeof cachePurgePostId === 'number' ) {
+		url.searchParams.set(
+			'cache_purge_post_id',
+			cachePurgePostId.toString()
+		);
+	}
+	url.searchParams.set( 'hmac', urlMetricHMAC );
+	navigator.sendBeacon(
+		url,
+		new Blob( [ JSON.stringify( urlMetric ) ], {
+			type: 'application/json',
+		} )
+	);
 
 	// Clean up.
 	breadcrumbedElementsMap.clear();

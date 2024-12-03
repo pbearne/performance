@@ -339,79 +339,14 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test append_head_html().
-	 *
-	 * @covers ::append_head_html
-	 */
-	public function test_append_head_html(): void {
-		$html           = '
-			<html>
-				<head>
-					<meta charset=utf-8>
-					<!-- </head> -->
-				</head>
-				<!--</HEAD>-->
-				<body>
-					<h1>Hello World</h1>
-				</body>
-			</html>
-		';
-		$processor      = new OD_HTML_Tag_Processor( $html );
-		$early_injected = '<!-- Early injection -->';
-		$late_injected  = '<!-- Late injection -->';
-		$processor->append_head_html( $early_injected );
-
-		$saw_head = false;
-		while ( $processor->next_open_tag() ) {
-			$tag = $processor->get_tag();
-			if ( 'HEAD' === $tag ) {
-				$saw_head = true;
-			}
-		}
-		$this->assertTrue( $saw_head );
-
-		$processor->append_head_html( $late_injected );
-		$expected = "
-			<html>
-				<head>
-					<meta charset=utf-8>
-					<!-- </head> -->
-				{$early_injected}{$late_injected}</head>
-				<!--</HEAD>-->
-				<body>
-					<h1>Hello World</h1>
-				</body>
-			</html>
-		";
-
-		$this->assertSame( $expected, $processor->get_updated_html() );
-
-		$later_injected = '<!-- Later injection -->';
-		$processor->append_head_html( $later_injected );
-
-		$expected = "
-			<html>
-				<head>
-					<meta charset=utf-8>
-					<!-- </head> -->
-				{$early_injected}{$late_injected}{$later_injected}</head>
-				<!--</HEAD>-->
-				<body>
-					<h1>Hello World</h1>
-				</body>
-			</html>
-		";
-		$this->assertSame( $expected, $processor->get_updated_html() );
-	}
-
-	/**
 	 * Test both append_head_html() and append_body_html().
 	 *
 	 * @covers ::append_head_html
 	 * @covers ::append_body_html
+	 * @covers ::get_updated_html
 	 */
 	public function test_append_head_and_body_html(): void {
-		$html          = '
+		$html                = '
 			<html>
 				<head>
 					<meta charset=utf-8>
@@ -425,36 +360,53 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 				<!--</BODY>-->
 			</html>
 		';
-		$head_injected = '<link rel="home" href="/">';
-		$body_injected = '<script>document.write("Goodbye!")</script>';
-		$processor     = new OD_HTML_Tag_Processor( $html );
+		$head_injected       = '<link rel="home" href="/">';
+		$body_injected       = '<script>document.write("Goodbye!")</script>';
+		$later_head_injected = '<!-- Later injection -->';
+		$processor           = new OD_HTML_Tag_Processor( $html );
+
+		$processor->append_head_html( $head_injected );
+		$processor->append_body_html( $body_injected );
 
 		$saw_head = false;
 		$saw_body = false;
+		$did_seek = false;
 		while ( $processor->next_open_tag() ) {
+			$this->assertStringNotContainsString( $head_injected, $processor->get_updated_html(), 'Only expecting end-of-head injection once document was finalized.' );
+			$this->assertStringNotContainsString( $body_injected, $processor->get_updated_html(), 'Only expecting end-of-body injection once document was finalized.' );
 			$tag = $processor->get_tag();
 			if ( 'HEAD' === $tag ) {
 				$saw_head = true;
 			} elseif ( 'BODY' === $tag ) {
 				$saw_body = true;
+				$this->assertTrue( $processor->set_bookmark( 'cuerpo' ) );
+			}
+			if ( ! $did_seek && 'H1' === $tag ) {
+				$processor->append_head_html( '<!--H1 appends to HEAD-->' );
+				$processor->append_body_html( '<!--H1 appends to BODY-->' );
+				$this->assertTrue( $processor->seek( 'cuerpo' ) );
+				$did_seek = true;
 			}
 		}
+		$this->assertTrue( $did_seek );
 		$this->assertTrue( $saw_head );
 		$this->assertTrue( $saw_body );
+		$this->assertStringContainsString( $head_injected, $processor->get_updated_html(), 'Only expecting end-of-head injection once document was finalized.' );
+		$this->assertStringContainsString( $body_injected, $processor->get_updated_html(), 'Only expecting end-of-body injection once document was finalized.' );
 
-		$processor->append_head_html( $head_injected );
-		$processor->append_body_html( $body_injected );
+		$processor->append_head_html( $later_head_injected );
+
 		$expected = "
 			<html>
 				<head>
 					<meta charset=utf-8>
 					<!-- </head> -->
-				{$head_injected}</head>
+				{$head_injected}<!--H1 appends to HEAD-->{$later_head_injected}</head>
 				<!--</HEAD>-->
 				<body>
 					<h1>Hello World</h1>
 					<!-- </body> -->
-				{$body_injected}</body>
+				{$body_injected}<!--H1 appends to BODY--></body>
 				<!--</BODY>-->
 			</html>
 		";
@@ -469,18 +421,23 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 	 * @covers ::set_meta_attribute
 	 */
 	public function test_html_tag_processor_wrapper_methods(): void {
-		$processor = new OD_HTML_Tag_Processor( '<html lang="en" class="foo" dir="ltr"></html>' );
+		$processor = new OD_HTML_Tag_Processor( '<html lang="en" class="foo" dir="ltr" data-novalue></html>' );
 		while ( $processor->next_open_tag() ) {
 			$open_tag = $processor->get_tag();
 			if ( 'HTML' === $open_tag ) {
 				$processor->set_attribute( 'lang', 'es' );
+				$processor->set_attribute( 'class', 'foo' ); // Unchanged from source to test that data-od-replaced-class metadata attribute won't be added.
 				$processor->remove_attribute( 'dir' );
 				$processor->set_attribute( 'id', 'root' );
 				$processor->set_meta_attribute( 'foo', 'bar' );
 				$processor->set_meta_attribute( 'baz', true );
+				$processor->set_attribute( 'data-novalue', 'Nevermind!' );
 			}
 		}
-		$this->assertSame( '<html data-od-added-id data-od-baz data-od-foo="bar" data-od-removed-dir="ltr" data-od-replaced-lang="en" id="root" lang="es" class="foo" ></html>', $processor->get_updated_html() );
+		$this->assertSame(
+			'<html data-od-added-id data-od-baz data-od-foo="bar" data-od-removed-dir="ltr" data-od-replaced-data-novalue data-od-replaced-lang="en" id="root" lang="es" class="foo"  data-novalue="Nevermind!"></html>',
+			$processor->get_updated_html()
+		);
 	}
 
 	/**
@@ -492,7 +449,8 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 	 */
 	public function test_bookmarking_and_seeking(): void {
 		$processor = new OD_HTML_Tag_Processor(
-			'
+			trim(
+				'
 				<html>
 					<head></head>
 					<body>
@@ -507,14 +465,19 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 						<img src="https://example.com/foo.jpg">
 					</body>
 				</html>
-			'
+				'
+			)
 		);
 
 		$actual_figure_contents = array();
-		$this->assertSame( 0, $processor->get_seek_count() );
+		$last_cursor_move_count = $processor->get_cursor_move_count();
+		$this->assertSame( 0, $last_cursor_move_count );
 
 		$bookmarks = array();
 		while ( $processor->next_open_tag() ) {
+			$this_cursor_move_count = $processor->get_cursor_move_count();
+			$this->assertGreaterThan( $last_cursor_move_count, $this_cursor_move_count );
+			$last_cursor_move_count = $this_cursor_move_count;
 			if (
 				'FIGURE' === $processor->get_tag()
 				&&
@@ -573,7 +536,6 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 				'depth' => $processor->get_current_depth(),
 			);
 		}
-		$this->assertSame( count( $bookmarks ), $processor->get_seek_count() );
 
 		$this->assertSame( $expected_figure_contents, $sought_actual_contents );
 
@@ -597,11 +559,11 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test get_seek_count.
+	 * Test get_cursor_move_count().
 	 *
-	 * @covers ::get_seek_count
+	 * @covers ::get_cursor_move_count
 	 */
-	public function test_get_next_token_count(): void {
+	public function test_get_cursor_move_count(): void {
 		$processor = new OD_HTML_Tag_Processor(
 			trim(
 				'
@@ -612,20 +574,38 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 				'
 			)
 		);
-		$this->assertSame( 0, $processor->get_next_token_count() );
+		$this->assertSame( 0, $processor->get_cursor_move_count() );
 		$this->assertTrue( $processor->next_tag() );
 		$this->assertSame( 'HTML', $processor->get_tag() );
-		$this->assertSame( 1, $processor->get_next_token_count() );
+		$this->assertTrue( $processor->set_bookmark( 'document_root' ) );
+		$this->assertSame( 1, $processor->get_cursor_move_count() );
 		$this->assertTrue( $processor->next_tag() );
 		$this->assertSame( 'HEAD', $processor->get_tag() );
-		$this->assertSame( 3, $processor->get_next_token_count() ); // Note that next_token() call #2 was for the whitespace between <html> and <head>.
+		$this->assertSame( 3, $processor->get_cursor_move_count() ); // Note that next_token() call #2 was for the whitespace between <html> and <head>.
 		$this->assertTrue( $processor->next_tag() );
 		$this->assertSame( 'HEAD', $processor->get_tag() );
 		$this->assertTrue( $processor->is_tag_closer() );
-		$this->assertSame( 4, $processor->get_next_token_count() );
+		$this->assertSame( 4, $processor->get_cursor_move_count() );
 		$this->assertTrue( $processor->next_tag() );
 		$this->assertSame( 'BODY', $processor->get_tag() );
-		$this->assertSame( 6, $processor->get_next_token_count() ); // Note that next_token() call #5 was for the whitespace between </head> and <body>.
+		$this->assertSame( 6, $processor->get_cursor_move_count() ); // Note that next_token() call #5 was for the whitespace between </head> and <body>.
+		$this->assertTrue( $processor->next_tag() );
+		$this->assertSame( 'BODY', $processor->get_tag() );
+		$this->assertTrue( $processor->is_tag_closer() );
+		$this->assertSame( 7, $processor->get_cursor_move_count() );
+		$this->assertTrue( $processor->next_tag() );
+		$this->assertSame( 'HTML', $processor->get_tag() );
+		$this->assertTrue( $processor->is_tag_closer() );
+		$this->assertSame( 9, $processor->get_cursor_move_count() ); // Note that next_token() call #8 was for the whitespace between </body> and <html>.
+		$this->assertFalse( $processor->next_tag() );
+		$this->assertSame( 10, $processor->get_cursor_move_count() );
+		$this->assertFalse( $processor->next_tag() );
+		$this->assertSame( 11, $processor->get_cursor_move_count() );
+		$this->assertTrue( $processor->seek( 'document_root' ) );
+		$this->assertSame( 12, $processor->get_cursor_move_count() );
+		$this->setExpectedIncorrectUsage( 'WP_HTML_Tag_Processor::seek' );
+		$this->assertFalse( $processor->seek( 'does_not_exist' ) );
+		$this->assertSame( 12, $processor->get_cursor_move_count() ); // The bookmark does not exist so no change.
 	}
 
 	/**

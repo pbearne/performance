@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *                   href?: non-empty-string,
  *                   imagesrcset?: non-empty-string,
  *                   imagesizes?: non-empty-string,
- *                   crossorigin?: ''|'anonymous'|'use-credentials',
+ *                   crossorigin?: 'anonymous'|'use-credentials',
  *                   fetchpriority?: 'high'|'low'|'auto',
  *                   as?: 'audio'|'document'|'embed'|'fetch'|'font'|'image'|'object'|'script'|'style'|'track'|'video'|'worker',
  *                   media?: non-empty-string,
@@ -130,18 +130,29 @@ final class OD_Link_Collection implements Countable {
 	 */
 	private function merge_consecutive_links( array $links ): array {
 
-		// Ensure links are sorted by the minimum_viewport_width.
 		usort(
 			$links,
 			/**
 			 * Comparator.
+			 *
+			 * The links are sorted first by the 'href' attribute to group identical URLs together.
+			 * If the 'href' attributes are the same, the links are then sorted by 'minimum_viewport_width'.
 			 *
 			 * @param Link $a First link.
 			 * @param Link $b Second link.
 			 * @return int Comparison result.
 			 */
 			static function ( array $a, array $b ): int {
-				return $a['minimum_viewport_width'] <=> $b['minimum_viewport_width'];
+				// Get href values, defaulting to empty string if not present.
+				$href_a = $a['attributes']['href'] ?? '';
+				$href_b = $b['attributes']['href'] ?? '';
+
+				$href_comparison = strcmp( $href_a, $href_b );
+				if ( 0 === $href_comparison ) {
+					return $a['minimum_viewport_width'] <=> $b['minimum_viewport_width'];
+				}
+
+				return $href_comparison;
 			}
 		);
 
@@ -192,20 +203,13 @@ final class OD_Link_Collection implements Countable {
 		// Add media attributes to the deduplicated links.
 		return array_map(
 			static function ( array $link ): array {
-				$media_attributes = array();
-				if ( null !== $link['minimum_viewport_width'] && $link['minimum_viewport_width'] > 0 ) {
-					$media_attributes[] = sprintf( '(min-width: %dpx)', $link['minimum_viewport_width'] );
-				}
-				if ( null !== $link['maximum_viewport_width'] && PHP_INT_MAX !== $link['maximum_viewport_width'] ) {
-					$media_attributes[] = sprintf( '(max-width: %dpx)', $link['maximum_viewport_width'] );
-				}
-				if ( count( $media_attributes ) > 0 ) {
+				$media_query = od_generate_media_query( $link['minimum_viewport_width'], $link['maximum_viewport_width'] );
+				if ( null !== $media_query ) {
 					if ( ! isset( $link['attributes']['media'] ) ) {
-						$link['attributes']['media'] = '';
+						$link['attributes']['media'] = $media_query;
 					} else {
-						$link['attributes']['media'] .= ' and ';
+						$link['attributes']['media'] .= " and $media_query";
 					}
-					$link['attributes']['media'] .= implode( ' and ', $media_attributes );
 				}
 				return $link['attributes'];
 			},

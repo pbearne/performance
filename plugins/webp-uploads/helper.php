@@ -17,6 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  * @since 2.0.0 Added support for AVIF.
+ * @since 2.2.0 Added support for PNG.
  *
  * @return array<string, array<string>> An array of valid mime types, where the key is the mime type and the value is the extension type.
  */
@@ -29,12 +30,14 @@ function webp_uploads_get_upload_image_mime_transforms(): array {
 		'image/jpeg' => array( 'image/' . $output_format ),
 		'image/webp' => array( 'image/webp' ),
 		'image/avif' => array( 'image/avif' ),
+		'image/png'  => array( 'image/' . $output_format ),
 	);
 
 	// Check setting for whether to generate both JPEG and the modern output format.
-	if ( webp_uploads_is_jpeg_fallback_enabled() ) {
+	if ( webp_uploads_is_fallback_enabled() ) {
 		$default_transforms = array(
 			'image/jpeg'              => array( 'image/jpeg', 'image/' . $output_format ),
+			'image/png'               => array( 'image/png', 'image/' . $output_format ),
 			'image/' . $output_format => array( 'image/' . $output_format, 'image/jpeg' ),
 		);
 	}
@@ -393,16 +396,104 @@ function webp_uploads_sanitize_image_format( $image_format ): string {
  * @return bool True if the option is enabled, false otherwise.
  */
 function webp_uploads_is_picture_element_enabled(): bool {
-	return webp_uploads_is_jpeg_fallback_enabled() && (bool) get_option( 'webp_uploads_use_picture_element', false );
+	return webp_uploads_is_fallback_enabled() && (bool) get_option( 'webp_uploads_use_picture_element', false );
 }
 
 /**
  * Checks if the `perflab_generate_webp_and_jpeg` option is enabled.
  *
  * @since 2.0.0
+ * @since 2.2.0 Renamed to webp_uploads_is_fallback_enabled().
  *
  * @return bool True if the option is enabled, false otherwise.
  */
-function webp_uploads_is_jpeg_fallback_enabled(): bool {
+function webp_uploads_is_fallback_enabled(): bool {
 	return (bool) get_option( 'perflab_generate_webp_and_jpeg' );
+}
+
+/**
+ * Retrieves the image URL for a specified MIME type from the attachment metadata.
+ *
+ * This function attempts to locate an alternate image source URL in the
+ * attachment's metadata that matches the provided MIME type.
+ *
+ * @since 2.2.0
+ *
+ * @param int    $attachment_id The ID of the attachment.
+ * @param string $src           The original image src url.
+ * @param string $mime          A mime type we are looking to get image url.
+ * @return string|null Returns mime type image if available.
+ */
+function webp_uploads_get_mime_type_image( int $attachment_id, string $src, string $mime ): ?string {
+	$metadata     = wp_get_attachment_metadata( $attachment_id );
+	$src_basename = wp_basename( $src );
+	if ( isset( $metadata['sources'][ $mime ]['file'] ) ) {
+		$basename = wp_basename( $metadata['file'] );
+
+		if ( $src_basename === $basename ) {
+			return str_replace(
+				$basename,
+				$metadata['sources'][ $mime ]['file'],
+				$src
+			);
+		}
+	}
+
+	if ( isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ) {
+		foreach ( $metadata['sizes'] as $size => $size_data ) {
+
+			if ( ! isset( $size_data['file'] ) ) {
+				continue;
+			}
+
+			if ( ! isset( $size_data['sources'][ $mime ]['file'] ) ) {
+				continue;
+			}
+
+			if ( $size_data['file'] === $size_data['sources'][ $mime ]['file'] ) {
+				continue;
+			}
+
+			if ( $src_basename !== $size_data['file'] ) {
+				continue;
+			}
+
+			return str_replace(
+				$size_data['file'],
+				$size_data['sources'][ $mime ]['file'],
+				$src
+			);
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Retrieves the MIME type of an attachment file, checking the file directly if possible.
+ *
+ * If checking the file directly fails, the function falls back to the attachment's MIME type.
+ *
+ * @since 2.3.0
+ *
+ * @param int    $attachment_id The attachment ID.
+ * @param string $file          Optional. The path to the file.
+ * @return string The MIME type of the file, or an empty string if not found.
+ */
+function webp_uploads_get_attachment_file_mime_type( int $attachment_id, string $file = '' ): string {
+	if ( '' === $file ) {
+		$file = get_attached_file( $attachment_id, true );
+		// File does not exist.
+		if ( false === $file ) {
+			return '';
+		}
+	}
+
+	/*
+	 * We need to get the MIME type ideally from the file, as WordPress Core may have already altered it.
+	 * The post MIME type is typically not updated during that process.
+	 */
+	$filetype  = wp_check_filetype( $file );
+	$mime_type = $filetype['type'] ?? get_post_mime_type( $attachment_id );
+	return is_string( $mime_type ) ? $mime_type : '';
 }

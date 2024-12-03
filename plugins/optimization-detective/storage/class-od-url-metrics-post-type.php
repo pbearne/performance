@@ -51,7 +51,7 @@ class OD_URL_Metrics_Post_Type {
 	}
 
 	/**
-	 * Registers post type for URL metrics storage.
+	 * Registers post type for URL Metrics storage.
 	 *
 	 * This the configuration for this post type is similar to the oembed_cache in core.
 	 *
@@ -78,11 +78,11 @@ class OD_URL_Metrics_Post_Type {
 	}
 
 	/**
-	 * Gets URL metrics post.
+	 * Gets URL Metrics post.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param string $slug URL metrics slug.
+	 * @param string $slug URL Metrics slug.
 	 * @return WP_Post|null Post object if exists.
 	 */
 	public static function get_post( string $slug ): ?WP_Post {
@@ -109,38 +109,44 @@ class OD_URL_Metrics_Post_Type {
 	}
 
 	/**
-	 * Parses post content in URL metrics post.
+	 * Parses post content in URL Metrics post.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param WP_Post $post URL metrics post.
-	 * @return OD_URL_Metric[] URL metrics.
+	 * @param WP_Post $post URL Metrics post.
+	 * @return OD_URL_Metric[] URL Metrics.
 	 */
 	public static function get_url_metrics_from_post( WP_Post $post ): array {
-		$this_function   = __FUNCTION__;
-		$trigger_warning = static function ( string $message ) use ( $this_function ): void {
-			wp_trigger_error( $this_function, esc_html( $message ), E_USER_WARNING );
+		$this_function = __METHOD__;
+		$trigger_error = static function ( string $message, int $error_level = E_USER_NOTICE ) use ( $this_function ): void {
+			// Default to E_USER_NOTICE.
+			if ( ! in_array( $error_level, array( E_USER_NOTICE, E_USER_WARNING, E_USER_ERROR, E_USER_DEPRECATED ), true ) ) {
+				$error_level = E_USER_NOTICE;
+			}
+			wp_trigger_error( $this_function, esc_html( $message ), $error_level );
 		};
 
 		$url_metrics_data = json_decode( $post->post_content, true );
 		if ( json_last_error() !== 0 ) {
-			$trigger_warning(
+			$trigger_error(
 				sprintf(
 					/* translators: 1: Post type slug, 2: Post ID, 3: JSON error message */
 					__( 'Contents of %1$s post type (ID: %2$s) not valid JSON: %3$s', 'optimization-detective' ),
 					self::SLUG,
 					$post->ID,
 					json_last_error_msg()
-				)
+				),
+				E_USER_WARNING
 			);
 			$url_metrics_data = array();
 		} elseif ( ! is_array( $url_metrics_data ) ) {
-			$trigger_warning(
+			$trigger_error(
 				sprintf(
 					/* translators: %s is post type slug */
 					__( 'Contents of %s post type was not a JSON array.', 'optimization-detective' ),
 					self::SLUG
-				)
+				),
+				E_USER_WARNING
 			);
 			$url_metrics_data = array();
 		}
@@ -148,7 +154,7 @@ class OD_URL_Metrics_Post_Type {
 		return array_values(
 			array_filter(
 				array_map(
-					static function ( $url_metric_data ) use ( $trigger_warning ) {
+					static function ( $url_metric_data ) use ( $trigger_error ) {
 						if ( ! is_array( $url_metric_data ) ) {
 							return null;
 						}
@@ -156,13 +162,21 @@ class OD_URL_Metrics_Post_Type {
 						try {
 							return new OD_URL_Metric( $url_metric_data );
 						} catch ( OD_Data_Validation_Exception $e ) {
-							$trigger_warning(
+							$suffix = '';
+							if ( isset( $url_metric_data['uuid'] ) && is_string( $url_metric_data['uuid'] ) ) {
+								$suffix .= sprintf( ' (URL Metric UUID: %s)', $url_metric_data['uuid'] );
+							}
+
+							$trigger_error(
 								sprintf(
 									/* translators: 1: Post type slug. 2: Exception message. */
 									__( 'Unexpected shape to JSON array in post_content of %1$s post type: %2$s', 'optimization-detective' ),
 									OD_URL_Metrics_Post_Type::SLUG,
-									$e->getMessage()
-								)
+									$e->getMessage() . $suffix
+								),
+								// This is not a warning because schema changes will happen, and so it is expected
+								// that this will result in existing URL Metrics being invalidated.
+								E_USER_NOTICE
 							);
 
 							return null;
@@ -175,12 +189,13 @@ class OD_URL_Metrics_Post_Type {
 	}
 
 	/**
-	 * Stores URL metric by merging it with the other URL metrics which share the same normalized query vars.
+	 * Stores URL Metric by merging it with the other URL Metrics which share the same normalized query vars.
 	 *
 	 * @since 0.1.0
+	 * @todo There is duplicate logic here with od_handle_rest_request().
 	 *
 	 * @param string        $slug           Slug (hash of normalized query vars).
-	 * @param OD_URL_Metric $new_url_metric New URL metric.
+	 * @param OD_URL_Metric $new_url_metric New URL Metric.
 	 * @return int|WP_Error Post ID or WP_Error otherwise.
 	 */
 	public static function store_url_metric( string $slug, OD_URL_Metric $new_url_metric ) {
@@ -202,8 +217,18 @@ class OD_URL_Metrics_Post_Type {
 			$url_metrics            = array();
 		}
 
-		$group_collection = new OD_URL_Metrics_Group_Collection(
+		$etag = $new_url_metric->get_etag();
+		if ( null === $etag ) {
+			// This case actually will never occur in practice because the store_url_metric function is only called
+			// in the REST API endpoint where the ETag parameter is required. It is here exclusively for the sake of
+			// PHPStan's static analysis. This entire condition can be removed in a future release when the 'etag'
+			// property becomes required.
+			return new WP_Error( 'missing_etag' );
+		}
+
+		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
+			$etag,
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			od_get_url_metric_freshness_ttl()
@@ -305,6 +330,8 @@ class OD_URL_Metrics_Post_Type {
 	 * This is used during uninstallation.
 	 *
 	 * @since 0.1.0
+	 *
+	 * @global wpdb $wpdb WordPress database abstraction object.
 	 */
 	public static function delete_all_posts(): void {
 		global $wpdb;

@@ -282,54 +282,142 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$second = od_get_url_metrics_slug( array( 'p' => 1 ) );
 		$this->assertNotEquals( $second, $first );
 		foreach ( array( $first, $second ) as $slug ) {
-			$this->assertMatchesRegularExpression( '/^[0-9a-f]{32}$/', $slug );
+			$this->assertMatchesRegularExpression( '/^[0-9a-f]{32}\z/', $slug );
 		}
 	}
 
 	/**
-	 * Test od_get_url_metrics_storage_nonce().
+	 * Test od_get_current_url_metrics_etag().
 	 *
-	 * @covers ::od_get_url_metrics_storage_nonce
-	 * @covers ::od_verify_url_metrics_storage_nonce
+	 * @covers ::od_get_current_url_metrics_etag
 	 */
-	public function test_od_get_url_metrics_storage_nonce_and_od_verify_url_metrics_storage_nonce(): void {
-		$user_id = self::factory()->user->create();
+	public function test_od_get_current_url_metrics_etag(): void {
+		remove_all_filters( 'od_current_url_metrics_etag_data' );
+		$registry = new OD_Tag_Visitor_Registry();
 
-		$nonce_life_actions = array();
+		$captured_etag_data = array();
 		add_filter(
-			'nonce_life',
-			static function ( int $life, string $action ) use ( &$nonce_life_actions ): int {
-				$nonce_life_actions[] = $action;
-				return $life;
+			'od_current_url_metrics_etag_data',
+			static function ( array $data ) use ( &$captured_etag_data ) {
+				$captured_etag_data[] = $data;
+				return $data;
 			},
-			10,
-			2
+			PHP_INT_MAX
+		);
+		$etag1 = od_get_current_url_metrics_etag( $registry );
+		$this->assertMatchesRegularExpression( '/^[a-z0-9]{32}\z/', $etag1 );
+		$etag2 = od_get_current_url_metrics_etag( $registry );
+		$this->assertSame( $etag1, $etag2 );
+		$this->assertCount( 2, $captured_etag_data );
+		$this->assertSame( array( 'tag_visitors' => array() ), $captured_etag_data[0] );
+		$this->assertSame( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+
+		$registry->register( 'foo', static function (): void {} );
+		$registry->register( 'bar', static function (): void {} );
+		$registry->register( 'baz', static function (): void {} );
+		$etag3 = od_get_current_url_metrics_etag( $registry );
+		$this->assertNotEquals( $etag2, $etag3 );
+		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		$this->assertSame( array( 'tag_visitors' => array( 'foo', 'bar', 'baz' ) ), $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		add_filter(
+			'od_current_url_metrics_etag_data',
+			static function ( $data ): array {
+				$data['last_modified'] = '2024-03-02T01:00:00';
+				return $data;
+			}
+		);
+		$etag4 = od_get_current_url_metrics_etag( $registry );
+		$this->assertNotEquals( $etag3, $etag4 );
+		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		$this->assertSame(
+			array(
+				'tag_visitors'  => array( 'foo', 'bar', 'baz' ),
+				'last_modified' => '2024-03-02T01:00:00',
+			),
+			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
+		);
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed> Data.
+	 */
+	public function data_provider_to_test_hmac(): array {
+		return array(
+			'is_home'   => array(
+				'set_up' => static function (): array {
+					$post_id = self::factory()->post->create();
+					return array(
+						home_url(),
+						od_get_url_metrics_slug( array() ),
+						$post_id,
+					);
+				},
+			),
+			'is_single' => array(
+				'set_up' => static function (): array {
+					$post_id = self::factory()->post->create();
+					return array(
+						get_permalink( $post_id ),
+						od_get_url_metrics_slug( array( 'p' => $post_id ) ),
+						$post_id,
+					);
+				},
+			),
+		);
+	}
+
+	/**
+	 * Test od_get_url_metrics_storage_hmac() and od_verify_url_metrics_storage_hmac().
+	 *
+	 * @dataProvider data_provider_to_test_hmac
+	 *
+	 * @covers ::od_get_url_metrics_storage_hmac
+	 * @covers ::od_verify_url_metrics_storage_hmac
+	 */
+	public function test_od_get_url_metrics_storage_hmac_and_od_verify_url_metrics_storage_hmac( Closure $set_up ): void {
+		list( $url, $slug, $cache_purge_post_id ) = $set_up();
+		$this->go_to( $url );
+		$hmac = od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]+\z/', $hmac );
+		$this->assertTrue( od_verify_url_metrics_storage_hmac( $hmac, $slug, $url, $cache_purge_post_id ) );
+	}
+
+	/**
+	 * Test od_get_minimum_viewport_aspect_ratio().
+	 *
+	 * @covers ::od_get_minimum_viewport_aspect_ratio
+	 */
+	public function test_od_get_minimum_viewport_aspect_ratio(): void {
+		$this->assertSame( 0.4, od_get_minimum_viewport_aspect_ratio() );
+
+		add_filter(
+			'od_minimum_viewport_aspect_ratio',
+			static function () {
+				return '0.6';
+			}
 		);
 
-		// Create first nonce for unauthenticated user.
-		$url    = home_url( '/' );
-		$slug   = od_get_url_metrics_slug( array() );
-		$nonce1 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertMatchesRegularExpression( '/^[0-9a-f]{10}$/', $nonce1 );
-		$this->assertTrue( od_verify_url_metrics_storage_nonce( $nonce1, $slug, $url ) );
-		$this->assertCount( 2, $nonce_life_actions );
+		$this->assertSame( 0.6, od_get_minimum_viewport_aspect_ratio() );
+	}
 
-		// Create second nonce for unauthenticated user.
-		$nonce2 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertSame( $nonce1, $nonce2 );
-		$this->assertCount( 3, $nonce_life_actions );
+	/**
+	 * Test od_get_maximum_viewport_aspect_ratio().
+	 *
+	 * @covers ::od_get_maximum_viewport_aspect_ratio
+	 */
+	public function test_od_get_maximum_viewport_aspect_ratio(): void {
+		$this->assertSame( 2.5, od_get_maximum_viewport_aspect_ratio() );
 
-		// Create third nonce, this time for authenticated user.
-		wp_set_current_user( $user_id );
-		$nonce3 = od_get_url_metrics_storage_nonce( $slug, $url );
-		$this->assertNotEquals( $nonce3, $nonce2 );
-		$this->assertFalse( od_verify_url_metrics_storage_nonce( $nonce1, $slug, $url ) );
-		$this->assertTrue( od_verify_url_metrics_storage_nonce( $nonce3, $slug, $url ) );
-		$this->assertCount( 6, $nonce_life_actions );
+		add_filter(
+			'od_maximum_viewport_aspect_ratio',
+			static function () {
+				return 3;
+			}
+		);
 
-		foreach ( $nonce_life_actions as $nonce_life_action ) {
-			$this->assertSame( "store_url_metrics:{$slug}:{$url}", $nonce_life_action );
-		}
+		$this->assertSame( 3.0, od_get_maximum_viewport_aspect_ratio() );
 	}
 
 	/**
