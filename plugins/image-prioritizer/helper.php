@@ -76,3 +76,81 @@ function image_prioritizer_register_tag_visitors( OD_Tag_Visitor_Registry $regis
 	$video_visitor = new Image_Prioritizer_Video_Tag_Visitor();
 	$registry->register( 'image-prioritizer/video', $video_visitor );
 }
+
+/**
+ * Gets the path to a script or stylesheet.
+ *
+ * @since n.e.x.t
+ *
+ * @param string      $src_path Source path, relative to plugin root.
+ * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
+ * @return string URL to script or stylesheet.
+ */
+function image_prioritizer_get_asset_path( string $src_path, ?string $min_path = null ): string {
+	if ( null === $min_path ) {
+		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+	}
+
+	$force_src = false;
+	if ( WP_DEBUG && ! file_exists( trailingslashit( __DIR__ ) . $min_path ) ) {
+		$force_src = true;
+		wp_trigger_error(
+			__FUNCTION__,
+			sprintf(
+				/* translators: %s is the minified asset path */
+				__( 'Minified asset has not been built: %s', 'image-prioritizer' ),
+				$min_path
+			),
+			E_USER_WARNING
+		);
+	}
+
+	if ( SCRIPT_DEBUG || $force_src ) {
+		return $src_path;
+	}
+
+	return $min_path;
+}
+
+/**
+ * Gets the script to lazy-load videos.
+ *
+ * Load a video and its poster image when it approaches the viewport using an IntersectionObserver.
+ *
+ * Handles 'autoplay' and 'preload' attributes accordingly.
+ *
+ * @since 0.2.0
+ *
+ * @return string Lazy load script.
+ */
+function image_prioritizer_get_video_lazy_load_script(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-video.js' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}
+
+/**
+ * Gets the script to lazy-load background images.
+ *
+ * Load the background image when it approaches the viewport using an IntersectionObserver.
+ *
+ * @since n.e.x.t
+ *
+ * @return string Lazy load script.
+ */
+function image_prioritizer_get_lazy_load_bg_image_script(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-bg-image.js' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}
+
+/**
+ * Gets the stylesheet to lazy-load background images.
+ *
+ * @since n.e.x.t
+ *
+ * @return string Lazy load stylesheet.
+ */
+function image_prioritizer_get_lazy_load_bg_image_stylesheet(): string {
+	$path = image_prioritizer_get_asset_path( 'lazy-load-bg-image.css' );
+	return (string) file_get_contents( __DIR__ . '/' . $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+}

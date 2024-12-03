@@ -92,9 +92,10 @@ Filters whether the current response can be optimized. By default, detection and
 2. It’s not a post embed template (`is_embed()`).
 3. It’s not the Customizer preview (`is_customize_preview()`)
 4. It’s not the response to a `POST` request.
-5. The user is not an administrator (`current_user_can( 'customize' )`).
+5. The user is not an administrator (`current_user_can( 'customize' )`), unless you're in plugin development mode (`wp_is_development_mode( 'plugin' )`).
+6. There is at least one queried post on the page. This is used to facilitate the purging of page caches after a new URL Metric is stored.
 
-During development, you may want to force this to always be enabled:
+To force every response to be optimized regardless of the conditions above, you can do:
 
 `
 <?php
@@ -103,7 +104,7 @@ add_filter( 'od_can_optimize_response', '__return_true' );
 
 **Filter:** `od_url_metrics_breakpoint_sample_size` (default: 3)
 
-Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. During development, it may be helpful to reduce the sample size to 1:
+Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. You can increase the sample size if you want better guarantees that the applied optimizations will be accurate. During development, it may be helpful to reduce the sample size to 1:
 
 `
 <?php
@@ -125,18 +126,36 @@ add_filter( 'od_metrics_storage_lock_ttl', function ( int $ttl ): int {
 
 **Filter:** `od_url_metric_freshness_ttl` (default: 1 day in seconds)
 
-Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. During development, this can be useful to set to zero:
+Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. If your site content does not change frequently, you may want to increase the TTL to a week:
 
 `
 <?php
-add_filter( 'od_url_metric_freshness_ttl', '__return_zero' );
+add_filter( 'od_url_metric_freshness_ttl', static function (): int {
+    return WEEK_IN_SECONDS;
+} );
+`
+
+During development, this can be useful to set to zero so that you don't have to wait for new URL Metrics to be requested when engineering a new optimization:
+
+`
+<?php
+add_filter( 'od_url_metric_freshness_ttl', static function (): int {
+    return 0;
+} );
 `
 
 **Filter:** `od_minimum_viewport_aspect_ratio` (default: 0.4)
 
 Filters the minimum allowed viewport aspect ratio for URL Metrics.
 
-The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
+The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429). During development when you have the DevTools console open on the right, the viewport aspect ratio will be smaller than normal. In this case, you may want to set this to 0:
+
+`
+<?php
+add_filter( 'od_minimum_viewport_aspect_ratio', static function (): int {
+    return 0;
+} );
+`
 
 **Filter:** `od_maximum_viewport_aspect_ratio` (default: 2.5)
 
@@ -144,11 +163,11 @@ Filters the maximum allowed viewport aspect ratio for URL Metrics.
 
 The 2.5 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
 
-During development when you have the DevTools console open, for example, the viewport aspect ratio will be wider than normal. In this case, you may want to increase the maximum aspect ratio:
+During development when you have the DevTools console open on the bottom, for example, the viewport aspect ratio will be larger than normal. In this case, you may want to increase the maximum aspect ratio:
 
 `
 <?php
-add_filter( 'od_maximum_viewport_aspect_ratio', function () {
+add_filter( 'od_maximum_viewport_aspect_ratio', static function (): int {
 	return 5;
 } );
 `
@@ -218,6 +237,14 @@ add_filter(
 `
 
 See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L128-L144) in Embed Optimizer. Note in particular the structure of the plugin’s [detect.js](https://github.com/WordPress/performance/blob/trunk/plugins/embed-optimizer/detect.js) script module, how it exports `initialize` and `finalize` functions which Optimization Detective then calls when the page loads and when the page unloads, at which time the URL Metric is constructed and sent to the server for storage. Refer also to the [TypeScript type definitions](https://github.com/WordPress/performance/blob/trunk/plugins/optimization-detective/types.ts).
+
+**Filter:** `od_current_url_metrics_etag_data` (default: array with `tag_visitors` key)
+
+Filters the data that goes into computing the current ETag for URL Metrics.
+
+The ETag is a unique identifier that changes whenever the underlying data used to generate it changes. By default, the ETag calculation includes the names of registered tag visitors. This ensures that when a new Optimization Detective-dependent plugin is activated (like Image Prioritizer or Embed Optimizer), any existing URL Metrics are immediately considered stale. This happens because the newly registered tag visitors alter the ETag calculation, making it different from the stored ones.
+
+When the ETag for URL Metrics in a complete viewport group no longer matches the current environment's ETag, new URL Metrics will then begin to be collected until there are no more stored URL Metrics with the old ETag. These new URL Metrics will include data relevant to the newly activated plugins and their tag visitors.
 
 **Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
 
