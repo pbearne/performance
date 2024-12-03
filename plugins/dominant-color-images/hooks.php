@@ -198,7 +198,7 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  *
  * @return void
  */
-function dominant_color_admin_inline_style() {
+function dominant_color_admin_inline_style(): void {
 	$handle = 'dominant-color-admin-styles';
 	// PHPCS ignore reason: Version not used since this handle is only registered for adding an inline style.
 	// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
@@ -220,7 +220,7 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  *
  * @return void
  */
-function dominant_color_admin_script() {
+function dominant_color_admin_script(): void {
 	?>
 	<script>
 		(function() {
@@ -247,7 +247,7 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  * @param array   $meta       The attachment metadata.
  * @return array The modified response array with added dominant color and transparency information.
  */
-function dominant_color_prepare_attachment_for_js( $response, $attachment, $meta ) {
+function dominant_color_prepare_attachment_for_js( array $response, WP_Post $attachment, array $meta ): array {
 	unset( $attachment );
 	$response['dominantColor'] = '';
 	if ( isset( $meta['dominant_color'] ) ) {
