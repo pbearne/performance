@@ -113,6 +113,8 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 						'message' => __( 'Plugin not found in API response.', 'performance-lab' ),
 					),
 				);
+
+				$has_errors = true;
 				continue;
 			}
 
@@ -140,14 +142,16 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 
 	if ( $has_errors ) {
 		set_transient( $transient_key, $plugins, MINUTE_IN_SECONDS );
+	} else {
+		set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
+	}
 
+	if ( isset( $plugins[ $plugin_slug ]['error'] ) ) {
 		return new WP_Error(
 			$plugins[ $plugin_slug ]['error']['code'],
 			$plugins[ $plugin_slug ]['error']['message']
 		);
 	}
-
-	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
 
 	/**
 	 * Validated (mostly) plugin data.
