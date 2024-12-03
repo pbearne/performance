@@ -127,12 +127,6 @@ function recursiveFreeze( obj ) {
 	Object.freeze( obj );
 }
 
-// This needs to be captured early in case the user later resizes the window.
-const viewport = {
-	width: win.innerWidth,
-	height: win.innerHeight,
-};
-
 /**
  * URL Metric being assembled for submission.
  *
@@ -489,7 +483,10 @@ export default async function detect( {
 
 	urlMetric = {
 		url: currentUrl,
-		viewport,
+		viewport: {
+			width: win.innerWidth,
+			height: win.innerHeight,
+		},
 		elements: [],
 	};
 
