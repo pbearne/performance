@@ -42,7 +42,7 @@ return array(
 			<body>
 				<picture>
 					<source type="image/avif" srcset="https://example.com/foo-300x225.avif 300w, https://example.com/foo-1024x768.avif 1024w, https://example.com/foo-768x576.avif 768w, https://example.com/foo-1536x1152.avif 1536w, https://example.com/foo-2048x1536.avif 2048w" sizes="(max-width: 600px) 480px, 800px">
-					<img fetchpriority="high" decoding="async" width="1200" height="800" src="https://example.com/foo.jpg" alt="Foo" srcset="https://example.com/foo-300x225.avif 300w, https://example.com/foo-1024x768.avif 1024w, https://example.com/foo-768x576.avif 768w, https://example.com/foo-1536x1152.jpg 1536w, https://example.com/foo-2048x1536.jpg 2048w" sizes="(max-width: 600px) 480px, 800px">
+					<img fetchpriority="high" decoding="async" width="1200" height="800" src="https://example.com/foo.jpg" alt="Foo" srcset="https://example.com/foo-300x225.jpg 300w, https://example.com/foo-1024x768.jpg 1024w, https://example.com/foo-768x576.jpg 768w, https://example.com/foo-1536x1152.jpg 1536w, https://example.com/foo-2048x1536.jpg 2048w" sizes="(max-width: 600px) 480px, 800px">
 				</picture>
 			</body>
 		</html>
@@ -57,7 +57,7 @@ return array(
 			<body>
 				<picture>
 					<source type="image/avif" srcset="https://example.com/foo-300x225.avif 300w, https://example.com/foo-1024x768.avif 1024w, https://example.com/foo-768x576.avif 768w, https://example.com/foo-1536x1152.avif 1536w, https://example.com/foo-2048x1536.avif 2048w" sizes="(max-width: 600px) 480px, 800px">
-					<img data-od-removed-fetchpriority="high" data-od-xpath="/*[1][self::HTML]/*[2][self::BODY]/*[1][self::PICTURE]/*[2][self::IMG]"  decoding="async" width="1200" height="800" src="https://example.com/foo.jpg" alt="Foo" srcset="https://example.com/foo-300x225.avif 300w, https://example.com/foo-1024x768.avif 1024w, https://example.com/foo-768x576.avif 768w, https://example.com/foo-1536x1152.jpg 1536w, https://example.com/foo-2048x1536.jpg 2048w" sizes="(max-width: 600px) 480px, 800px">
+					<img data-od-removed-fetchpriority="high" data-od-xpath="/*[1][self::HTML]/*[2][self::BODY]/*[1][self::PICTURE]/*[2][self::IMG]"  decoding="async" width="1200" height="800" src="https://example.com/foo.jpg" alt="Foo" srcset="https://example.com/foo-300x225.jpg 300w, https://example.com/foo-1024x768.jpg 1024w, https://example.com/foo-768x576.jpg 768w, https://example.com/foo-1536x1152.jpg 1536w, https://example.com/foo-2048x1536.jpg 2048w" sizes="(max-width: 600px) 480px, 800px">
 				</picture>
 				<script type="module">/* import detect ... */</script>
 			</body>
