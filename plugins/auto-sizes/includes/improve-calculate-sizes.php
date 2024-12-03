@@ -234,53 +234,6 @@ function auto_sizes_format_sizes_attribute( string $alignment, string $width ): 
 }
 
 /**
- * Generates the `sizes` attribute value based on block information.
- *
- * @since n.e.x.t
- *
- * @param string $alignment   The alignment.
- * @param int    $image_width The image width.
- * @param bool   $print_sizes Print the sizes attribute. Default is false.
- * @return string The sizes attribute value.
- */
-function auto_sizes_get_sizes_by_block_alignments( string $alignment, int $image_width, bool $print_sizes = false ): string {
-	$sizes = '';
-
-	$layout = auto_sizes_get_layout_settings();
-
-	// Handle different alignment use cases.
-	switch ( $alignment ) {
-		case 'full':
-			$sizes = '100vw';
-			break;
-
-		case 'wide':
-			if ( array_key_exists( 'wideSize', $layout ) ) {
-				$sizes = $layout['wideSize'];
-			}
-			break;
-
-		case 'left':
-		case 'right':
-		case 'center':
-			$sizes = auto_sizes_get_width( '', $image_width );
-			break;
-
-		default:
-			if ( array_key_exists( 'contentSize', $layout ) ) {
-				$sizes = auto_sizes_get_width( $layout['contentSize'], $image_width );
-			}
-			break;
-	}
-
-	if ( $print_sizes ) {
-		$sizes = 'full' === $alignment ? $sizes : sprintf( '(max-width: %1$s) 100vw, %1$s', $sizes );
-	}
-
-	return $sizes;
-}
-
-/**
  * Filters the context keys that a block type uses.
  *
  * @since n.e.x.t
