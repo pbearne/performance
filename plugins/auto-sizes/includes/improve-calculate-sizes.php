@@ -242,7 +242,7 @@ function auto_sizes_format_sizes_attribute( string $alignment, string $width ): 
  * @param WP_Block_Type $block_type   The full block type object.
  * @return array<string> The filtered context keys used by the block type.
  */
-function auto_sizes_allowed_uses_context_for_image_blocks( array $uses_context, WP_Block_Type $block_type ): array {
+function auto_sizes_filter_uses_context( array $uses_context, WP_Block_Type $block_type ): array {
 	if ( 'core/image' === $block_type->name ) {
 		// Use array_values to reset the array keys after merging.
 		return array_values( array_unique( array_merge( $uses_context, array( 'ancestor_block_align' ) ) ) );
@@ -259,7 +259,7 @@ function auto_sizes_allowed_uses_context_for_image_blocks( array $uses_context, 
  * @param array<string, mixed> $block   The block being rendered.
  * @return array<string, mixed> Modified block context.
  */
-function auto_sizes_modify_render_block_context( array $context, array $block ): array {
+function auto_sizes_filter_render_block_context( array $context, array $block ): array {
 	if ( 'core/group' === $block['blockName'] || 'core/columns' === $block['blockName'] ) {
 		$context['ancestor_block_align'] = $block['attrs']['align'] ?? '';
 	}
