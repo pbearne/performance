@@ -76,24 +76,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 			return;
 		}
 
-		if (
-			( is_admin() || ( defined( 'WP_CLI' ) && WP_CLI ) ) &&
-			! file_exists( __DIR__ . '/detect.min.js' )
-		) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
-			trigger_error(
-				esc_html(
-					sprintf(
-						/* translators: 1: File path. 2: CLI command. */
-						'[Embed Optimizer] ' . __( 'Unable to load %1$s. Please make sure you have run %2$s.', 'embed-optimizer' ),
-						'detect.min.js',
-						'`npm install && npm run build:plugin:embed-optimizer`'
-					)
-				),
-				E_USER_ERROR
-			);
-		}
-
 		define( 'EMBED_OPTIMIZER_VERSION', $version );
 
 		// Load in the Embed Optimizer plugin hooks.

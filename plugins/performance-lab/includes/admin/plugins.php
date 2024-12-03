@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 2.8.0
  *
  * @param string $plugin_slug The string identifier for the plugin in questions slug.
- * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}|WP_Error Array of plugin data or WP_Error if failed.
+ * @return array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], version: string}|WP_Error Array of plugin data or WP_Error if failed.
  */
 function perflab_query_plugin_info( string $plugin_slug ) {
 	$transient_key = 'perflab_plugins_info';
@@ -40,7 +40,6 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		'requires',
 		'requires_php',
 		'requires_plugins',
-		'download_link',
 		'version', // Needed by install_plugin_install_status().
 	);
 
@@ -71,16 +70,34 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		return new WP_Error( 'no_plugins', __( 'No plugins found in the API response.', 'performance-lab' ) );
 	}
 
-	$plugins            = array();
-	$standalone_plugins = array_merge(
-		array_flip( perflab_get_standalone_plugins() ),
-		array( 'optimization-detective' => array() ) // TODO: Programmatically discover the plugin dependencies and add them here. See <https://github.com/WordPress/performance/issues/1616>.
-	);
-	foreach ( $response->plugins as $plugin_data ) {
-		if ( ! isset( $standalone_plugins[ $plugin_data['slug'] ] ) ) {
+	$plugins      = array();
+	$plugin_queue = perflab_get_standalone_plugins();
+
+	// Index the plugins from the API response by their slug for efficient lookup.
+	$all_performance_plugins = array_column( $response->plugins, null, 'slug' );
+
+	// Start processing the plugins using a queue-based approach.
+	while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
+		$current_plugin_slug = array_shift( $plugin_queue );
+
+		if ( isset( $plugins[ $current_plugin_slug ] ) ) {
 			continue;
 		}
-		$plugins[ $plugin_data['slug'] ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		if ( ! isset( $all_performance_plugins[ $current_plugin_slug ] ) ) {
+			return new WP_Error(
+				'plugin_not_found',
+				__( 'Plugin not found in WordPress.org API response.', 'performance-lab' )
+			);
+		}
+
+		$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
+		$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
+
+		// Enqueue the required plugins slug by adding it to the queue.
+		if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
+			$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+		}
 	}
 
 	set_transient( $transient_key, $plugins, HOUR_IN_SECONDS );
@@ -95,7 +112,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 	/**
 	 * Validated (mostly) plugin data.
 	 *
-	 * @var array<string, array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], download_link: string, version: string}> $plugins
+	 * @var array<string, array{name: string, slug: string, short_description: string, requires: string|false, requires_php: string|false, requires_plugins: string[], version: string}> $plugins
 	 */
 	return $plugins[ $plugin_slug ];
 }
@@ -325,9 +342,25 @@ function perflab_install_and_activate_plugin( string $plugin_slug, array &$proce
 	}
 	$processed_plugins[] = $plugin_slug;
 
-	$plugin_data = perflab_query_plugin_info( $plugin_slug );
+	// Get the freshest data (including the most recent download_link) as opposed what is cached by perflab_query_plugin_info().
+	$plugin_data = plugins_api(
+		'plugin_information',
+		array(
+			'slug'   => $plugin_slug,
+			'fields' => array(
+				'download_link'    => true,
+				'requires_plugins' => true,
+				'sections'         => false, // Omit the bulk of the response which we don't need.
+			),
+		)
+	);
+
 	if ( $plugin_data instanceof WP_Error ) {
 		return $plugin_data;
+	}
+
+	if ( is_object( $plugin_data ) ) {
+		$plugin_data = (array) $plugin_data;
 	}
 
 	// Add recommended plugins (soft dependencies) to the list of plugins installed and activated.

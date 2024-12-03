@@ -63,7 +63,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Collection that this instance belongs to.
 	 *
-	 * @var OD_URL_Metric_Group_Collection|null
+	 * @var OD_URL_Metric_Group_Collection
 	 */
 	private $collection;
 
@@ -72,7 +72,9 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 *
 	 * @var array{
 	 *          get_lcp_element?: OD_Element|null,
-	 *          is_complete?: bool
+	 *          is_complete?: bool,
+	 *          get_xpath_elements_map?: array<string, non-empty-array<int, OD_Element>>,
+	 *          get_all_element_max_intersection_ratios?: array<string, float>,
 	 *      }
 	 */
 	private $result_cache = array();
@@ -80,16 +82,19 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Constructor.
 	 *
+	 * This class should never be directly constructed. It should only be constructed by the {@see OD_URL_Metric_Group_Collection::create_groups()}.
+	 *
+	 * @access private
 	 * @throws InvalidArgumentException If arguments are invalid.
 	 *
-	 * @param OD_URL_Metric[]                     $url_metrics            URL Metrics to add to the group.
-	 * @param int                                 $minimum_viewport_width Minimum possible viewport width for the group. Must be zero or greater.
-	 * @param int                                 $maximum_viewport_width Maximum possible viewport width for the group. Must be greater than zero and the minimum viewport width.
-	 * @param int                                 $sample_size            Sample size for the maximum number of viewports in a group between breakpoints.
-	 * @param int                                 $freshness_ttl          Freshness age (TTL) for a given URL Metric.
-	 * @param OD_URL_Metric_Group_Collection|null $collection             Collection that this instance belongs to. Optional.
+	 * @param OD_URL_Metric[]                $url_metrics            URL Metrics to add to the group.
+	 * @param int                            $minimum_viewport_width Minimum possible viewport width for the group. Must be zero or greater.
+	 * @param int                            $maximum_viewport_width Maximum possible viewport width for the group. Must be greater than zero and the minimum viewport width.
+	 * @param int                            $sample_size            Sample size for the maximum number of viewports in a group between breakpoints.
+	 * @param int                            $freshness_ttl          Freshness age (TTL) for a given URL Metric.
+	 * @param OD_URL_Metric_Group_Collection $collection             Collection that this instance belongs to.
 	 */
-	public function __construct( array $url_metrics, int $minimum_viewport_width, int $maximum_viewport_width, int $sample_size, int $freshness_ttl, ?OD_URL_Metric_Group_Collection $collection = null ) {
+	public function __construct( array $url_metrics, int $minimum_viewport_width, int $maximum_viewport_width, int $sample_size, int $freshness_ttl, OD_URL_Metric_Group_Collection $collection ) {
 		if ( $minimum_viewport_width < 0 ) {
 			throw new InvalidArgumentException(
 				esc_html__( 'The minimum viewport width must be at least zero.', 'optimization-detective' )
@@ -133,12 +138,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			);
 		}
 		$this->freshness_ttl = $freshness_ttl;
-
-		if ( ! is_null( $collection ) ) {
-			$this->collection = $collection;
-		}
-
-		$this->url_metrics = $url_metrics;
+		$this->collection    = $collection;
+		$this->url_metrics   = $url_metrics;
 	}
 
 	/**
@@ -189,9 +190,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 		}
 
 		$this->result_cache = array();
-		if ( ! is_null( $this->collection ) ) {
-			$this->collection->clear_cache();
-		}
+		$this->collection->clear_cache();
 
 		$url_metric->set_group( $this );
 		$this->url_metrics[] = $url_metric;
@@ -218,6 +217,8 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * A group is complete if it has the full sample size of URL Metrics
 	 * and all of these URL Metrics are fresh.
 	 *
+	 * @since n.e.x.t If the current environment's generated ETag does not match the URL Metric's ETag, the URL Metric is considered stale.
+	 *
 	 * @return bool Whether complete.
 	 */
 	public function is_complete(): bool {
@@ -231,7 +232,18 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			}
 			$current_time = microtime( true );
 			foreach ( $this->url_metrics as $url_metric ) {
+				// The URL Metric is too old to be fresh.
 				if ( $current_time > $url_metric->get_timestamp() + $this->freshness_ttl ) {
+					return false;
+				}
+
+				// The ETag is not populated yet, so this is stale. Eventually this will be required.
+				if ( $url_metric->get_etag() === null ) {
+					return false;
+				}
+
+				// The ETag of the URL Metric does not match the current ETag for the collection, so it is stale.
+				if ( ! hash_equals( $url_metric->get_etag(), $this->collection->get_current_etag() ) ) {
 					return false;
 				}
 			}
@@ -318,6 +330,72 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 
 		$this->result_cache[ __FUNCTION__ ] = $result;
 		return $result;
+	}
+
+	/**
+	 * Gets all elements from all URL Metrics in the viewport group keyed by the elements' XPaths.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return array<string, non-empty-array<int, OD_Element>> Keys are XPaths and values are the element instances.
+	 */
+	public function get_xpath_elements_map(): array {
+		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
+			return $this->result_cache[ __FUNCTION__ ];
+		}
+
+		$result = ( function () {
+			$all_elements = array();
+			foreach ( $this->url_metrics as $url_metric ) {
+				foreach ( $url_metric->get_elements() as $element ) {
+					$all_elements[ $element->get_xpath() ][] = $element;
+				}
+			}
+			return $all_elements;
+		} )();
+
+		$this->result_cache[ __FUNCTION__ ] = $result;
+		return $result;
+	}
+
+	/**
+	 * Gets the max intersection ratios of all elements in the viewport group and its captured URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @return array<string, float> Keys are XPaths and values are the intersection ratios.
+	 */
+	public function get_all_element_max_intersection_ratios(): array {
+		if ( array_key_exists( __FUNCTION__, $this->result_cache ) ) {
+			return $this->result_cache[ __FUNCTION__ ];
+		}
+
+		$result = ( function () {
+			$elements_max_intersection_ratios = array();
+			foreach ( $this->get_xpath_elements_map() as $xpath => $elements ) {
+				$element_intersection_ratios = array();
+				foreach ( $elements as $element ) {
+					$element_intersection_ratios[] = $element->get_intersection_ratio();
+				}
+				$elements_max_intersection_ratios[ $xpath ] = (float) max( $element_intersection_ratios );
+			}
+			return $elements_max_intersection_ratios;
+		} )();
+
+		$this->result_cache[ __FUNCTION__ ] = $result;
+		return $result;
+	}
+
+	/**
+	 * Gets the max intersection ratio of an element in the viewport group and its captured URL Metrics.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param string $xpath XPath for the element.
+	 * @return float|null Max intersection ratio of null if tag is unknown (not captured).
+	 */
+	public function get_element_max_intersection_ratio( string $xpath ): ?float {
+		return $this->get_all_element_max_intersection_ratios()[ $xpath ] ?? null;
 	}
 
 	/**
