@@ -187,9 +187,6 @@ function dominant_color_render_generator(): void {
 }
 add_action( 'wp_head', 'dominant_color_render_generator' );
 
-
-
-
 /**
  * Adds inline CSS for dominant color styling in the WordPress admin area.
  *
@@ -236,7 +233,6 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
 
 };
 add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000  );
-
 
 /**
  * Prepares attachment data for JavaScript, adding dominant color and transparency information.
