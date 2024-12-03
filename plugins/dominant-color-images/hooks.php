@@ -193,3 +193,87 @@ function dominant_color_render_generator(): void {
 	echo '<meta name="generator" content="dominant-color-images ' . esc_attr( DOMINANT_COLOR_IMAGES_VERSION ) . '">' . "\n";
 }
 add_action( 'wp_head', 'dominant_color_render_generator' );
+
+
+
+
+/**
+ * Adds inline CSS for dominant color styling in the WordPress admin area.
+ *
+ * This function registers and enqueues a custom style handle, then adds inline CSS
+ * to apply background color based on the dominant color for attachment previews
+ * in the WordPress admin interface.
+ *
+ * @since 1.1.2
+ *
+ * @return void
+ */
+function dominant_color_admin_inline_style() {
+    $handle = 'dominant-color-admin-styles';
+    // PHPCS ignore reason: Version not used since this handle is only registered for adding an inline style.
+    // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+    wp_register_style( $handle, false );
+    wp_enqueue_style( $handle );
+    $custom_css = '.wp-core-ui .attachment-preview[data-dominant-color]:not(.has-transparency) { background-color: var(--dominant-color); }';
+    wp_add_inline_style( $handle, $custom_css );
+};
+add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
+
+/**
+ * Adds a script to the admin footer to modify the attachment template.
+ *
+ * This function injects a JavaScript snippet into the admin footer that modifies
+ * the attachment template. It adds attributes for dominant color and transparency
+ * to the template, allowing these properties to be displayed in the media library.
+ *
+ * @since 1.1.2
+ *
+ * @return void
+ */
+ function dominant_color_admin_script(){
+	?>
+	<script>
+		(function() {
+			var s = jQuery( '#tmpl-attachment' )
+			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ data.hasTransparencyClass }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
+			s.replaceWith( '<script type="text/html" id="tmpl-attachment">' + n  );
+		}());
+	</script>
+	<?php
+
+};
+add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000  );
+
+
+/**
+ * Prepares attachment data for JavaScript, adding dominant color and transparency information.
+ *
+ * This function enhances the attachment data for JavaScript by including information about
+ * the dominant color and transparency of the image. It modifies the response array to include
+ * these additional properties, which can be used in the media library interface.
+ *
+ * @since 1.1.2
+ *
+ * @param array   $response   The current response array for the attachment.
+ * @param WP_Post $attachment The attachment post object.
+ * @param array   $meta       The attachment metadata.
+ *
+ * @return array The modified response array with added dominant color and transparency information.
+ */
+function dominant_color_prepare_attachment_for_js( $response, $attachment, $meta ) {
+	unset( $attachment );
+
+    $response['dominantColor'] = '';
+    if ( isset( $meta['dominant_color'] ) ) {
+        $response['dominantColor'] = $meta['dominant_color'];
+    }
+    $response['hasTransparency'] = '';
+    $response['hasTransparencyClass'] = '';
+    if ( isset( $meta['has_transparency'] ) ) {
+        $response['hasTransparency'] = $meta['has_transparency'];
+        $response['hasTransparencyClass'] = $meta['has_transparency'] ? 'has-transparency' : 'not-transparent';
+    }
+
+    return $response;
+};
+add_filter( 'wp_prepare_attachment_for_js', 'dominant_color_prepare_attachment_for_js', 10, 3  );
