@@ -20,6 +20,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_Prioritizer_Tag_Visitor {
 
 	/**
+	 * Class name used to indicate a background image which is lazy-loaded.
+	 *
+	 * @since n.e.x.t
+	 * @var string
+	 */
+	const LAZY_BG_IMAGE_CLASS_NAME = 'od-lazy-bg-image';
+
+	/**
+	 * Whether the lazy-loading script and stylesheet have been added.
+	 *
+	 * @since n.e.x.t
+	 * @var bool
+	 */
+	private $added_lazy_assets = false;
+
+	/**
 	 * Visits a tag.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
@@ -71,6 +87,43 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 			);
 		}
 
+		$this->lazy_load_bg_images( $context );
+
 		return true;
+	}
+
+	/**
+	 * Optimizes an element with a background image based on whether it is displayed in any initial viewport.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param OD_Tag_Visitor_Context $context Tag visitor context, with the cursor currently at block with a background image.
+	 */
+	private function lazy_load_bg_images( OD_Tag_Visitor_Context $context ): void {
+		$processor = $context->processor;
+
+		// Lazy-loading can only be done once there are URL Metrics collected for both mobile and desktop.
+		if (
+			$context->url_metric_group_collection->get_first_group()->count() === 0
+			||
+			$context->url_metric_group_collection->get_last_group()->count() === 0
+		) {
+			return;
+		}
+
+		$xpath = $processor->get_xpath();
+
+		// If the element is in the initial viewport, do not lazy load its background image.
+		if ( false !== $context->url_metric_group_collection->is_element_positioned_in_any_initial_viewport( $xpath ) ) {
+			return;
+		}
+
+		$processor->add_class( self::LAZY_BG_IMAGE_CLASS_NAME );
+
+		if ( ! $this->added_lazy_assets ) {
+			$processor->append_head_html( sprintf( "<style>\n%s\n</style>\n", image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
+			$processor->append_body_html( wp_get_inline_script_tag( image_prioritizer_get_lazy_load_bg_image_script(), array( 'type' => 'module' ) ) );
+			$this->added_lazy_assets = true;
+		}
 	}
 }
