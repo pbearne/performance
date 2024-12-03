@@ -658,16 +658,16 @@
         },
         {
             "name": "phpstan/php-8-stubs",
-            "version": "0.4.6",
+            "version": "0.4.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/php-8-stubs.git",
-                "reference": "25ba0a11dc14a02c062392786486ada62d36b66d"
+                "reference": "1857c330fea6e795af1f7435ed02a18652e7dd8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/php-8-stubs/zipball/25ba0a11dc14a02c062392786486ada62d36b66d",
-                "reference": "25ba0a11dc14a02c062392786486ada62d36b66d",
+                "url": "https://api.github.com/repos/phpstan/php-8-stubs/zipball/1857c330fea6e795af1f7435ed02a18652e7dd8c",
+                "reference": "1857c330fea6e795af1f7435ed02a18652e7dd8c",
                 "shasum": ""
             },
             "type": "library",
@@ -684,9 +684,9 @@
             "description": "PHP stubs extracted from php-src",
             "support": {
                 "issues": "https://github.com/phpstan/php-8-stubs/issues",
-                "source": "https://github.com/phpstan/php-8-stubs/tree/0.4.6"
+                "source": "https://github.com/phpstan/php-8-stubs/tree/0.4.9"
             },
-            "time": "2024-11-13T00:19:28+00:00"
+            "time": "2024-12-02T00:21:59+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
@@ -2466,16 +2466,16 @@
         },
         {
             "name": "wp-phpunit/wp-phpunit",
-            "version": "6.7.0",
+            "version": "6.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wp-phpunit/wp-phpunit.git",
-                "reference": "2ed55b450c10f6850c44531bed7d86aceba2f842"
+                "reference": "e63eb1c0980839853c569d3f04ff70263b7795e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wp-phpunit/wp-phpunit/zipball/2ed55b450c10f6850c44531bed7d86aceba2f842",
-                "reference": "2ed55b450c10f6850c44531bed7d86aceba2f842",
+                "url": "https://api.github.com/repos/wp-phpunit/wp-phpunit/zipball/e63eb1c0980839853c569d3f04ff70263b7795e3",
+                "reference": "e63eb1c0980839853c569d3f04ff70263b7795e3",
                 "shasum": ""
             },
             "type": "library",
@@ -2510,7 +2510,7 @@
                 "issues": "https://github.com/wp-phpunit/issues",
                 "source": "https://github.com/wp-phpunit/wp-phpunit"
             },
-            "time": "2024-11-13T01:22:47+00:00"
+            "time": "2024-11-22T01:27:46+00:00"
         },
         {
             "name": "yoast/phpunit-polyfills",
