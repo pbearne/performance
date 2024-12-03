@@ -160,21 +160,77 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
 
 	if ( $has_parent_block ) {
 		if ( 'full' === $ancestor_block_align && 'full' === $align ) {
-			return auto_sizes_get_sizes_by_block_alignments( $align, $image_width, true );
+			$width = auto_sizes_calculate_width( $align, $image_width );
+			return auto_sizes_format_sizes_attribute( $align, $width );
 		} elseif ( 'full' !== $ancestor_block_align && 'full' === $align ) {
-			return auto_sizes_get_sizes_by_block_alignments( $ancestor_block_align, $image_width, true );
+			$width = auto_sizes_calculate_width( $ancestor_block_align, $image_width );
+			return auto_sizes_format_sizes_attribute( $ancestor_block_align, $width );
 		} elseif ( 'full' !== $ancestor_block_align ) {
-			$parent_block_alignment_width = auto_sizes_get_sizes_by_block_alignments( $ancestor_block_align, $image_width );
-			$block_alignment_width        = auto_sizes_get_sizes_by_block_alignments( $align, $image_width );
+			$parent_block_alignment_width = auto_sizes_calculate_width( $ancestor_block_align, $image_width );
+			$block_alignment_width        = auto_sizes_calculate_width( $align, $image_width );
 			if ( (int) $parent_block_alignment_width < (int) $block_alignment_width ) {
-				return sprintf( '(max-width: %1$s) 100vw, %1$s', $parent_block_alignment_width );
+				return auto_sizes_format_sizes_attribute( $ancestor_block_align, $parent_block_alignment_width );
 			} else {
-				return sprintf( '(max-width: %1$s) 100vw, %1$s', $block_alignment_width );
+				return auto_sizes_format_sizes_attribute( $align, $block_alignment_width );
 			}
 		}
 	}
 
-	return auto_sizes_get_sizes_by_block_alignments( $align, $image_width, true );
+	$width = auto_sizes_calculate_width( $align, $image_width );
+	return auto_sizes_format_sizes_attribute( $align, $width );
+}
+
+/**
+ * Calculates the width value for the `sizes` attribute based on block information.
+ *
+ * @since n.e.x.t
+ *
+ * @param string $alignment   The alignment.
+ * @param int    $image_width The image width.
+ * @return string The calculated width value.
+ */
+function auto_sizes_calculate_width( string $alignment, int $image_width ): string {
+	$sizes  = '';
+	$layout = auto_sizes_get_layout_settings();
+
+	// Handle different alignment use cases.
+	switch ( $alignment ) {
+		case 'full':
+			$sizes = '100vw';
+			break;
+
+		case 'wide':
+			$sizes = array_key_exists( 'wideSize', $layout ) ? $layout['wideSize'] : '';
+			break;
+
+		case 'left':
+		case 'right':
+		case 'center':
+			$sizes = auto_sizes_get_width( '', $image_width );
+			break;
+
+		default:
+			$sizes = array_key_exists( 'contentSize', $layout )
+				? auto_sizes_get_width( $layout['contentSize'], $image_width )
+				: '';
+			break;
+	}
+	return $sizes;
+}
+
+/**
+ * Formats the `sizes` attribute value.
+ *
+ * @since n.e.x.t
+ *
+ * @param string $alignment The alignment.
+ * @param string $width     The calculated width value.
+ * @return string The formatted sizes attribute value.
+ */
+function auto_sizes_format_sizes_attribute( string $alignment, string $width ): string {
+	return 'full' === $alignment
+		? $width
+		: sprintf( '(max-width: %1$s) 100vw, %1$s', $width );
 }
 
 /**
