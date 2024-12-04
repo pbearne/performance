@@ -61,7 +61,7 @@ abstract class Image_Prioritizer_Tag_Visitor {
 		if ( is_string( $value ) ) {
 			$value = strtolower( trim( $value, " \t\f\r\n" ) );
 		}
-		if ( 'crossorigin' === $attribute_name && ( true === $value || '' === trim( $value ) ) ) {
+		if ( 'crossorigin' === $attribute_name && 'use-credentials' !== $value ) {
 			$value = 'anonymous';
 		}
 		return $value;

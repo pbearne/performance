@@ -28,7 +28,6 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @since n.e.x.t Separate the processing of IMG and PICTURE elements.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 *
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	public function __invoke( OD_Tag_Visitor_Context $context ): bool {
@@ -50,8 +49,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @since n.e.x.t
 	 *
 	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
-	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 *
+	 * @param OD_Tag_Visitor_Context $context   Tag visitor context.
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_img( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
@@ -189,8 +187,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @since n.e.x.t
 	 *
 	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
-	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
-	 *
+	 * @param OD_Tag_Visitor_Context $context   Tag visitor context.
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
@@ -200,21 +197,21 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 		$referrerpolicy = null;
 		$crossorigin    = null;
 
-		// Loop through child tags until we reach the closing </picture> tag.
+		// Loop through child tags until we reach the closing PICTURE tag.
 		while ( $processor->next_tag() ) {
 			$tag = $processor->get_tag();
 
-			// If we reached the closing </picture> tag, break.
+			// If we reached the closing PICTURE tag, break.
 			if ( 'PICTURE' === $tag && $processor->is_tag_closer() ) {
 				break;
 			}
 
-			// Collect <source> elements.
+			// Collect SOURCE elements.
 			if ( 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
 				$media = $processor->get_attribute( 'media' );
 				$type  = $processor->get_attribute( 'type' );
 
-				// Ensure that all <source> elements have a type attribute and no media attribute.
+				// Ensure that all SOURCE elements have a type attribute and no media attribute.
 				if ( null !== $media || null === $type ) {
 					return false;
 				}
