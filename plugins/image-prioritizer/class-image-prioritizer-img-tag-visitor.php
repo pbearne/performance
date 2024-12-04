@@ -191,6 +191,11 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_picture( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
+		/**
+		 * First SOURCE tag's attributes.
+		 *
+		 * @var array{ srcset: non-empty-string, sizes: string|null, type: non-empty-string }|null $first_source
+		 */
 		$first_source = null;
 		$img_xpath    = null;
 
@@ -206,20 +211,35 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				break;
 			}
 
-			// Collect SOURCE elements.
+			// Process the SOURCE elements.
 			if ( 'SOURCE' === $tag && ! $processor->is_tag_closer() ) {
-				$media = $processor->get_attribute( 'media' );
-				$type  = $processor->get_attribute( 'type' );
-
-				// Ensure that all SOURCE elements have a type attribute and no media attribute.
-				if ( null !== $media || null === $type ) {
+				// Abort processing if the PICTURE involves art direction since then adding a preload link is infeasible.
+				if ( null !== $processor->get_attribute( 'media' ) ) {
 					return false;
 				}
 
+				// Abort processing if a SOURCE lacks the required srcset attribute.
+				$srcset = $processor->get_attribute( 'srcset' );
+				if ( ! is_string( $srcset ) ) {
+					return false;
+				}
+				$srcset = trim( $srcset );
+				if ( '' === $srcset ) {
+					return false;
+				}
+
+				// Abort processing if there is no valid image type.
+				$type = $this->get_attribute_value( $processor, 'type' );
+				if ( ! is_string( $type ) || ! str_starts_with( $type, 'image/' ) ) {
+					return false;
+				}
+
+				// Collect the first valid SOURCE as the preload link.
 				if ( null === $first_source ) {
+					$sizes        = $processor->get_attribute( 'sizes' );
 					$first_source = array(
-						'srcset' => $processor->get_attribute( 'srcset' ),
-						'sizes'  => $processor->get_attribute( 'sizes' ),
+						'srcset' => $srcset,
+						'sizes'  => is_string( $sizes ) ? $sizes : null,
 						'type'   => $type,
 					);
 				}
@@ -243,6 +263,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 			}
 		}
 
+		// Abort if we never encountered a SOURCE or IMG tag.
 		if ( null === $img_xpath || null === $first_source ) {
 			return false;
 		}
