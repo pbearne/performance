@@ -24,7 +24,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 
 	if ( is_array( $plugins ) && isset( $plugins[ $plugin_slug ] ) ) {
 		if ( isset( $plugins[ $plugin_slug ]['error'] ) ) {
-			// Plugin was requested before and not found.
+			// Plugin was requested before but an error occurred for it.
 			return new WP_Error(
 				$plugins[ $plugin_slug ]['error']['code'],
 				$plugins[ $plugin_slug ]['error']['message']
