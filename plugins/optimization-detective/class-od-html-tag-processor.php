@@ -514,6 +514,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	 * They always include the entire path from the root HTML node to the matched element.
 	 *
 	 * @since n.e.x.t
+	 * @see WP_HTML_Processor::get_breadcrumbs()
 	 *
 	 * @return string[] Array of tag names representing path to matched node.
 	 */

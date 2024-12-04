@@ -218,12 +218,8 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 				}
 
 				// Abort processing if a SOURCE lacks the required srcset attribute.
-				$srcset = $processor->get_attribute( 'srcset' );
-				if ( ! is_string( $srcset ) ) {
-					return false;
-				}
-				$srcset = trim( $srcset );
-				if ( '' === $srcset ) {
+				$srcset = $this->get_valid_src( $processor, 'srcset' );
+				if ( null === $srcset ) {
 					return false;
 				}
 
@@ -289,11 +285,12 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 *
 	 * @since n.e.x.t
 	 *
-	 * @param OD_HTML_Tag_Processor $processor Processor.
+	 * @param OD_HTML_Tag_Processor $processor      Processor.
+	 * @param 'src'|'srcset'        $attribute_name Attribute name.
 	 * @return non-empty-string|null URL which is not a data: URL.
 	 */
-	private function get_valid_src( OD_HTML_Tag_Processor $processor ): ?string {
-		$src = $processor->get_attribute( 'src' );
+	private function get_valid_src( OD_HTML_Tag_Processor $processor, string $attribute_name = 'src' ): ?string {
+		$src = $processor->get_attribute( $attribute_name );
 		if ( ! is_string( $src ) ) {
 			return null;
 		}
