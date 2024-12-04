@@ -53,9 +53,8 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * @return bool Whether the tag should be tracked in URL Metrics.
 	 */
 	private function process_img( OD_HTML_Tag_Processor $processor, OD_Tag_Visitor_Context $context ): bool {
-		// Skip empty src attributes and data: URLs.
-		$src = trim( (string) $processor->get_attribute( 'src' ) );
-		if ( '' === $src || $this->is_data_url( $src ) ) {
+		$src = $this->get_valid_src( $processor );
+		if ( null === $src ) {
 			return false;
 		}
 
@@ -247,9 +246,8 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 
 			// Process the IMG element within the PICTURE.
 			if ( 'IMG' === $tag && ! $processor->is_tag_closer() ) {
-				// Skip empty src attributes and data: URLs.
-				$src = trim( (string) $processor->get_attribute( 'src' ) );
-				if ( '' === $src || $this->is_data_url( $src ) ) {
+				$src = $this->get_valid_src( $processor );
+				if ( null === $src ) {
 					return false;
 				}
 
@@ -281,6 +279,29 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 		);
 
 		return false;
+	}
+
+	/**
+	 * Gets valid src attribute value for preloading.
+	 *
+	 * Returns null if the src attribute is not a string (i.e. src was used as a boolean attribute was used), if it
+	 * it has an empty string value after trimming, or if it is a data: URL.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param OD_HTML_Tag_Processor $processor Processor.
+	 * @return non-empty-string|null URL which is not a data: URL.
+	 */
+	private function get_valid_src( OD_HTML_Tag_Processor $processor ): ?string {
+		$src = $processor->get_attribute( 'src' );
+		if ( ! is_string( $src ) ) {
+			return null;
+		}
+		$src = trim( $src );
+		if ( '' === $src || $this->is_data_url( $src ) ) {
+			return null;
+		}
+		return $src;
 	}
 
 	/**
