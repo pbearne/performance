@@ -47,12 +47,6 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 == Changelog ==
 
-= 1.1.3 =
-
-**Enhancements**
-
-* Added support for placeholder images to the admin Media Model. ([354](https://github.com/WordPress/performance/issues/354))
-
 = 1.1.2 =
 
 **Enhancements**

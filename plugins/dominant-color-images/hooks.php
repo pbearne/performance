@@ -194,7 +194,7 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  * to apply background color based on the dominant color for attachment previews
  * in the WordPress admin interface.
  *
- * @since 1.1.3
+ * @since n.e.x.t
  */
 function dominant_color_admin_inline_style(): void {
 	$handle = 'dominant-color-admin-styles';
@@ -214,7 +214,7 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  * the attachment template. It adds attributes for dominant color and transparency
  * to the template, allowing these properties to be displayed in the media library.
  *
- * @since 1.1.3
+ * @since n.e.x.t
  */
 function dominant_color_admin_script(): void {
 	?>
@@ -236,7 +236,7 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  * the dominant color and transparency of the image. It modifies the response array to include
  * these additional properties, which can be used in the media library interface.
  *
- * @since 1.1.3
+ * @since n.e.x.t
  *
  * @param array<mixed> $response   The current response array for the attachment.
  * @param WP_Post      $attachment The attachment post object.
@@ -244,15 +244,15 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  * @return array<mixed> The modified response array with added dominant color and transparency information.
  */
 function dominant_color_prepare_attachment_for_js( array $response, WP_Post $attachment, array $meta ): array {
-	unset( $attachment );
+
 	$response['dominantColor'] = '';
-	if ( isset( $meta['dominant_color'] ) ) {
-		$response['dominantColor'] = $meta['dominant_color'];
+	if ( isset( $meta['dominant_color'] ) && str_contains( '#', $meta['dominant_color'] ) ) {
+		$response['dominantColor'] = sanitize_hex_color( $meta['dominant_color'] );
 	}
 	$response['hasTransparency']      = '';
 	$response['hasTransparencyClass'] = '';
 	if ( isset( $meta['has_transparency'] ) ) {
-		$response['hasTransparency']      = $meta['has_transparency'];
+		$response['hasTransparency']      = esc_attr( $meta['has_transparency'] );
 		$response['hasTransparencyClass'] = $meta['has_transparency'] ? 'has-transparency' : 'not-transparent';
 	}
 
