@@ -69,6 +69,10 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 			),
 		);
 
+		foreach ( perflab_get_standalone_plugins() as $standalone_plugin ) {
+			$plugins[ $standalone_plugin ] = $plugins[ $plugin_slug ];
+		}
+
 		$has_errors = true;
 	}
 
@@ -81,14 +85,11 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 			),
 		);
 
-		$has_errors = true;
-	}
-
-	// Cache error for all standalone plugins.
-	if ( $has_errors ) {
 		foreach ( perflab_get_standalone_plugins() as $standalone_plugin ) {
 			$plugins[ $standalone_plugin ] = $plugins[ $plugin_slug ];
 		}
+
+		$has_errors = true;
 	}
 
 	if ( ! $has_errors && is_object( $response ) && property_exists( $response, 'plugins' ) ) {
