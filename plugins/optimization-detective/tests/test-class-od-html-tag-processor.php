@@ -24,7 +24,7 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 	public function data_provider_sample_documents(): array {
 		return array(
 			'well-formed-html'   => array(
-				'document'  => '
+				'document'          => '
 					<!DOCTYPE html>
 					<html>
 						<head>
@@ -45,8 +45,8 @@ class Test_OD_HTML_Tag_Processor extends WP_UnitTestCase {
 						</body>
 					</html>
 				',
-				'open_tags' => array( 'HTML', 'HEAD', 'META', 'TITLE', 'SCRIPT', 'STYLE', 'BODY', 'IFRAME', 'P', 'BR', 'IMG', 'FORM', 'TEXTAREA', 'FOOTER' ),
-				array(
+				'open_tags'         => array( 'HTML', 'HEAD', 'META', 'TITLE', 'SCRIPT', 'STYLE', 'BODY', 'IFRAME', 'P', 'BR', 'IMG', 'FORM', 'TEXTAREA', 'FOOTER' ),
+				'xpath_breadcrumbs' => array(
 					'/*[1][self::HTML]'                  => array( 'HTML' ),
 					'/*[1][self::HTML]/*[1][self::HEAD]' => array( 'HTML', 'HEAD' ),
 					'/*[1][self::HTML]/*[1][self::HEAD]/*[1][self::META]' => array( 'HTML', 'HEAD', 'META' ),
