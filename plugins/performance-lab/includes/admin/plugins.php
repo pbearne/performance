@@ -74,10 +74,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		}
 
 		$has_errors = true;
-	}
-
-	// Check if the response contains plugins.
-	if ( ! $has_errors && ! ( is_object( $response ) && property_exists( $response, 'plugins' ) ) ) {
+	} elseif ( ! ( is_object( $response ) && property_exists( $response, 'plugins' ) ) ) {
 		$plugins[ $plugin_slug ] = array(
 			'error' => array(
 				'code'    => 'no_plugins',
@@ -90,9 +87,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		}
 
 		$has_errors = true;
-	}
-
-	if ( ! $has_errors && is_object( $response ) && property_exists( $response, 'plugins' ) ) {
+	} else {
 		$plugin_queue = perflab_get_standalone_plugins();
 
 		// Index the plugins from the API response by their slug for efficient lookup.
