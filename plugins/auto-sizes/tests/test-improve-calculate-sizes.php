@@ -553,7 +553,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 			)
 		);
 
-		$align_class = isset( $atts['align'] ) ? ' align' . $atts['align'] : '';
+		$align_class = (bool) $atts['align'] ? ' align' . $atts['align'] : '';
 
 		return '<!-- wp:group ' . wp_json_encode( $atts ) . ' -->
 		<div class="wp-block-group' . $align_class . '">' . $content . '</div>
