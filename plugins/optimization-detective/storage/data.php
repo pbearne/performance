@@ -166,7 +166,15 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 			'last_modified' => $queried_object->post_modified_gmt,
 		);
 	} else {
-		$data['queried_post_ids'] = join( ',', wp_list_pluck( $GLOBALS['wp_query']->posts, 'ID' ) );
+		$data['queried_posts'] = array_map(
+			static function ( WP_Post $post ): array {
+				return array(
+					'ID'            => $post->ID,
+					'last_modified' => $post->post_modified_gmt,
+				);
+			},
+			$GLOBALS['wp_the_query']->posts
+		);
 	}
 
 	/**
