@@ -74,7 +74,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		}
 
 		$has_errors = true;
-	} elseif ( ! ( is_object( $response ) && property_exists( $response, 'plugins' ) ) ) {
+	} elseif ( ! is_object( $response ) || ! property_exists( $response, 'plugins' ) ) {
 		$plugins[ $plugin_slug ] = array(
 			'error' => array(
 				'code'    => 'no_plugins',
@@ -97,6 +97,7 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 		while ( count( $plugin_queue ) > 0 ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found
 			$current_plugin_slug = array_shift( $plugin_queue );
 
+			// Skip already-processed plugins.
 			if ( isset( $plugins[ $current_plugin_slug ] ) ) {
 				continue;
 			}
@@ -111,15 +112,14 @@ function perflab_query_plugin_info( string $plugin_slug ) {
 				);
 
 				$has_errors = true;
-				continue;
-			}
+			} else {
+				$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
+				$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
 
-			$plugin_data                     = $all_performance_plugins[ $current_plugin_slug ];
-			$plugins[ $current_plugin_slug ] = wp_array_slice_assoc( $plugin_data, $fields );
-
-			// Enqueue the required plugins slug by adding it to the queue.
-			if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
-				$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+				// Enqueue the required plugins slug by adding it to the queue.
+				if ( isset( $plugin_data['requires_plugins'] ) && is_array( $plugin_data['requires_plugins'] ) ) {
+					$plugin_queue = array_merge( $plugin_queue, $plugin_data['requires_plugins'] );
+				}
 			}
 		}
 
