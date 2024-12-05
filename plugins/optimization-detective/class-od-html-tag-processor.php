@@ -296,7 +296,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 				$i = array_search( 'P', $this->open_stack_tags, true );
 				if ( false !== $i ) {
 					array_splice( $this->open_stack_tags, (int) $i );
-					array_splice( $this->open_stack_indices, count( $this->open_stack_tags ) );
+					array_splice( $this->open_stack_indices, count( $this->open_stack_tags ) + 1 );
 				}
 			}
 
@@ -497,13 +497,29 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	 * A breadcrumb consists of a tag name and its sibling index.
 	 *
 	 * @since 0.4.0
+	 * @since n.e.x.t Renamed from get_breadcrumbs() to get_indexed_breadcrumbs().
 	 *
 	 * @return Generator<array{string, int}> Breadcrumb.
 	 */
-	private function get_breadcrumbs(): Generator {
+	private function get_indexed_breadcrumbs(): Generator {
 		foreach ( $this->open_stack_tags as $i => $breadcrumb_tag_name ) {
 			yield array( $breadcrumb_tag_name, $this->open_stack_indices[ $i ] );
 		}
+	}
+
+	/**
+	 * Computes the HTML breadcrumbs for the currently-matched node, if matched.
+	 *
+	 * Breadcrumbs start at the outermost parent and descend toward the matched element.
+	 * They always include the entire path from the root HTML node to the matched element.
+	 *
+	 * @since n.e.x.t
+	 * @see WP_HTML_Processor::get_breadcrumbs()
+	 *
+	 * @return string[] Array of tag names representing path to matched node.
+	 */
+	public function get_breadcrumbs(): array {
+		return $this->open_stack_tags;
 	}
 
 	/**
@@ -535,7 +551,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	public function get_xpath(): string {
 		if ( null === $this->current_xpath ) {
 			$this->current_xpath = '';
-			foreach ( $this->get_breadcrumbs() as list( $tag_name, $index ) ) {
+			foreach ( $this->get_indexed_breadcrumbs() as list( $tag_name, $index ) ) {
 				$this->current_xpath .= sprintf( '/*[%d][self::%s]', $index + 1, $tag_name );
 			}
 		}
