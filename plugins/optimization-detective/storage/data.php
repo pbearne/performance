@@ -155,18 +155,8 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  */
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
 	$data = array(
-		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
-	);
-
-	if ( is_singular() ) {
-		$queried_object = get_queried_object();
-
-		$data['queried_object'] = array(
-			'ID'            => $queried_object->ID,
-			'last_modified' => $queried_object->post_modified_gmt,
-		);
-	} else {
-		$data['queried_posts'] = array_map(
+		'tag_visitors'  => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+		'queried_posts' => array_map(
 			static function ( WP_Post $post ): array {
 				return array(
 					'ID'            => $post->ID,
@@ -174,8 +164,8 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 				);
 			},
 			$GLOBALS['wp_the_query']->posts
-		);
-	}
+		),
+	);
 
 	/**
 	 * Filters the data that goes into computing the current ETag for URL Metrics.
