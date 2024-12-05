@@ -158,6 +158,17 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 		'tag_visitors' => array_keys( iterator_to_array( $tag_visitor_registry ) ),
 	);
 
+	if ( is_singular() ) {
+		$queried_object = get_queried_object();
+
+		$data['queried_object'] = array(
+			'ID'            => $queried_object->ID,
+			'last_modified' => $queried_object->post_modified_gmt,
+		);
+	} else {
+		$data['queried_post_ids'] = join( ',', wp_list_pluck( $GLOBALS['wp_query']->posts, 'ID' ) );
+	}
+
 	/**
 	 * Filters the data that goes into computing the current ETag for URL Metrics.
 	 *
