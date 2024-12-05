@@ -165,7 +165,20 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 			},
 			$GLOBALS['wp_the_query']->posts
 		),
+		'active_theme'  => array(
+			'template'           => get_template(),
+			'template_version'   => wp_get_theme( get_template() )->get( 'Version' ),
+			'stylesheet'         => get_stylesheet(),
+			'stylesheet_version' => wp_get_theme()->get( 'Version' ),
+		),
 	);
+
+	if ( wp_is_block_theme() ) {
+		// Extract the template slug from $_wp_current_template_id, which has the format 'theme_slug//template_slug'.
+		$data['current_template'] = explode( '//', $GLOBALS['_wp_current_template_id'] )[1];
+	} else {
+		$data['current_template'] = basename( $GLOBALS['template'] );
+	}
 
 	/**
 	 * Filters the data that goes into computing the current ETag for URL Metrics.
