@@ -158,9 +158,8 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @return non-empty-string Current ETag.
  */
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
-	$data = array(
-		'tag_visitors'  => array_keys( iterator_to_array( $tag_visitor_registry ) ),
-		'queried_posts' => array_map(
+	if ( isset( $GLOBALS['wp_the_query']->posts ) && is_array( $GLOBALS['wp_the_query']->posts ) ) {
+		$queried_posts = array_map(
 			static function ( WP_Post $post ): array {
 				return array(
 					'ID'            => $post->ID,
@@ -168,7 +167,14 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 				);
 			},
 			$GLOBALS['wp_the_query']->posts
-		),
+		);
+	} else {
+		$queried_posts = array();
+	}
+
+	$data = array(
+		'tag_visitors'  => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+		'queried_posts' => $queried_posts,
 		'active_theme'  => array(
 			'template'           => get_template(),
 			'template_version'   => wp_get_theme( get_template() )->get( 'Version' ),
@@ -179,9 +185,9 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 
 	if ( wp_is_block_theme() ) {
 		// Extract the template slug from $_wp_current_template_id, which has the format 'theme_slug//template_slug'.
-		$data['current_template'] = explode( '//', $GLOBALS['_wp_current_template_id'] )[1];
+		$data['current_template'] = explode( '//', $GLOBALS['_wp_current_template_id'] ?? '' )[1] ?? '';
 	} else {
-		$data['current_template'] = basename( $GLOBALS['template'] );
+		$data['current_template'] = basename( $GLOBALS['template'] ?? '' );
 	}
 
 	/**
