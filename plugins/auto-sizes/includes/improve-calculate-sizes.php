@@ -7,25 +7,6 @@
  */
 
 /**
- * Gets the smaller image size if the layout width is bigger.
- *
- * It will return the smaller image size and return "px" if the layout width
- * is something else, e.g. min(640px, 90vw) or 90vw.
- *
- * @since 1.1.0
- *
- * @param string $layout_width The layout width.
- * @param int    $image_width  The image width.
- * @return string The proper width after some calculations.
- */
-function auto_sizes_get_width( string $layout_width, int $image_width ): string {
-	if ( str_ends_with( $layout_width, 'px' ) ) {
-		return $image_width > (int) $layout_width ? $layout_width : $image_width . 'px';
-	}
-	return $image_width . 'px';
-}
-
-/**
  * Primes attachment into the cache with a single database query.
  *
  * @since n.e.x.t
