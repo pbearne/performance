@@ -309,7 +309,20 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$etag2 = od_get_current_url_metrics_etag( $registry );
 		$this->assertSame( $etag1, $etag2 );
 		$this->assertCount( 2, $captured_etag_data );
-		$this->assertSame( array( 'tag_visitors' => array() ), $captured_etag_data[0] );
+		$this->assertSame(
+			array(
+				'tag_visitors'     => array(),
+				'queried_posts'    => array(),
+				'active_theme'     => array(
+					'template'           => 'default',
+					'template_version'   => '1.6',
+					'stylesheet'         => 'default',
+					'stylesheet_version' => '1.6',
+				),
+				'current_template' => '',
+			),
+			$captured_etag_data[0]
+		);
 		$this->assertSame( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 
 		$registry->register( 'foo', static function (): void {} );
@@ -318,11 +331,29 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$etag3 = od_get_current_url_metrics_etag( $registry );
 		$this->assertNotEquals( $etag2, $etag3 );
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
-		$this->assertSame( array( 'tag_visitors' => array( 'foo', 'bar', 'baz' ) ), $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
+		$this->assertSame(
+			array(
+				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
+				'queried_posts'    => array(),
+				'active_theme'     => array(
+					'template'           => 'default',
+					'template_version'   => '1.6',
+					'stylesheet'         => 'default',
+					'stylesheet_version' => '1.6',
+				),
+				'current_template' => '',
+			),
+			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
+		);
 		add_filter(
 			'od_current_url_metrics_etag_data',
 			static function ( $data ): array {
-				$data['last_modified'] = '2024-03-02T01:00:00';
+				$data['queried_posts'] = array(
+					array(
+						'ID'            => 99,
+						'last_modified' => '2024-03-02T01:00:00',
+					),
+				);
 				return $data;
 			}
 		);
@@ -331,8 +362,20 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 		$this->assertSame(
 			array(
-				'tag_visitors'  => array( 'foo', 'bar', 'baz' ),
-				'last_modified' => '2024-03-02T01:00:00',
+				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
+				'queried_posts'    => array(
+					array(
+						'ID'            => 99,
+						'last_modified' => '2024-03-02T01:00:00',
+					),
+				),
+				'active_theme'     => array(
+					'template'           => 'default',
+					'template_version'   => '1.6',
+					'stylesheet'         => 'default',
+					'stylesheet_version' => '1.6',
+				),
+				'current_template' => '',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
 		);
