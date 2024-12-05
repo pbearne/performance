@@ -143,12 +143,16 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 /**
  * Gets the current ETag for URL Metrics.
  *
- * The ETag is a hash based on the IDs of the registered tag visitors
- * in the current environment. It is used for marking the URL Metrics as stale
- * when its value changes.
+ * Generates a hash based on the IDs of registered tag visitors, queried posts,
+ * and theme information in the current environment. This ETag is used to assess
+ * if the URL Metrics are stale when its value changes.
  *
  * @since n.e.x.t
  * @access private
+ *
+ * @global WP_Query $wp_the_query            Global WP_Query instance.
+ * @global string   $_wp_current_template_id Current template ID.
+ * @global string   $template                Template file path.
  *
  * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
  * @return non-empty-string Current ETag.
