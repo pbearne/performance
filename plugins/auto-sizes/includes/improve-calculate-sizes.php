@@ -99,14 +99,17 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 		 * @param string $sizes The image sizes attribute value.
 		 * @param string $size  The image size data.
 		 */
-		$filter = static function ( $sizes, $size ) use ( $block, $parsed_block ) {
+		$filter = static function ( $sizes, $size ) use ( $block ) {
+
 			$id                   = $block->attributes['id'] ?? 0;
 			$alignment            = $block->attributes['align'] ?? '';
 			$width                = $block->attributes['width'] ?? '';
-			$has_parent_block     = isset( $parsed_block['parentLayout'] );
-			$ancestor_block_align = $block->context['ancestor_block_align'] ?? '';
+			$ancestor_block_align = $block->context['ancestor_block_align'] ?? 'full';
 
-			return auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string) $alignment, (string) $width, $has_parent_block, (string) $ancestor_block_align );
+			$better_sizes = auto_sizes_calculate_better_sizes( (int) $id, (string) $size, (string) $alignment, (string) $width, (string) $ancestor_block_align );
+
+			// If better sizes can't be calculated, use the default sizes.
+			return false !== $better_sizes ? $better_sizes : $sizes;
 		};
 
 		// Hook this filter early, before default filters are run.
@@ -144,40 +147,72 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  * @param string $size                 The image size data.
  * @param string $align                The image alignment.
  * @param string $resize_width         Resize image width.
- * @param bool   $has_parent_block     Check if image block has parent block.
  * @param string $ancestor_block_align The ancestor block alignment.
- * @return string The sizes attribute value.
+ * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
-function auto_sizes_calculate_better_sizes( int $id, string $size, string $align, string $resize_width, bool $has_parent_block, string $ancestor_block_align ): string {
-	$image = wp_get_attachment_image_src( $id, $size );
-
-	if ( false === $image ) {
-		return '';
+function auto_sizes_calculate_better_sizes( int $id, string $size, string $align, string $resize_width, string $ancestor_block_align ) {
+	// Without an image ID or a resize width, we cannot calculate a better size.
+	if ( ! (bool) $id && ! (bool) $resize_width ) {
+		return false;
 	}
 
-	// Retrieve width from the image tag itself.
-	$image_width = '' !== $resize_width ? (int) $resize_width : $image[1];
+	$image_data = wp_get_attachment_image_src( $id, $size );
 
-	if ( $has_parent_block ) {
-		if ( 'full' === $ancestor_block_align && 'full' === $align ) {
-			$width = auto_sizes_calculate_width( $align, $image_width );
-			return auto_sizes_format_sizes_attribute( $align, $width );
-		} elseif ( 'full' !== $ancestor_block_align && 'full' === $align ) {
-			$width = auto_sizes_calculate_width( $ancestor_block_align, $image_width );
-			return auto_sizes_format_sizes_attribute( $ancestor_block_align, $width );
-		} elseif ( 'full' !== $ancestor_block_align ) {
-			$parent_block_alignment_width = auto_sizes_calculate_width( $ancestor_block_align, $image_width );
-			$block_alignment_width        = auto_sizes_calculate_width( $align, $image_width );
-			if ( (int) $parent_block_alignment_width < (int) $block_alignment_width ) {
-				return auto_sizes_format_sizes_attribute( $ancestor_block_align, $parent_block_alignment_width );
-			} else {
-				return auto_sizes_format_sizes_attribute( $align, $block_alignment_width );
-			}
-		}
+	$resize_width = (int) $resize_width;
+	$image_width  = false !== $image_data ? $image_data[1] : 0;
+
+	// If we don't have an image width or a resize width, we cannot calculate a better size.
+	if ( ! ( (bool) $image_width || (bool) $resize_width ) ) {
+		return false;
 	}
 
-	$width = auto_sizes_calculate_width( $align, $image_width );
-	return auto_sizes_format_sizes_attribute( $align, $width );
+	/*
+	 * If we don't have an image width, use the resize width.
+	 * If we have both an image width and a resize width, use the smaller of the two.
+	 */
+	if ( ! (bool) $image_width ) {
+		$image_width = $resize_width;
+	} elseif ( (bool) $resize_width ) {
+		$image_width = min( $image_width, $resize_width );
+	}
+
+	// Normalize default alignment values.
+	$align                = '' !== $align ? $align : 'default';
+	$ancestor_block_align = '' !== $ancestor_block_align ? $ancestor_block_align : 'default';
+
+	// We'll choose which alignment to use, based on which is more constraining.
+	$constraint = array(
+		'full'    => 0,
+		'wide'    => 1,
+		'left'    => 2,
+		'right'   => 2,
+		'center'  => 2,
+		'default' => 3,
+	);
+
+	$alignment = $constraint[ $align ] > $constraint[ $ancestor_block_align ] ? $align : $ancestor_block_align;
+
+	return auto_sizes_calculate_width( $alignment, $image_width, $ancestor_block_align );
+}
+
+/**
+ * Retrieves the layout width for an alignment defined in theme.json.
+ *
+ * @since n.e.x.t
+ *
+ * @param string $alignment The alignment value.
+ * @return string The alignment width based.
+ */
+function auto_sizes_get_layout_width( string $alignment ): string {
+	$layout = auto_sizes_get_layout_settings();
+
+	$layout_widths = array(
+		'full'    => '100vw',
+		'wide'    => array_key_exists( 'wideSize', $layout ) ? $layout['wideSize'] : '',
+		'default' => array_key_exists( 'contentSize', $layout ) ? $layout['contentSize'] : '',
+	);
+
+	return $layout_widths[ $alignment ] ?? '';
 }
 
 /**
@@ -185,52 +220,40 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
  *
  * @since n.e.x.t
  *
- * @param string $alignment   The alignment.
- * @param int    $image_width The image width.
+ * @param string $alignment          The alignment.
+ * @param int    $image_width        The image width.
+ * @param string $ancestor_alignment The ancestor alignment.
  * @return string The calculated width value.
  */
-function auto_sizes_calculate_width( string $alignment, int $image_width ): string {
-	$sizes  = '';
-	$layout = auto_sizes_get_layout_settings();
+function auto_sizes_calculate_width( string $alignment, int $image_width, string $ancestor_alignment ): string {
+	$sizes = '';
 
 	// Handle different alignment use cases.
 	switch ( $alignment ) {
 		case 'full':
-			$sizes = '100vw';
+			$layout_width = auto_sizes_get_layout_width( 'full' );
 			break;
 
 		case 'wide':
-			$sizes = array_key_exists( 'wideSize', $layout ) ? $layout['wideSize'] : '';
+			$layout_width = auto_sizes_get_layout_width( 'wide' );
 			break;
 
 		case 'left':
 		case 'right':
 		case 'center':
-			$sizes = auto_sizes_get_width( '', $image_width );
+			// Todo: use smaller fo the two values.
+			$content_width = auto_sizes_get_layout_width( $ancestor_alignment );
+			$layout_width  = sprintf( '%1$spx', $image_width );
 			break;
 
 		default:
-			$sizes = array_key_exists( 'contentSize', $layout )
-				? auto_sizes_get_width( $layout['contentSize'], $image_width )
-				: '';
+			// Todo: use smaller fo the two values.
+			$content_width = auto_sizes_get_layout_width( 'default' );
+			$layout_width  = min( (int) $content_width, $image_width ) . 'px';
 			break;
 	}
-	return $sizes;
-}
 
-/**
- * Formats the `sizes` attribute value.
- *
- * @since n.e.x.t
- *
- * @param string $alignment The alignment.
- * @param string $width     The calculated width value.
- * @return string The formatted sizes attribute value.
- */
-function auto_sizes_format_sizes_attribute( string $alignment, string $width ): string {
-	return 'full' === $alignment
-		? $width
-		: sprintf( '(max-width: %1$s) 100vw, %1$s', $width );
+	return 'full' === $alignment ? $layout_width : sprintf( '(max-width: %1$s) 100vw, %1$s', $layout_width );
 }
 
 /**

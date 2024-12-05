@@ -62,7 +62,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 * @param string $image_size Image size.
 	 */
 	public function test_image_block_with_full_alignment( string $image_size ): void {
-		$block_content = '<!-- wp:image {"id":' . self::$image_id . ',"sizeSlug":"' . $image_size . '","linkDestination":"none","align":"full"} --><figure class="wp-block-image size-' . $image_size . '"><img src="' . wp_get_attachment_image_url( self::$image_id, $image_size ) . '" alt="" class="wp-image-' . self::$image_id . '"/></figure><!-- /wp:image -->';
+		$block_content = $this->get_image_block_markup( self::$image_id, $image_size, 'full' );
 
 		$result = apply_filters( 'the_content', $block_content );
 
@@ -93,7 +93,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 * @param string $image_size Image size.
 	 */
 	public function test_image_block_with_wide_alignment( string $image_size ): void {
-		$block_content = '<!-- wp:image {"id":' . self::$image_id . ',"sizeSlug":"' . $image_size . '","linkDestination":"none","align":"wide"} --><figure class="wp-block-image size-' . $image_size . '"><img src="' . wp_get_attachment_image_url( self::$image_id, $image_size ) . '" alt="" class="wp-image-' . self::$image_id . '"/></figure><!-- /wp:image -->';
+		$block_content = $this->get_image_block_markup( self::$image_id, $image_size, 'wide' );
 
 		$result = apply_filters( 'the_content', $block_content );
 
@@ -531,7 +531,9 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 			'linkDestination' => 'none',
 		);
 
-		return '<!-- wp:image ' . wp_json_encode( $atts ) . ' --><figure class="wp-block-image size-' . $size . '"><img src="' . $image_url . '" alt="" class="wp-image-' . $attachment_id . '"/></figure><!-- /wp:image -->';
+		$align_class = null !== $align ? ' align' . $align : '';
+
+		return '<!-- wp:image ' . wp_json_encode( $atts ) . ' --><figure class="wp-block-image size-' . $size . $align_class . '"><img src="' . $image_url . '" alt="" class="wp-image-' . $attachment_id . '"/></figure><!-- /wp:image -->';
 	}
 
 	/**
@@ -551,8 +553,10 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 			)
 		);
 
+		$align_class = isset( $atts['align'] ) ? ' align' . $atts['align'] : '';
+
 		return '<!-- wp:group ' . wp_json_encode( $atts ) . ' -->
-		<div class="wp-block-group">' . $content . '</div>
+		<div class="wp-block-group' . $align_class . '">' . $content . '</div>
 		<!-- /wp:group -->';
 	}
 }
