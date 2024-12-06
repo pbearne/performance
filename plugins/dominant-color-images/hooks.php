@@ -238,12 +238,15 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script', 1000 );
  *
  * @since n.e.x.t
  *
- * @param array<mixed> $response   The current response array for the attachment.
- * @param WP_Post      $attachment The attachment post object.
- * @param array<mixed> $meta       The attachment metadata.
+ * @param array<mixed>|mixed $response   The current response array for the attachment.
+ * @param WP_Post            $attachment The attachment post object.
+ * @param array<mixed>       $meta       The attachment metadata.
  * @return array<mixed> The modified response array with added dominant color and transparency information.
  */
-function dominant_color_prepare_attachment_for_js( array $response, WP_Post $attachment, array $meta ): array {
+function dominant_color_prepare_attachment_for_js( $response, WP_Post $attachment, array $meta ): array {
+	if ( ! is_array( $response ) ) {
+		$response = array();
+	}
 
 	$response['dominantColor'] = '';
 	if ( isset( $meta['dominant_color'] ) && str_contains( '#', $meta['dominant_color'] ) ) {
