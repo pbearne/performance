@@ -456,19 +456,18 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 				||
 				$first_group_lcp_element->get_xpath() !== $last_group_lcp_element->get_xpath()
 			) {
-				return null;  // No common LCP element across the narrowest and widest viewports.
+				return null; // No common LCP element across the narrowest and widest viewports.
 			}
 
 			// Check intermediate viewport groups for conflicting LCP elements.
-			$num_groups = count( $this->groups );
-			for ( $i = 1; $i < $num_groups - 1; $i++ ) {
-				$group_lcp_element = $this->groups[ $i ]->get_lcp_element();
+			foreach ( array_slice( $this->groups, 1, -1 ) as $group ) {
+				$group_lcp_element = $group->get_lcp_element();
 				if (
 					$group_lcp_element instanceof OD_Element
 					&&
 					$group_lcp_element->get_xpath() !== $first_group_lcp_element->get_xpath()
 				) {
-					return null;  // Conflicting LCP element found in an intermediate group.
+					return null; // Conflicting LCP element found in an intermediate group.
 				}
 			}
 
