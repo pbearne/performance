@@ -124,11 +124,11 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  *
  * @since n.e.x.t
  *
- * @param int    $id                   The image id.
- * @param string $size                 The image size data.
- * @param string $align                The image alignment.
- * @param string $resize_width         Resize image width.
- * @param string $max_alignment        The maximum usable layout alignment.
+ * @param int    $id            The image id.
+ * @param string $size          The image size data.
+ * @param string $align         The image alignment.
+ * @param string $resize_width  Resize image width.
+ * @param string $max_alignment The maximum usable layout alignment.
  * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
 function auto_sizes_calculate_better_sizes( int $id, string $size, string $align, string $resize_width, string $max_alignment ) {
