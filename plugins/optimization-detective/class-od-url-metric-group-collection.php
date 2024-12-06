@@ -427,6 +427,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * Gets common LCP element.
 	 *
 	 * @since 0.3.0
+	 * @since n.e.x.t An LCP element is also considered common if it is the same in the narrowest and widest viewport groups, and all intermediate groups are empty.
 	 *
 	 * @return OD_Element|null Common LCP element if it exists.
 	 */
