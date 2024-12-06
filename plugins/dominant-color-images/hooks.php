@@ -221,7 +221,8 @@ function dominant_color_admin_script(): void {
 	<script>
 		(function() {
 			var s = jQuery( '#tmpl-attachment' )
-			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ data.hasTransparencyClass }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
+			var transparencyClassName = 'true' === data.hasTransparency ? 'has-transparency' : 'not-transparent';
+			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ transparencyClassName }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
 			s.replaceWith( '<script type="text/html" id="tmpl-attachment">' + n  );
 		}());
 	</script>
@@ -256,7 +257,6 @@ function dominant_color_prepare_attachment_for_js( $response, WP_Post $attachmen
 	$response['hasTransparencyClass'] = '';
 	if ( isset( $meta['has_transparency'] ) ) {
 		$response['hasTransparency']      = (bool) $meta['has_transparency'];
-		$response['hasTransparencyClass'] = $meta['has_transparency'] ? 'has-transparency' : 'not-transparent';
 	}
 
 	return $response;
