@@ -252,7 +252,7 @@ function dominant_color_prepare_attachment_for_js( array $response, WP_Post $att
 	$response['hasTransparency']      = '';
 	$response['hasTransparencyClass'] = '';
 	if ( isset( $meta['has_transparency'] ) ) {
-		$response['hasTransparency']      = esc_attr( $meta['has_transparency'] );
+		$response['hasTransparency']      = (bool) $meta['has_transparency'];
 		$response['hasTransparencyClass'] = $meta['has_transparency'] ? 'has-transparency' : 'not-transparent';
 	}
 
