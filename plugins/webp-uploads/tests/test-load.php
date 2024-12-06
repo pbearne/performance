@@ -1045,4 +1045,46 @@ class Test_WebP_Uploads_Load extends TestCase {
 
 		return $filename;
 	}
+
+	/**
+	 * Test that fallback images are generated for all sizes when the `perflab_generate_all_fallback_sizes` option is enabled.
+	 *
+	 * @dataProvider data_provider_supported_image_types
+	 *
+	 * @param string $image_type The image type.
+	 */
+	public function test_it_should_generate_fallback_images_for_all_sizes_when_generate_all_fallback_sizes_option_is_enabled( string $image_type ): void {
+		$mime_type = 'image/' . $image_type;
+
+		// Ensure the MIME type is supported; skip the test if not.
+		if ( ! webp_uploads_mime_type_supported( $mime_type ) ) {
+			$this->markTestSkipped( 'Mime type ' . $mime_type . ' is not supported.' );
+		}
+
+		// Register custom image sizes.
+		add_image_size( 'custom_size_1', 200, 200, true );
+		add_image_size( 'custom_size_2', 400, 400, true );
+
+		// Generate image output type and fallback image.
+		update_option( 'perflab_generate_webp_and_jpeg', true );
+
+		// Generate fallback images for all sizes.
+		update_option( 'perflab_generate_all_fallback_sizes', true );
+
+		$this->set_image_output_type( $image_type );
+
+		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/leaves.jpg' );
+
+		// Clean up custom sizes.
+		remove_image_size( 'custom_size_1' );
+		remove_image_size( 'custom_size_2' );
+
+		// Verify that fallback images are generated for custom sizes.
+		foreach ( array( 'custom_size_1', 'custom_size_2' ) as $size_name ) {
+			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/jpeg' );
+			$this->assertImageHasSizeSource( $attachment_id, $size_name, $mime_type );
+		}
+
+		wp_delete_attachment( $attachment_id );
+	}
 }
