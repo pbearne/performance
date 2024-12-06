@@ -1084,5 +1084,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/jpeg' );
 			$this->assertImageHasSizeSource( $attachment_id, $size_name, $mime_type );
 		}
+
+		wp_delete_attachment( $attachment_id );
 	}
 }
