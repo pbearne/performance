@@ -312,6 +312,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array(),
+				'queried_object'   => null,
 				'queried_posts'    => array(),
 				'active_theme'     => array(
 					'template'           => 'default',
@@ -334,6 +335,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
+				'queried_object'   => null,
 				'queried_posts'    => array(),
 				'active_theme'     => array(
 					'template'           => 'default',
@@ -363,6 +365,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
+				'queried_object'   => null,
 				'queried_posts'    => array(
 					array(
 						'ID'            => 99,

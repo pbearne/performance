@@ -143,9 +143,9 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 /**
  * Gets the current ETag for URL Metrics.
  *
- * Generates a hash based on the IDs of registered tag visitors, queried posts,
- * and theme information in the current environment. This ETag is used to assess
- * if the URL Metrics are stale when its value changes.
+ * Generates a hash based on the IDs of registered tag visitors, the queried object,
+ * posts in The Loop, and theme information in the current environment. This ETag
+ * is used to assess if the URL Metrics are stale when its value changes.
  *
  * @since n.e.x.t
  * @access private
@@ -173,9 +173,10 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 	}
 
 	$data = array(
-		'tag_visitors'  => array_keys( iterator_to_array( $tag_visitor_registry ) ),
-		'queried_posts' => $queried_posts,
-		'active_theme'  => array(
+		'tag_visitors'   => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+		'queried_object' => get_queried_object(),
+		'queried_posts'  => $queried_posts,
+		'active_theme'   => array(
 			'template'           => get_template(),
 			'template_version'   => wp_get_theme( get_template() )->get( 'Version' ),
 			'stylesheet'         => get_stylesheet(),
