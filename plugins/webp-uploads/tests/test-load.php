@@ -1114,7 +1114,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 		$this->assertStringEndsWith( $metadata['sources']['image/avif']['file'], $metadata['file'] );
 		$this->assertStringEndsWith( $metadata['sources']['image/avif']['file'], get_attached_file( $attachment_id ) );
 
-		// There should be a WebP source, but no JPEG source for all sizes.
+		// There should be a AVIF source, but no WebP source for all sizes.
 		foreach ( array_keys( $metadata['sizes'] ) as $size_name ) {
 			$this->assertImageNotHasSizeSource( $attachment_id, $size_name, 'image/webp' );
 			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/avif' );
