@@ -222,7 +222,7 @@ function dominant_color_admin_script(): void {
 		(function() {
 			var s = jQuery( '#tmpl-attachment' )
 			var transparencyClassName = 'true' === data.hasTransparency ? 'has-transparency' : 'not-transparent';
-			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ transparencyClassName }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
+			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ data.hasTransparency ? 'has-transparency' : 'not-transparent' }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
 			s.replaceWith( '<script type="text/html" id="tmpl-attachment">' + n  );
 		}());
 	</script>
