@@ -291,6 +291,7 @@ class Test_OD_Optimization extends WP_UnitTestCase {
 	 * @dataProvider data_provider_test_od_optimize_template_output_buffer
 	 */
 	public function test_od_optimize_template_output_buffer( Closure $set_up, string $buffer, string $expected ): void {
+		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$set_up( $this );
 
 		add_action(
@@ -336,5 +337,7 @@ class Test_OD_Optimization extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
+
+		unset( $GLOBALS['template'] );
 	}
 }

@@ -150,46 +150,24 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @since n.e.x.t
  * @access private
  *
- * @global WP_Query $wp_the_query            Global WP_Query instance.
- * @global string   $_wp_current_template_id Current template ID.
- * @global string   $template                Template file path.
- *
  * @param OD_Tag_Visitor_Registry $tag_visitor_registry Tag visitor registry.
+ * @param WP_Query                $wp_query             The WP_Query instance.
+ * @param string                  $current_template     The current template being used.
  * @return non-empty-string Current ETag.
  */
-function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry ): string {
-	if ( isset( $GLOBALS['wp_the_query']->posts ) && is_array( $GLOBALS['wp_the_query']->posts ) ) {
-		$queried_posts = array_map(
-			static function ( WP_Post $post ): array {
-				return array(
-					'ID'            => $post->ID,
-					'last_modified' => $post->post_modified_gmt,
-				);
-			},
-			$GLOBALS['wp_the_query']->posts
-		);
-	} else {
-		$queried_posts = array();
-	}
-
+function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, string $current_template ): string {
 	$data = array(
-		'tag_visitors'   => array_keys( iterator_to_array( $tag_visitor_registry ) ),
-		'queried_object' => get_queried_object(),
-		'queried_posts'  => $queried_posts,
-		'active_theme'   => array(
+		'tag_visitors'     => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+		'queried_object'   => $wp_query->get_queried_object(),
+		'queried_posts'    => wp_list_pluck( $wp_query->posts, 'post_modified_gmt', 'ID' ),
+		'active_theme'     => array(
 			'template'           => get_template(),
 			'template_version'   => wp_get_theme( get_template() )->get( 'Version' ),
 			'stylesheet'         => get_stylesheet(),
 			'stylesheet_version' => wp_get_theme()->get( 'Version' ),
 		),
+		'current_template' => $current_template,
 	);
-
-	if ( wp_is_block_theme() ) {
-		// Extract the template slug from $_wp_current_template_id, which has the format 'theme_slug//template_slug'.
-		$data['current_template'] = explode( '//', $GLOBALS['_wp_current_template_id'] ?? '' )[1] ?? '';
-	} else {
-		$data['current_template'] = basename( $GLOBALS['template'] ?? '' );
-	}
 
 	/**
 	 * Filters the data that goes into computing the current ETag for URL Metrics.

@@ -293,7 +293,9 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 */
 	public function test_od_get_current_url_metrics_etag(): void {
 		remove_all_filters( 'od_current_url_metrics_etag_data' );
-		$registry = new OD_Tag_Visitor_Registry();
+		$registry         = new OD_Tag_Visitor_Registry();
+		$wp_the_query     = new WP_Query();
+		$current_template = 'index.php';
 
 		$captured_etag_data = array();
 		add_filter(
@@ -304,9 +306,9 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 			},
 			PHP_INT_MAX
 		);
-		$etag1 = od_get_current_url_metrics_etag( $registry );
+		$etag1 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertMatchesRegularExpression( '/^[a-z0-9]{32}\z/', $etag1 );
-		$etag2 = od_get_current_url_metrics_etag( $registry );
+		$etag2 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertSame( $etag1, $etag2 );
 		$this->assertCount( 2, $captured_etag_data );
 		$this->assertSame(
@@ -320,7 +322,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'stylesheet'         => 'default',
 					'stylesheet_version' => '1.6',
 				),
-				'current_template' => '',
+				'current_template' => 'index.php',
 			),
 			$captured_etag_data[0]
 		);
@@ -329,7 +331,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$registry->register( 'foo', static function (): void {} );
 		$registry->register( 'bar', static function (): void {} );
 		$registry->register( 'baz', static function (): void {} );
-		$etag3 = od_get_current_url_metrics_etag( $registry );
+		$etag3 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertNotEquals( $etag2, $etag3 );
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 		$this->assertSame(
@@ -343,7 +345,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'stylesheet'         => 'default',
 					'stylesheet_version' => '1.6',
 				),
-				'current_template' => '',
+				'current_template' => 'index.php',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
 		);
@@ -359,7 +361,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 				return $data;
 			}
 		);
-		$etag4 = od_get_current_url_metrics_etag( $registry );
+		$etag4 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertNotEquals( $etag3, $etag4 );
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 		$this->assertSame(
@@ -378,7 +380,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'stylesheet'         => 'default',
 					'stylesheet_version' => '1.6',
 				),
-				'current_template' => '',
+				'current_template' => 'index.php',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
 		);

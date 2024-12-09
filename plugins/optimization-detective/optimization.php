@@ -170,6 +170,10 @@ function od_is_response_html_content_type(): bool {
  * @since 0.1.0
  * @access private
  *
+ * @global WP_Query $wp_the_query            WP_Query object.
+ * @global string   $_wp_current_template_id Current template ID.
+ * @global string   $template                Template file path.
+ *
  * @param string $buffer Template output buffer.
  * @return string Filtered template output buffer.
  */
@@ -206,7 +210,15 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	 */
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
-	$current_etag         = od_get_current_url_metrics_etag( $tag_visitor_registry );
+	if ( wp_is_block_theme() ) {
+		// Extract the template slug from $_wp_current_template_id, which has the format 'theme_slug//template_slug'.
+		$parts            = explode( '//', $GLOBALS['_wp_current_template_id'] );
+		$current_template = ( 2 === count( $parts ) ) ? $parts[1] : '';
+	} else {
+		$current_template = basename( $GLOBALS['template'] );
+	}
+
+	$current_etag         = od_get_current_url_metrics_etag( $tag_visitor_registry, $GLOBALS['wp_the_query'], $current_template );
 	$group_collection     = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
 		$current_etag,
