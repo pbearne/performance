@@ -293,6 +293,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 */
 	public function test_od_get_current_url_metrics_etag(): void {
 		remove_all_filters( 'od_current_url_metrics_etag_data' );
+		$post_ids         = self::factory()->post->create_many( 3 );
 		$registry         = new OD_Tag_Visitor_Registry();
 		$wp_the_query     = new WP_Query();
 		$current_template = 'index.php';
@@ -306,8 +307,11 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 			},
 			PHP_INT_MAX
 		);
+
+		$wp_the_query->query( array() );
 		$etag1 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertMatchesRegularExpression( '/^[a-z0-9]{32}\z/', $etag1 );
+
 		$etag2 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertSame( $etag1, $etag2 );
 		$this->assertCount( 2, $captured_etag_data );
@@ -315,7 +319,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 			array(
 				'tag_visitors'     => array(),
 				'queried_object'   => null,
-				'queried_posts'    => array(),
+				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'           => 'default',
 					'template_version'   => '1.6',
@@ -328,17 +332,37 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		);
 		$this->assertSame( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 
+		// Add new post.
+		$new_post_id = self::factory()->post->create();
+		$post_ids[]  = $new_post_id;
+		$wp_the_query->query( array() );
+		$etag3 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
+		$this->assertNotEquals( $etag2, $etag3 ); // Etag should change.
+
+		// Update the post content.
+		usleep( 1000000 ); // Sleep for 1 second to ensure the post_modified_gmt is different from the previous value.
+		wp_update_post(
+			array(
+				'ID'           => $post_ids[0],
+				'post_content' => 'Updated post content',
+			)
+		);
+		$wp_the_query->query( array() );
+		$etag4 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
+		$this->assertNotEquals( $etag3, $etag4 );
+
+		// Register new tag visitors.
 		$registry->register( 'foo', static function (): void {} );
 		$registry->register( 'bar', static function (): void {} );
 		$registry->register( 'baz', static function (): void {} );
-		$etag3 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
-		$this->assertNotEquals( $etag2, $etag3 );
+		$etag5 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
+		$this->assertNotEquals( $etag4, $etag5 );
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
 				'queried_object'   => null,
-				'queried_posts'    => array(),
+				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'           => 'default',
 					'template_version'   => '1.6',
@@ -349,31 +373,29 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
 		);
+
+		// Modify data using filter.
 		add_filter(
 			'od_current_url_metrics_etag_data',
 			static function ( $data ): array {
-				$data['queried_posts'] = array(
-					array(
-						'ID'            => 99,
-						'last_modified' => '2024-03-02T01:00:00',
-					),
+				$data['queried_object'] = array(
+					'ID'            => 99,
+					'last_modified' => '2024-03-02T01:00:00',
 				);
 				return $data;
 			}
 		);
-		$etag4 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
-		$this->assertNotEquals( $etag3, $etag4 );
+		$etag6 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
+		$this->assertNotEquals( $etag5, $etag6 );
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
-				'queried_object'   => null,
-				'queried_posts'    => array(
-					array(
-						'ID'            => 99,
-						'last_modified' => '2024-03-02T01:00:00',
-					),
+				'queried_object'   => array(
+					'ID'            => 99,
+					'last_modified' => '2024-03-02T01:00:00',
 				),
+				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'           => 'default',
 					'template_version'   => '1.6',
