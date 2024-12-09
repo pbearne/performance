@@ -1,6 +1,11 @@
 /**
  * @typedef {import("web-vitals").LCPMetric} LCPMetric
  * @typedef {import("./types.ts").ElementData} ElementData
+ * @typedef {import("./types.ts").OnTTFBFunction} OnTTFBFunction
+ * @typedef {import("./types.ts").OnFCPFunction} OnFCPFunction
+ * @typedef {import("./types.ts").OnLCPFunction} OnLCPFunction
+ * @typedef {import("./types.ts").OnINPFunction} OnINPFunction
+ * @typedef {import("./types.ts").OnCLSFunction} OnCLSFunction
  * @typedef {import("./types.ts").URLMetric} URLMetric
  * @typedef {import("./types.ts").URLMetricGroupStatus} URLMetricGroupStatus
  * @typedef {import("./types.ts").Extension} Extension
@@ -335,6 +340,14 @@ export default async function detect( {
 		{ once: true }
 	);
 
+	const {
+		/** @type OnTTFBFunction */ onTTFB,
+		/** @type OnFCPFunction */ onFCP,
+		/** @type OnLCPFunction */ onLCP,
+		/** @type OnINPFunction */ onINP,
+		/** @type OnCLSFunction */ onCLS,
+	} = await import( webVitalsLibrarySrc );
+
 	// TODO: Does this make sense here?
 	// Prevent detection when page is not scrolled to the initial viewport.
 	if ( doc.documentElement.scrollTop > 0 ) {
@@ -368,7 +381,11 @@ export default async function detect( {
 			if ( extension.initialize instanceof Function ) {
 				const initializePromise = extension.initialize( {
 					isDebug,
-					webVitalsLibrarySrc,
+					onTTFB,
+					onFCP,
+					onLCP,
+					onINP,
+					onCLS,
 				} );
 				if ( initializePromise instanceof Promise ) {
 					extensionInitializePromises.push( initializePromise );
@@ -453,8 +470,6 @@ export default async function detect( {
 			passive: true,
 		} );
 	}
-
-	const { onLCP } = await import( webVitalsLibrarySrc );
 
 	/** @type {LCPMetric[]} */
 	const lcpMetricCandidates = [];
