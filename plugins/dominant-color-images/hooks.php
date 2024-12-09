@@ -218,13 +218,14 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  */
 function dominant_color_admin_script(): void {
 	?>
-	<script>
-		(function() {
-			var s = jQuery( '#tmpl-attachment' )
-			var transparencyClassName = 'true' === data.hasTransparency ? 'has-transparency' : 'not-transparent';
-			var n = s[0].innerText.replace( '{{ data.orientation }}"', '{{ data.orientation }} {{ data.hasTransparency ? 'has-transparency' : 'not-transparent' }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"')
-			s.replaceWith( '<script type="text/html" id="tmpl-attachment">' + n  );
-		}());
+	<script type="module">
+		const tmpl = document.getElementById( 'tmpl-attachment' );
+		if ( tmpl ) {
+			tmpl.textContent = tmpl.textContent.replace(
+				'{{ data.orientation }}"',
+				'{{ data.orientation }} {{ data.hasTransparency ? \'has-transparency\' : \'not-transparent\' }}"	data-dominant-color="{{ data.dominantColor }}" data-has-transparency="{{ data.hasTransparency }}" style="--dominant-color: #{{ data.dominantColor }};"'
+			);
+		}
 	</script>
 	<?php
 }
