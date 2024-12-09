@@ -730,7 +730,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		$xpath1 = '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]/*[1]';
 		$xpath2 = '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]/*[2]';
 
-		$get_sample_url_metric = function ( int $viewport_width, string $lcp_element_xpath, bool $is_lcp ): OD_URL_Metric {
+		$get_sample_url_metric = function ( int $viewport_width, string $lcp_element_xpath, bool $is_lcp = true ): OD_URL_Metric {
 			return $this->get_sample_url_metric(
 				array(
 					'viewport_width' => $viewport_width,
@@ -745,9 +745,9 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		return array(
 			'all_groups_have_common_lcp'             => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 400, $xpath1, true ),
-					$get_sample_url_metric( 600, $xpath1, true ),
-					$get_sample_url_metric( 1000, $xpath1, true ),
+					$get_sample_url_metric( 400, $xpath1 ),
+					$get_sample_url_metric( 600, $xpath1 ),
+					$get_sample_url_metric( 1000, $xpath1 ),
 				),
 				'expected'    => array(
 					'type'  => OD_Element::class,
@@ -760,22 +760,22 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'empty_first_group'                      => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 600, $xpath1, true ),
-					$get_sample_url_metric( 1000, $xpath1, true ),
+					$get_sample_url_metric( 600, $xpath1 ),
+					$get_sample_url_metric( 1000, $xpath1 ),
 				),
 				'expected'    => null,
 			),
 			'empty_last_group'                       => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 400, $xpath1, true ),
-					$get_sample_url_metric( 600, $xpath1, true ),
+					$get_sample_url_metric( 400, $xpath1 ),
+					$get_sample_url_metric( 600, $xpath1 ),
 				),
 				'expected'    => null,
 			),
 			'first_and_last_common_lcp_others_empty' => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 400, $xpath1, true ),
-					$get_sample_url_metric( 1000, $xpath1, true ),
+					$get_sample_url_metric( 400, $xpath1 ),
+					$get_sample_url_metric( 1000, $xpath1 ),
 				),
 				'expected'    => array(
 					'type'  => OD_Element::class,
@@ -784,17 +784,17 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 			),
 			'intermediate_groups_conflict'           => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 400, $xpath1, true ),
-					$get_sample_url_metric( 600, $xpath2, true ),
-					$get_sample_url_metric( 1000, $xpath1, true ),
+					$get_sample_url_metric( 400, $xpath1 ),
+					$get_sample_url_metric( 600, $xpath2 ),
+					$get_sample_url_metric( 1000, $xpath1 ),
 				),
 				'expected'    => null,
 			),
 			'first_and_last_lcp_mismatch'            => array(
 				'url_metrics' => array(
-					$get_sample_url_metric( 400, $xpath1, true ),
-					$get_sample_url_metric( 600, $xpath1, true ),
-					$get_sample_url_metric( 1000, $xpath2, true ),
+					$get_sample_url_metric( 400, $xpath1 ),
+					$get_sample_url_metric( 600, $xpath1 ),
+					$get_sample_url_metric( 1000, $xpath2 ),
 				),
 				'expected'    => null,
 			),
