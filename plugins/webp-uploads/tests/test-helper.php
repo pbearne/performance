@@ -365,14 +365,14 @@ class Test_WebP_Uploads_Helper extends TestCase {
 			$this->set_image_output_type( 'avif' );
 			$default_transforms = array(
 				'image/jpeg' => array( 'image/avif' ),
-				'image/webp' => array( 'image/webp' ),
+				'image/webp' => array( 'image/avif' ),
 				'image/avif' => array( 'image/avif' ),
 				'image/png'  => array( 'image/avif' ),
 			);
 		} else {
 			$default_transforms = array(
 				'image/jpeg' => array( 'image/webp' ),
-				'image/webp' => array( 'image/webp' ),
+				'image/webp' => array( 'image/avif' ),
 				'image/avif' => array( 'image/avif' ),
 				'image/png'  => array( 'image/webp' ),
 			);
