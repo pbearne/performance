@@ -333,8 +333,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 
 		// Add new post.
-		$new_post_id = self::factory()->post->create();
-		$post_ids[]  = $new_post_id;
+		$post_ids[] = self::factory()->post->create();
 		$wp_the_query->query( array() );
 		$etag3 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertNotEquals( $etag2, $etag3 ); // Etag should change.

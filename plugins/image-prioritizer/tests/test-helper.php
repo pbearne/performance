@@ -98,6 +98,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @param callable|string $expected Expected content after.
 	 */
 	public function test_image_prioritizer_register_tag_visitors( callable $set_up, $buffer, $expected ): void {
+		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$set_up( $this, $this::factory() );
 
 		$buffer = is_string( $buffer ) ? $buffer : $buffer();
@@ -125,6 +126,8 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
+
+		unset( $GLOBALS['template'] );
 	}
 
 	/**
@@ -220,6 +223,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @phpstan-param array{ xpath: string, isLCP: bool, intersectionRatio: int } $element_metrics
 	 */
 	public function test_auto_sizes( array $element_metrics, string $buffer, string $expected ): void {
+		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$this->populate_url_metrics( array( $element_metrics ) );
 
 		$html_start_doc = '<html lang="en"><head><meta charset="utf-8"><title>...</title></head><body>';
@@ -234,6 +238,8 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
+
+		unset( $GLOBALS['template'] );
 	}
 
 	/**
