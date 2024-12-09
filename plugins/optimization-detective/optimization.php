@@ -211,9 +211,8 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
 	if ( wp_is_block_theme() ) {
-		// Extract the template slug from $_wp_current_template_id, which has the format 'theme_slug//template_slug'.
-		$parts            = explode( '//', $GLOBALS['_wp_current_template_id'] );
-		$current_template = ( 2 === count( $parts ) ) ? $parts[1] : '';
+		$current_template = get_block_template( $GLOBALS['_wp_current_template_id'], 'wp_template' );
+		$current_template = $current_template ?? basename( $GLOBALS['template'] );
 	} else {
 		$current_template = basename( $GLOBALS['template'] );
 	}
