@@ -321,10 +321,14 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 				'queried_object'   => null,
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
-					'template'           => 'default',
-					'template_version'   => '1.6',
-					'stylesheet'         => 'default',
-					'stylesheet_version' => '1.6',
+					'template'   => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
+					'stylesheet' => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
 				),
 				'current_template' => 'index.php',
 			),
@@ -363,10 +367,14 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 				'queried_object'   => null,
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
-					'template'           => 'default',
-					'template_version'   => '1.6',
-					'stylesheet'         => 'default',
-					'stylesheet_version' => '1.6',
+					'template'   => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
+					'stylesheet' => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
 				),
 				'current_template' => 'index.php',
 			),
@@ -396,10 +404,14 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
-					'template'           => 'default',
-					'template_version'   => '1.6',
-					'stylesheet'         => 'default',
-					'stylesheet_version' => '1.6',
+					'template'   => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
+					'stylesheet' => array(
+						'name'    => 'default',
+						'version' => '1.6',
+					),
 				),
 				'current_template' => 'index.php',
 			),
