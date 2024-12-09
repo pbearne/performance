@@ -749,10 +749,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 					$get_sample_url_metric( 600, $xpath1 ),
 					$get_sample_url_metric( 1000, $xpath1 ),
 				),
-				'expected'    => array(
-					'type'  => OD_Element::class,
-					'xpath' => $xpath1,
-				),
+				'expected'    => $xpath1,
 			),
 			'no_url_metrics'                         => array(
 				'url_metrics' => array(),
@@ -777,10 +774,7 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 					$get_sample_url_metric( 400, $xpath1 ),
 					$get_sample_url_metric( 1000, $xpath1 ),
 				),
-				'expected'    => array(
-					'type'  => OD_Element::class,
-					'xpath' => $xpath1,
-				),
+				'expected'    => $xpath1,
 			),
 			'intermediate_groups_conflict'           => array(
 				'url_metrics' => array(
@@ -817,9 +811,9 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	 * @dataProvider data_provider_test_get_common_lcp_element
 	 *
 	 * @param OD_URL_Metric[] $url_metrics URL Metrics.
-	 * @param mixed           $expected    Expected.
+	 * @param string|null     $expected    Expected.
 	 */
-	public function test_get_common_lcp_element( array $url_metrics, $expected ): void {
+	public function test_get_common_lcp_element( array $url_metrics, ?string $expected ): void {
 		$breakpoints      = array( 480, 800 );
 		$sample_size      = 3;
 		$current_etag     = md5( '' );
@@ -834,9 +828,9 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		$this->assertCount( 3, $group_collection );
 
 		$common_lcp_element = $group_collection->get_common_lcp_element();
-		if ( is_array( $expected ) ) {
-			$this->assertInstanceOf( $expected['type'], $common_lcp_element );
-			$this->assertSame( $expected['xpath'], $common_lcp_element->get_xpath() );
+		if ( is_string( $expected ) ) {
+			$this->assertInstanceOf( OD_Element::class, $common_lcp_element );
+			$this->assertSame( $expected, $common_lcp_element->get_xpath() );
 		} else {
 			$this->assertNull( $common_lcp_element );
 		}
