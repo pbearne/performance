@@ -273,14 +273,14 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 				'sizes="(max-width: 300px) 100vw, 300px" ',
 				'center',
 			),
-			'Return large image size 1024px with center alignment'                                  => array(
+			'Return large image size 620px with center alignment'                                  => array(
 				'large',
-				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
 				'center',
 			),
-			'Return full image size 1080px with center alignment'                                   => array(
+			'Return full image size 620px with center alignment'                                   => array(
 				'full',
-				'sizes="(max-width: 1080px) 100vw, 1080px" ',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
 				'center',
 			),
 			'Return resized size 100px instead of medium image size 300px with left alignment'      => array(
@@ -346,8 +346,9 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 * @dataProvider data_image_left_right_center_alignment
 	 *
 	 * @param string $alignment Alignment of the image.
+	 * @param string $expected  Expected output.
 	 */
-	public function test_cover_block_with_left_right_center_alignment( string $alignment ): void {
+	public function test_cover_block_with_left_right_center_alignment( string $alignment, string $expected ): void {
 		$image_url     = wp_get_attachment_image_url( self::$image_id, 'full' );
 		$block_content = '<!-- wp:cover {"url":"' . $image_url . '","id":' . self::$image_id . ',"dimRatio":50,"align":"' . $alignment . '","style":{"color":{}}} -->
 		<div class="wp-block-cover align' . $alignment . '"><span aria-hidden="true" class="wp-block-cover__background has-background-dim"></span><img class="wp-block-cover__image-background wp-image-' . self::$image_id . '" alt="" src="' . $image_url . '" data-object-fit="cover"/><div class="wp-block-cover__inner-container"><!-- wp:paragraph {"align":"center","fontSize":"large"} -->
@@ -357,7 +358,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 
 		$result = apply_filters( 'the_content', $block_content );
 
-		$this->assertStringContainsString( 'sizes="(max-width: 1080px) 100vw, 1080px" ', $result );
+		$this->assertStringContainsString( $expected, $result );
 	}
 
 	/**
@@ -367,9 +368,9 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 */
 	public function data_image_left_right_center_alignment(): array {
 		return array(
-			array( 'left' ),
-			array( 'right' ),
-			array( 'center' ),
+			array( 'left', 'sizes="(max-width: 420px) 100vw, 420px' ),
+			array( 'right', 'sizes="(max-width: 420px) 100vw, 420px' ),
+			array( 'center', 'sizes="(max-width: 620px) 100vw, 620px' ),
 		);
 	}
 

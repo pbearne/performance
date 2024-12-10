@@ -162,15 +162,15 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
 
 	/*
 	 * Map alignment values to a weighting value so they can be compared.
-	 * Note that 'left', 'right', and 'center' alignments are only constrained by default containers.
+	 * Note that 'left' and 'right' alignments are only constrained by max alignment.
 	 */
 	$constraints = array(
 		'full'    => 0,
-		'wide'    => 1,
-		'left'    => 2,
-		'right'   => 2,
-		'center'  => 2,
+		'left'    => 1,
+		'right'   => 1,
+		'wide'    => 2,
 		'default' => 3,
+		'center'  => 3,
 	);
 
 	$alignment = $constraints[ $align ] > $constraints[ $max_alignment ] ? $align : $max_alignment;
@@ -187,12 +187,12 @@ function auto_sizes_calculate_better_sizes( int $id, string $size, string $align
 
 		case 'left':
 		case 'right':
-		case 'center':
 			// These alignment get constrained by the wide layout size but do not get stretched.
 			$alignment    = auto_sizes_get_layout_width( 'wide' );
 			$layout_width = sprintf( '%1$spx', min( (int) $alignment, $image_width ) );
 			break;
 
+		case 'center':
 		default:
 			$alignment    = auto_sizes_get_layout_width( 'default' );
 			$layout_width = sprintf( '%1$spx', min( (int) $alignment, $image_width ) );
