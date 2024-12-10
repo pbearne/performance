@@ -308,9 +308,9 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 			PHP_INT_MAX
 		);
 		add_filter(
-			'od_current_url_metrics_etag_active_theme',
-			static function ( $active_theme ) {
-				$active_theme = array(
+			'od_current_url_metrics_etag_data',
+			static function ( $data ) {
+				$data['active_theme'] = array(
 					'template'   => array(
 						'name'    => 'od-theme',
 						'version' => '1.0.0',
@@ -320,7 +320,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 						'version' => '1.0.0',
 					),
 				);
-				return $active_theme;
+				return $data;
 			}
 		);
 
@@ -401,11 +401,11 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 
 		// Modify data using filters.
 		add_filter(
-			'od_current_url_metrics_etag_active_theme',
-			static function ( $active_theme ) {
-				$active_theme['template']['version']   = '2.0.0';
-				$active_theme['stylesheet']['version'] = '2.0.0';
-				return $active_theme;
+			'od_current_url_metrics_etag_data',
+			static function ( $data ) {
+				$data['active_theme']['template']['version']   = '2.0.0';
+				$data['active_theme']['stylesheet']['version'] = '2.0.0';
+				return $data;
 			}
 		);
 		$etag6 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );

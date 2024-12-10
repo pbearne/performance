@@ -156,31 +156,20 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @return non-empty-string Current ETag.
  */
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, $current_template ): string {
-	$active_theme = array(
-		'template'   => array(
-			'name'    => get_template(),
-			'version' => wp_get_theme( get_template() )->get( 'Version' ),
-		),
-		'stylesheet' => array(
-			'name'    => get_stylesheet(),
-			'version' => wp_get_theme()->get( 'Version' ),
-		),
-	);
-
-	/**
-	 * Filters the active theme details used for computing the current ETag.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param array<string, array<string, string|false>> $active_theme Active theme details.
-	 */
-	$active_theme = apply_filters( 'od_current_url_metrics_etag_active_theme', $active_theme );
-
 	$data = array(
 		'tag_visitors'     => array_keys( iterator_to_array( $tag_visitor_registry ) ),
 		'queried_object'   => $wp_query->get_queried_object(),
 		'queried_posts'    => wp_list_pluck( $wp_query->posts, 'post_modified_gmt', 'ID' ),
-		'active_theme'     => $active_theme,
+		'active_theme'     => array(
+			'template'   => array(
+				'name'    => get_template(),
+				'version' => wp_get_theme( get_template() )->get( 'Version' ),
+			),
+			'stylesheet' => array(
+				'name'    => get_stylesheet(),
+				'version' => wp_get_theme()->get( 'Version' ),
+			),
+		),
 		'current_template' => $current_template,
 	);
 
