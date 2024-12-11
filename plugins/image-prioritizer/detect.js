@@ -63,10 +63,9 @@ function warn( ...message ) {
  * @type {InitializeCallback}
  * @param {InitializeArgs} args Args.
  */
-export async function initialize( { isDebug, webVitalsLibrarySrc } ) {
-	const { onLCP } = await import( webVitalsLibrarySrc );
+export async function initialize( { isDebug, onLCP } ) {
 	onLCP(
-		( /** @type {LCPMetric} */ metric ) => {
+		( metric ) => {
 			handleLCPMetric( metric, isDebug );
 		},
 		{

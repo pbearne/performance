@@ -45,6 +45,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Tuples of URL Metric group and the common LCP element external background image.
 	 *
+	 * @since n.e.x.t
 	 * @var array<array{OD_URL_Metric_Group, LcpElementExternalBackgroundImage}>
 	 */
 	private $group_common_lcp_element_external_background_images;
@@ -87,7 +88,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 
 		// If this element is the LCP (for a breakpoint group), add a preload link for it.
 		foreach ( $context->url_metric_group_collection->get_groups_by_lcp_element( $xpath ) as $group ) {
-			$this->add_preload_link( $context->link_collection, $group, $background_image_url );
+			$this->add_image_preload_link( $context->link_collection, $group, $background_image_url );
 		}
 
 		$this->lazy_load_bg_images( $context );
@@ -140,6 +141,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	 */
 	private function maybe_preload_external_lcp_background_image( OD_Tag_Visitor_Context $context ): void {
 		// Gather the tuples of URL Metric group and the common LCP element external background image.
+		// Note the groups of URL Metrics do not change across invocations, we just need to compute this once for all.
 		if ( ! is_array( $this->group_common_lcp_element_external_background_images ) ) {
 			$this->group_common_lcp_element_external_background_images = array();
 			foreach ( $context->url_metric_group_collection as $group ) {
@@ -169,7 +171,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 				&&
 				$processor->get_attribute( 'class' ) === $common['class'] // May be checking equality with null.
 			) {
-				$this->add_preload_link( $context->link_collection, $group, $common['url'] );
+				$this->add_image_preload_link( $context->link_collection, $group, $common['url'] );
 
 				// Now that the preload link has been added, eliminate the entry to stop looking for it while iterating over the rest of the document.
 				unset( $this->group_common_lcp_element_external_background_images[ $i ] );
@@ -186,7 +188,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	 * @param OD_URL_Metric_Group $group           URL Metric group.
 	 * @param non-empty-string    $url             Image URL.
 	 */
-	private function add_preload_link( OD_Link_Collection $link_collection, OD_URL_Metric_Group $group, string $url ): void {
+	private function add_image_preload_link( OD_Link_Collection $link_collection, OD_URL_Metric_Group $group, string $url ): void {
 		$link_collection->add_link(
 			array(
 				'rel'           => 'preload',
