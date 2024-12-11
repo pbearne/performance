@@ -1089,7 +1089,7 @@ class Test_WebP_Uploads_Load extends TestCase {
 	}
 
 	/**
-	 * Create the original mime type for WebP images.
+	 * Convert WebP to AVIF on uploads.
 	 */
 	public function test_that_it_should_convert_webp_to_avif_on_upload(): void {
 		// Ensure the AVIF MIME type is supported; skip the test if not.
