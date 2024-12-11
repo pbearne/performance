@@ -291,6 +291,16 @@ function perflab_render_plugins_ui(): void {
 		</div>
 		<div class="clear"></div>
 	</div>
+	<p>
+		<?php
+		printf(
+			/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
+			esc_html__( 'Performance features are installed as plugins. To update features or remove them, %1$s manage them on the plugins screen. %2$s', 'performance-lab' ),
+			'<a href="' . esc_url( admin_url( 'plugins.php?s=WordPress%20Performance%20Team&plugin_status=all' ) ) . '">',
+			'</a>'
+		);
+		?>
+	</p>
 	<?php
 }
 
