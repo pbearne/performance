@@ -237,8 +237,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 			);
 		}
 
-		$this->result_cache = array();
-		$this->collection->clear_cache();
+		$this->clear_cache();
 
 		$url_metric->set_group( $this );
 		$this->url_metrics[] = $url_metric;
@@ -469,6 +468,16 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 */
 	public function count(): int {
 		return count( $this->url_metrics );
+	}
+
+	/**
+	 * Clear result cache.
+	 *
+	 * @since n.e.x.t
+	 */
+	public function clear_cache(): void {
+		$this->result_cache = array();
+		$this->collection->clear_cache();
 	}
 
 	/**
