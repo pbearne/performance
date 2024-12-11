@@ -94,7 +94,7 @@ function od_register_endpoint(): void {
 					return new WP_Error(
 						'url_metric_storage_locked',
 						__( 'URL Metric storage is presently locked for the current IP.', 'optimization-detective' ),
-						array( 'status' => 403 )
+						array( 'status' => 403 ) // TODO: Consider 423 Locked status code.
 					);
 				}
 				return true;
@@ -163,6 +163,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 			$request->get_param( 'viewport' )['width']
 		);
 	} catch ( InvalidArgumentException $exception ) {
+		// Note: This should never happen because an exception only occurs if a viewport width is less than zero, and the JSON Schema enforces that the viewport.width have a minimum of zero.
 		return new WP_Error( 'invalid_viewport_width', $exception->getMessage() );
 	}
 	if ( $url_metric_group->is_complete() ) {
