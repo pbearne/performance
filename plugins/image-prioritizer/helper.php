@@ -107,7 +107,8 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 		'properties' => array(
 			'url'   => array(
 				'type'      => 'string',
-				'format'    => 'uri',
+				'format'    => 'uri', // Note: This is excessively lax, as it is used exclusively in rest_sanitize_value_from_schema() and not in rest_validate_value_from_schema().
+				'pattern'   => '^https?://',
 				'required'  => true,
 				'maxLength' => 500, // Image URLs can be quite long.
 			),
