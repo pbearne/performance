@@ -221,13 +221,13 @@ function dominant_color_admin_script(): void {
 	<script type="module">
 		const tmpl = document.getElementById( 'tmpl-attachment' );
 		if ( tmpl ) {
-		tmpl.textContent = tmpl.textContent.replace( /^\s*<div[^>]*?(?=>)/, ( match ) => {
-			let replaced = match.replace( /\sclass="/, " class=\"{{ data.hasTransparency ? \'has-transparency\' : \'not-transparent\' }} " );
-			replaced += ' data-dominant-color="{{ data.dominantColor }}"';
-			replaced += ' data-has-transparency="{{ data.hasTransparency }}"';
-			replaced += ' style="--dominant-color: #{{ data.dominantColor }};"'; // TODO: Potentially there could be a style attribute as well!
-			return replaced;
-		} );
+			tmpl.textContent = tmpl.textContent.replace( /^\s*<div[^>]*?(?=>)/, ( match ) => {
+				let replaced = match.replace( /\sclass="/, " class=\"{{ data.hasTransparency ? \'has-transparency\' : \'not-transparent\' }} " );
+				replaced += ' data-dominant-color="{{ data.dominantColor }}"';
+				replaced += ' data-has-transparency="{{ data.hasTransparency }}"';
+				replaced += ' style="--dominant-color: #{{ data.dominantColor }};"'; // TODO: Potentially there could be a style attribute as well!
+				return replaced;
+			} );
 		}
 	</script>
 	<?php
