@@ -341,7 +341,7 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test the cover block with left and right alignment.
+	 * Test the cover block with left, right and center alignment.
 	 *
 	 * @dataProvider data_image_left_right_center_alignment
 	 *
@@ -368,8 +368,8 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 */
 	public function data_image_left_right_center_alignment(): array {
 		return array(
-			array( 'left', 'sizes="(max-width: 420px) 100vw, 420px' ),
-			array( 'right', 'sizes="(max-width: 420px) 100vw, 420px' ),
+			array( 'left', 'sizes="(max-width: 540px) 100vw, 540px' ),
+			array( 'right', 'sizes="(max-width: 540px) 100vw, 540px' ),
 			array( 'center', 'sizes="(max-width: 620px) 100vw, 620px' ),
 		);
 	}
@@ -469,10 +469,10 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 				'left',
 				'sizes="(max-width: 1024px) 100vw, 1024px" ',
 			),
-			'Return image size 1024px, parent block wide alignment, image block center alignment'     => array(
+			'Return image size 620px, parent block wide alignment, image block center alignment'     => array(
 				'wide',
 				'center',
-				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
 			),
 			'Return image size 1024px, parent block wide alignment, image block right alignment'      => array(
 				'wide',
@@ -501,10 +501,10 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 				'left',
 				'sizes="(max-width: 1024px) 100vw, 1024px" ',
 			),
-			'Return image size 1024px, parent block full alignment, image block center alignment'     => array(
+			'Return image size 620px, parent block full alignment, image block center alignment'     => array(
 				'full',
 				'center',
-				'sizes="(max-width: 1024px) 100vw, 1024px" ',
+				'sizes="(max-width: 620px) 100vw, 620px" ',
 			),
 			'Return image size 1024px, parent block full alignment, image block right alignment'      => array(
 				'full',
