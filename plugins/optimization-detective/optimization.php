@@ -210,10 +210,11 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	 */
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
-	if ( wp_is_block_theme() ) {
+	$current_template = null;
+	if ( wp_is_block_theme() && isset( $GLOBALS['_wp_current_template_id'] ) ) {
 		$current_template = get_block_template( $GLOBALS['_wp_current_template_id'], 'wp_template' );
-		$current_template = $current_template ?? basename( $GLOBALS['template'] );
-	} else {
+	}
+	if ( null === $current_template && isset( $GLOBALS['template'] ) && is_string( $GLOBALS['template'] ) ) {
 		$current_template = basename( $GLOBALS['template'] );
 	}
 
