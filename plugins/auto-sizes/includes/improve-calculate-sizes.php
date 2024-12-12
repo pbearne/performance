@@ -278,9 +278,9 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
 		$alignment = $block['attrs']['align'] ?? '';
 
 		// If the container block doesn't have alignment, it's assumed to be 'default'.
-		if ( ! (bool) $alignment ) {
+		if ( '' === $alignment ) {
 			$context['max_alignment'] = 'default';
-		} elseif ( 'wide' === $block['attrs']['align'] ) {
+		} elseif ( 'wide' === $alignment ) {
 			$context['max_alignment'] = 'wide';
 		}
 	}
