@@ -82,9 +82,9 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 		 */
 		$filter = static function ( $sizes, $size ) use ( $block ) {
 
-			$id            = $block->attributes['id'] ?? 0;
+			$id            = isset( $block->attributes['id'] ) ? (int) $block->attributes['id'] : 0;
 			$alignment     = $block->attributes['align'] ?? '';
-			$width         = $block->attributes['width'] ?? '';
+			$width         = isset( $block->attributes['width'] ) ? (int) $block->attributes['width'] : 0;
 			$max_alignment = $block->context['max_alignment'] ?? '';
 
 			/*
@@ -95,7 +95,7 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 				$size = array( 420, 420 );
 			}
 
-			$better_sizes = auto_sizes_calculate_better_sizes( (int) $id, $size, (string) $alignment, (string) $width, (string) $max_alignment );
+			$better_sizes = auto_sizes_calculate_better_sizes( $id, $size, $alignment, $width, $max_alignment );
 
 			// If better sizes can't be calculated, use the default sizes.
 			return false !== $better_sizes ? $better_sizes : $sizes;
@@ -135,23 +135,22 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  * @param int                    $id            The image attachment post ID.
  * @param string|array{int, int} $size          Image size name or array of width and height.
  * @param string                 $align         The image alignment.
- * @param string                 $resize_width  Resize image width.
+ * @param int                    $resize_width  Resize image width.
  * @param string                 $max_alignment The maximum usable layout alignment.
  * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
-function auto_sizes_calculate_better_sizes( int $id, $size, string $align, string $resize_width, string $max_alignment ) {
+function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $resize_width, string $max_alignment ) {
 	// Without an image ID or a resize width, we cannot calculate a better size.
-	if ( ! (bool) $id && ! (bool) $resize_width ) {
+	if ( 0 === $id && 0 === $resize_width ) {
 		return false;
 	}
 
 	$image_data = wp_get_attachment_image_src( $id, $size );
 
-	$resize_width = (int) $resize_width;
-	$image_width  = false !== $image_data ? $image_data[1] : 0;
+	$image_width = false !== $image_data ? $image_data[1] : 0;
 
 	// If we don't have an image width or a resize width, we cannot calculate a better size.
-	if ( ! ( (bool) $image_width || (bool) $resize_width ) ) {
+	if ( 0 === $image_width && 0 === $resize_width ) {
 		return false;
 	}
 
@@ -159,9 +158,9 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, strin
 	 * If we don't have an image width, use the resize width.
 	 * If we have both an image width and a resize width, use the smaller of the two.
 	 */
-	if ( ! (bool) $image_width ) {
+	if ( 0 === $image_width ) {
 		$image_width = $resize_width;
-	} elseif ( (bool) $resize_width ) {
+	} elseif ( 0 !== $resize_width ) {
 		$image_width = min( $image_width, $resize_width );
 	}
 
