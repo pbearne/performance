@@ -178,6 +178,8 @@ function od_is_response_html_content_type(): bool {
  * @return string Filtered template output buffer.
  */
 function od_optimize_template_output_buffer( string $buffer ): string {
+	global $wp_the_query, $_wp_current_template_id, $template;
+
 	// If the content-type is not HTML or the output does not start with '<', then abort since the buffer is definitely not HTML.
 	if (
 		! od_is_response_html_content_type() ||
@@ -211,14 +213,14 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
 	$current_template = null;
-	if ( wp_is_block_theme() && isset( $GLOBALS['_wp_current_template_id'] ) ) {
-		$current_template = get_block_template( $GLOBALS['_wp_current_template_id'], 'wp_template' );
+	if ( wp_is_block_theme() && $_wp_current_template_id ) {
+		$current_template = get_block_template( $_wp_current_template_id, 'wp_template' );
 	}
-	if ( null === $current_template && isset( $GLOBALS['template'] ) && is_string( $GLOBALS['template'] ) ) {
-		$current_template = basename( $GLOBALS['template'] );
+	if ( null === $current_template && $template && is_string( $template ) ) {
+		$current_template = basename( $template );
 	}
 
-	$current_etag         = od_get_current_url_metrics_etag( $tag_visitor_registry, $GLOBALS['wp_the_query'], $current_template );
+	$current_etag         = od_get_current_url_metrics_etag( $tag_visitor_registry, $wp_the_query, $current_template );
 	$group_collection     = new OD_URL_Metric_Group_Collection(
 		$post instanceof WP_Post ? OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post ) : array(),
 		$current_etag,
