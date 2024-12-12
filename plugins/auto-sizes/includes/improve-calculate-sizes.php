@@ -85,7 +85,7 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 			$id            = $block->attributes['id'] ?? 0;
 			$alignment     = $block->attributes['align'] ?? '';
 			$width         = $block->attributes['width'] ?? '';
-			$max_alignment = $block->context['max_alignment'];
+			$max_alignment = $block->context['max_alignment'] ?? '';
 
 			/*
 			 * Update width for cover block.
@@ -132,11 +132,11 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  *
  * @since n.e.x.t
  *
- * @param int          $id            The image id.
- * @param string|int[] $size          The image size data.
- * @param string       $align         The image alignment.
- * @param string       $resize_width  Resize image width.
- * @param string       $max_alignment The maximum usable layout alignment.
+ * @param int                    $id            The image attachment post ID.
+ * @param string|array{int, int} $size          Image size name or array of width and height.
+ * @param string                 $align         The image alignment.
+ * @param string                 $resize_width  Resize image width.
+ * @param string                 $max_alignment The maximum usable layout alignment.
  * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
 function auto_sizes_calculate_better_sizes( int $id, $size, string $align, string $resize_width, string $max_alignment ) {
@@ -166,7 +166,7 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, strin
 	}
 
 	// Normalize default alignment values.
-	$align = (bool) $align ? $align : 'default';
+	$align = '' !== $align ? $align : 'default';
 
 	/*
 	 * Map alignment values to a weighting value so they can be compared.
@@ -238,9 +238,9 @@ function auto_sizes_get_layout_width( string $alignment ): string {
  *
  * @since n.e.x.t
  *
- * @param array<string> $uses_context Array of registered uses context for a block type.
+ * @param string[]      $uses_context Array of registered uses context for a block type.
  * @param WP_Block_Type $block_type   The full block type object.
- * @return array<string> The filtered context keys used by the block type.
+ * @return string[] The filtered context keys used by the block type.
  */
 function auto_sizes_filter_uses_context( array $uses_context, WP_Block_Type $block_type ): array {
 	// The list of blocks that can consume outer layout context.
