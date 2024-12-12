@@ -86,6 +86,7 @@ trait Optimization_Detective_Test_Helpers {
 				'viewport_width' => 480,
 				'elements'       => array(),
 				'timestamp'      => microtime( true ),
+				'extended_root'  => array(),
 			),
 			$params
 		);
@@ -94,7 +95,7 @@ trait Optimization_Detective_Test_Helpers {
 			$params['elements'][] = $params['element'];
 		}
 
-		return new OD_URL_Metric(
+		$data = array_merge(
 			array(
 				'etag'      => $params['etag'],
 				'url'       => $params['url'],
@@ -118,8 +119,10 @@ trait Optimization_Detective_Test_Helpers {
 					},
 					$params['elements']
 				),
-			)
+			),
+			$params['extended_root']
 		);
+		return new OD_URL_Metric( $data );
 	}
 
 	/**
