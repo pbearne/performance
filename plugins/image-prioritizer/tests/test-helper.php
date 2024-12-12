@@ -15,12 +15,21 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 */
 	public function set_up(): void {
 		parent::set_up();
+		$GLOBALS['template'] = '/path/to/theme/index.php';
 
 		// Normalize the data for computing the current URL Metrics ETag to work around the issue where there is no
 		// global variable storing the OD_Tag_Visitor_Registry instance along with any registered tag visitors, so
 		// during set up we do not know what the ETag will look like. The current ETag is only established when
 		// the output begins to be processed by od_optimize_template_output_buffer().
 		add_filter( 'od_current_url_metrics_etag_data', '__return_empty_array' );
+	}
+
+	/**
+	 * Runs the routine after each test is executed.
+	 */
+	public function tear_down(): void {
+		unset( $GLOBALS['template'] );
+		parent::tear_down();
 	}
 
 	/**
@@ -98,7 +107,6 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @param callable|string $expected Expected content after.
 	 */
 	public function test_end_to_end( callable $set_up, $buffer, $expected ): void {
-		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$set_up( $this, $this::factory() );
 
 		$buffer = is_string( $buffer ) ? $buffer : $buffer();
@@ -126,8 +134,6 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
-
-		unset( $GLOBALS['template'] );
 	}
 
 	/**
@@ -223,7 +229,6 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @phpstan-param array{ xpath: string, isLCP: bool, intersectionRatio: int } $element_metrics
 	 */
 	public function test_auto_sizes_end_to_end( array $element_metrics, string $buffer, string $expected ): void {
-		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$this->populate_url_metrics( array( $element_metrics ) );
 
 		$html_start_doc = '<html lang="en"><head><meta charset="utf-8"><title>...</title></head><body>';
@@ -238,8 +243,6 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
-
-		unset( $GLOBALS['template'] );
 	}
 
 	/**

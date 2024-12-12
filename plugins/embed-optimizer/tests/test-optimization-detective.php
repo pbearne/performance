@@ -18,12 +18,21 @@ class Test_Embed_Optimizer_Optimization_Detective extends WP_UnitTestCase {
 		if ( ! defined( 'OPTIMIZATION_DETECTIVE_VERSION' ) ) {
 			$this->markTestSkipped( 'Optimization Detective is not active.' );
 		}
+		$GLOBALS['template'] = '/path/to/theme/index.php';
 
 		// Normalize the data for computing the current URL Metrics ETag to work around the issue where there is no
 		// global variable storing the OD_Tag_Visitor_Registry instance along with any registered tag visitors, so
 		// during set up we do not know what the ETag will look like. The current ETag is only established when
 		// the output begins to be processed by od_optimize_template_output_buffer().
 		add_filter( 'od_current_url_metrics_etag_data', '__return_empty_array' );
+	}
+
+	/**
+	 * Runs the routine after each test is executed.
+	 */
+	public function tear_down(): void {
+		unset( $GLOBALS['template'] );
+		parent::tear_down();
 	}
 
 	/**
@@ -101,7 +110,6 @@ class Test_Embed_Optimizer_Optimization_Detective extends WP_UnitTestCase {
 	 * @dataProvider data_provider_test_od_optimize_template_output_buffer
 	 */
 	public function test_od_optimize_template_output_buffer( Closure $set_up, string $buffer, string $expected ): void {
-		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$set_up( $this );
 
 		$buffer = od_optimize_template_output_buffer( $buffer );
@@ -123,7 +131,5 @@ class Test_Embed_Optimizer_Optimization_Detective extends WP_UnitTestCase {
 			$this->remove_initial_tabs( $buffer ),
 			"Buffer snapshot:\n$buffer"
 		);
-
-		unset( $GLOBALS['template'] );
 	}
 }
