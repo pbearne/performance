@@ -334,7 +334,11 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array(),
-				'queried_object'   => null,
+				'queried_object'   => array(
+					'id'            => null,
+					'type'          => null,
+					'last_modified' => null,
+				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'   => array(
@@ -382,7 +386,11 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
-				'queried_object'   => null,
+				'queried_object'   => array(
+					'id'            => null,
+					'type'          => null,
+					'last_modified' => null,
+				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'   => array(
@@ -414,7 +422,11 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		$this->assertSame(
 			array(
 				'tag_visitors'     => array( 'foo', 'bar', 'baz' ),
-				'queried_object'   => null,
+				'queried_object'   => array(
+					'id'            => null,
+					'type'          => null,
+					'last_modified' => null,
+				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
 				'active_theme'     => array(
 					'template'   => array(

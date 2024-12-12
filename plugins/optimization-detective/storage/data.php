@@ -156,9 +156,30 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @return non-empty-string Current ETag.
  */
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, $current_template ): string {
+	$queried_object      = $wp_query->get_queried_object();
+	$queried_object_data = array(
+		'id'            => null,
+		'type'          => null,
+		'last_modified' => null,
+	);
+
+	if ( $queried_object instanceof WP_Post ) {
+		$queried_object_data['id']            = $queried_object->ID;
+		$queried_object_data['type']          = 'post';
+		$queried_object_data['last_modified'] = $queried_object->post_modified_gmt;
+	} elseif ( $queried_object instanceof WP_Term ) {
+		$queried_object_data['id']   = $queried_object->term_id;
+		$queried_object_data['type'] = 'term';
+	} elseif ( $queried_object instanceof WP_User ) {
+		$queried_object_data['id']   = $queried_object->ID;
+		$queried_object_data['type'] = 'user';
+	} elseif ( $wp_query->is_post_type_archive() ) {
+		$queried_object_data['type'] = get_query_var( 'post_type' );
+	}
+
 	$data = array(
 		'tag_visitors'     => array_keys( iterator_to_array( $tag_visitor_registry ) ),
-		'queried_object'   => $wp_query->get_queried_object(),
+		'queried_object'   => $queried_object_data,
 		'queried_posts'    => wp_list_pluck( $wp_query->posts, 'post_modified_gmt', 'ID' ),
 		'active_theme'     => array(
 			'template'   => array(
