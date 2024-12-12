@@ -174,7 +174,7 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 		$queried_object_data['id']   = $queried_object->ID;
 		$queried_object_data['type'] = 'user';
 	} elseif ( $wp_query->is_post_type_archive() ) {
-		$queried_object_data['type'] = get_query_var( 'post_type' );
+		$queried_object_data['type'] = $wp_query->get( 'post_type' );
 	}
 
 	$data = array(
