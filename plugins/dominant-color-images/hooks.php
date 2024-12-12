@@ -225,7 +225,15 @@ function dominant_color_admin_script(): void {
 				let replaced = match.replace( /\sclass="/, " class=\"{{ data.hasTransparency ? \'has-transparency\' : \'not-transparent\' }} " );
 				replaced += ' data-dominant-color="{{ data.dominantColor }}"';
 				replaced += ' data-has-transparency="{{ data.hasTransparency }}"';
-				replaced += ' style="--dominant-color: #{{ data.dominantColor }};"'; // TODO: Potentially there could be a style attribute as well!
+				let hasStyleAttr = false;
+				const colorStyle = '--dominant-color: #{{ data.dominantColor }};';
+				replaced = replaced.replace( /\sstyle="/, ( styleMatch ) => {
+					hasStyleAttr = true;
+					return styleMatch + colorStyle;
+				} );
+				if ( ! hasStyleAttr ) {
+					replaced += ` style="${colorStyle}"`;
+				}
 				return replaced;
 			} );
 		}
