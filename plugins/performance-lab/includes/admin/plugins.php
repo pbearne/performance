@@ -293,20 +293,23 @@ function perflab_render_plugins_ui(): void {
 	</div>
 	<p>
 		<?php
-		printf(
-			/* translators: %1$s: opening anchor tag, %2$s: closing anchor tag */
-			esc_html__( 'Performance features are installed as plugins. To update features or remove them, %1$s manage them on the plugins screen. %2$s', 'performance-lab' ),
-			'<a href="' . esc_url(
-				add_query_arg(
-					array(
-						's'             => 'WordPress Performance Team',
-						'plugin_status' => 'all',
-					),
-					admin_url( 'plugins.php' )
+			$plugins_url = add_query_arg(
+				array(
+					's'             => 'WordPress Performance Team',
+					'plugin_status' => 'all',
+				),
+				admin_url( 'plugins.php' )
+			);
+			echo wp_kses(
+				sprintf(
+					/* translators: %s is the URL to the plugins screen */
+					__( 'Performance features are installed as plugins. To update features or remove them, <a href="%s">manage them on the plugins screen</a>.', 'performance-lab' ),
+					esc_url( $plugins_url )
+				),
+				array(
+					'a' => array( 'href' => true ),
 				)
-			) . '">',
-			'</a>'
-		);
+			);
 		?>
 	</p>
 	<?php
