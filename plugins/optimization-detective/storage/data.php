@@ -150,9 +150,9 @@ function od_get_url_metrics_slug( array $query_vars ): string {
  * @since n.e.x.t
  * @access private
  *
- * @param OD_Tag_Visitor_Registry  $tag_visitor_registry Tag visitor registry.
- * @param WP_Query                 $wp_query             The WP_Query instance.
- * @param string|WP_Block_Template $current_template     The current template being used.
+ * @param OD_Tag_Visitor_Registry      $tag_visitor_registry Tag visitor registry.
+ * @param WP_Query                     $wp_query             The WP_Query instance.
+ * @param string|WP_Block_Template|null $current_template     The current template being used.
  * @return non-empty-string Current ETag.
  */
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, $current_template ): string {
