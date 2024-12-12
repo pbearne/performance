@@ -504,6 +504,33 @@ class OD_URL_Metric implements JsonSerializable {
 	}
 
 	/**
+	 * Unsets a property from the URL Metric.
+	 *
+	 * @since n.e.x.t
+	 *
+	 * @param string $key Key to unset.
+	 * @throws OD_Data_Validation_Exception If the property is required an exception will be thrown.
+	 */
+	public function unset( string $key ): void {
+		$schema = self::get_json_schema(); // TODO: Consider capturing the schema as a private member variable once the URL Metric is constructed.
+		if ( isset( $schema['properties'][ $key ]['required'] ) && true === $schema['properties'][ $key ]['required'] ) {
+			throw new OD_Data_Validation_Exception(
+				esc_html(
+					sprintf(
+						/* translators: %s is the property key. */
+						__( 'The %s key is required at the root of a URL Metric.', 'optimization-detective' ),
+						$key
+					)
+				)
+			);
+		}
+		unset( $this->data[ $key ] ); // @phpstan-ignore assign.propertyType (Above required check ensures $key is not uuid, url, timestamp, viewport, or elements.)
+		if ( $this->group instanceof OD_URL_Metric_Group ) {
+			$this->group->clear_cache();
+		}
+	}
+
+	/**
 	 * Specifies data which should be serialized to JSON.
 	 *
 	 * @since 0.1.0
@@ -511,6 +538,15 @@ class OD_URL_Metric implements JsonSerializable {
 	 * @return Data Exports to be serialized by json_encode().
 	 */
 	public function jsonSerialize(): array {
-		return $this->data;
+		$data = $this->data;
+
+		$data['elements'] = array_map(
+			static function ( OD_Element $element ): array {
+				return $element->jsonSerialize();
+			},
+			$this->get_elements()
+		);
+
+		return $data;
 	}
 }

@@ -200,6 +200,89 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test clear_cache().
+	 *
+	 * @covers ::clear_cache
+	 * @covers OD_URL_Metric_Group::clear_cache
+	 * @covers OD_URL_Metric::unset
+	 * @covers OD_Element::unset
+	 */
+	public function test_clear_cache(): void {
+		$collection      = new OD_URL_Metric_Group_Collection( array(), md5( '' ), array(), 1, DAY_IN_SECONDS );
+		$populated_value = array( 'foo' => true );
+		$group           = $collection->get_first_group();
+
+		// Get private members.
+		$collection_result_cache_reflection_property = new ReflectionProperty( OD_URL_Metric_Group_Collection::class, 'result_cache' );
+		$collection_result_cache_reflection_property->setAccessible( true );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$group_result_cache_reflection_property = new ReflectionProperty( OD_URL_Metric_Group::class, 'result_cache' );
+		$group_result_cache_reflection_property->setAccessible( true );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+
+		// Test clear_cache() on collection.
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$collection->clear_cache();
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+
+		// Test that adding a URL metric to a collection clears the caches.
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$group_result_cache_reflection_property->setValue( $group, $populated_value );
+
+		add_filter(
+			'od_url_metric_schema_root_additional_properties',
+			static function ( $schema ) {
+				$schema['new_prop_at_root'] = array(
+					'type' => 'string',
+				);
+				return $schema;
+			}
+		);
+		add_filter(
+			'od_url_metric_schema_element_additional_properties',
+			static function ( $schema ) {
+				$schema['new_prop_at_element'] = array(
+					'type' => 'string',
+				);
+				return $schema;
+			}
+		);
+
+		$collection->add_url_metric(
+			$this->get_sample_url_metric(
+				array(
+					'element'       => array(
+						'xpath'               => '/*[1][self::HTML]/*[2][self::BODY]/*[1][self::IMG]',
+						'new_prop_at_element' => 'hey there',
+					),
+					'extended_root' => array(
+						'new_prop_at_root' => 'hola',
+					),
+				)
+			)
+		);
+		$url_metric = $group->getIterator()->current();
+		$this->assertInstanceOf( OD_URL_Metric::class, $url_metric );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+
+		// Test that modifying a URL Metric empties the cache of the collection and the group.
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$group_result_cache_reflection_property->setValue( $group, $populated_value );
+		$url_metric->unset( 'new_prop_at_root' );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+
+		// Test that modifying a URL Metric element empties the cache of the collection and the group.
+		$element = $url_metric->get_elements()[0];
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$group_result_cache_reflection_property->setValue( $group, $populated_value );
+		$element->unset( 'new_prop_at_element' );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+	}
+
+	/**
 	 * Test add_url_metric().
 	 *
 	 * @covers ::add_url_metric

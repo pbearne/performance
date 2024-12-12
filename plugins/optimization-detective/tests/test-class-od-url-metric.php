@@ -277,6 +277,7 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 * @covers ::get_json_schema
 	 * @covers ::set_group
 	 * @covers ::get_group
+	 * @covers ::unset
 	 *
 	 * @dataProvider data_provider_to_test_constructor
 	 *
@@ -335,6 +336,15 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 
 		$this->assertTrue( wp_is_uuid( $url_metric->get_uuid() ) );
 		$this->assertSame( $url_metric->get_uuid(), $url_metric->get( 'uuid' ) );
+
+		$exception = null;
+		try {
+			$url_metric->unset( 'elements' );
+		} catch ( OD_Data_Validation_Exception $e ) {
+			$exception = $e;
+		}
+		$this->assertInstanceOf( OD_Data_Validation_Exception::class, $exception );
+		$url_metric->unset( 'does_not_exist' );
 
 		$serialized = $url_metric->jsonSerialize();
 		if ( ! array_key_exists( 'uuid', $data ) ) {
@@ -397,6 +407,12 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 					$this->assertArrayHasKey( 'isTouch', $extended_data );
 					$this->assertTrue( $extended_data['isTouch'] );
 					$this->assertTrue( $extended_url_metric->get( 'isTouch' ) );
+
+					$this->assertTrue( $extended_url_metric->get( 'isTouch' ) );
+					$extended_url_metric->unset( 'isTouch' );
+					$this->assertNull( $extended_url_metric->get( 'isTouch' ) );
+					$extended_data = $extended_url_metric->jsonSerialize();
+					$this->assertArrayNotHasKey( 'isTouch', $extended_data );
 				},
 			),
 
@@ -489,6 +505,13 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 					$this->assertArrayHasKey( 'isColorful', $extended_data['elements'][0] );
 					$this->assertFalse( $extended_data['elements'][0]['isColorful'] );
 					$this->assertFalse( $extended_url_metric->get_elements()[0]['isColorful'] );
+
+					$element = $extended_url_metric->get_elements()[0];
+					$this->assertFalse( $element->get( 'isColorful' ) );
+					$element->unset( 'isColorful' );
+					$this->assertNull( $element->get( 'isColorful' ) );
+					$extended_data = $extended_url_metric->jsonSerialize();
+					$this->assertArrayNotHasKey( 'isColorful', $extended_data['elements'][0] );
 				},
 			),
 
@@ -554,6 +577,8 @@ class Test_OD_URL_Metric extends WP_UnitTestCase {
 	 * Tests construction with extended schema.
 	 *
 	 * @covers ::get_json_schema
+	 * @covers ::unset
+	 * @covers OD_Element::unset
 	 *
 	 * @dataProvider data_provider_to_test_constructor_with_extended_schema
 	 *
