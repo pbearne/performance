@@ -33,7 +33,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				'expected' => false,
 			),
 			'with_new_version' => array(
-				'version'  => '0.7.0',
+				'version'  => '99.0.0',
 				'expected' => true,
 			),
 		);
@@ -84,7 +84,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test image_prioritizer_register_tag_visitors().
+	 * Test end-to-end.
 	 *
 	 * @covers ::image_prioritizer_register_tag_visitors
 	 * @covers Image_Prioritizer_Tag_Visitor
@@ -97,7 +97,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @param callable|string $buffer   Content before.
 	 * @param callable|string $expected Expected content after.
 	 */
-	public function test_image_prioritizer_register_tag_visitors( callable $set_up, $buffer, $expected ): void {
+	public function test_end_to_end( callable $set_up, $buffer, $expected ): void {
 		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$set_up( $this, $this::factory() );
 
@@ -222,7 +222,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 * @dataProvider data_provider_test_auto_sizes
 	 * @phpstan-param array{ xpath: string, isLCP: bool, intersectionRatio: int } $element_metrics
 	 */
-	public function test_auto_sizes( array $element_metrics, string $buffer, string $expected ): void {
+	public function test_auto_sizes_end_to_end( array $element_metrics, string $buffer, string $expected ): void {
 		$GLOBALS['template'] = '/path/to/theme/index.php';
 		$this->populate_url_metrics( array( $element_metrics ) );
 
@@ -243,29 +243,263 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test image_prioritizer_register_tag_visitors.
+	 *
+	 * @covers ::image_prioritizer_register_tag_visitors
+	 */
+	public function test_image_prioritizer_register_tag_visitors(): void {
+		$registry = new OD_Tag_Visitor_Registry();
+		image_prioritizer_register_tag_visitors( $registry );
+		$this->assertTrue( $registry->is_registered( 'image-prioritizer/img' ) );
+		$this->assertTrue( $registry->is_registered( 'image-prioritizer/background-image' ) );
+		$this->assertTrue( $registry->is_registered( 'image-prioritizer/video' ) );
+	}
+
+	/**
+	 * Test image_prioritizer_filter_extension_module_urls.
+	 *
+	 * @covers ::image_prioritizer_filter_extension_module_urls
+	 */
+	public function test_image_prioritizer_filter_extension_module_urls(): void {
+		$initial_modules  = array(
+			home_url( '/module.js' ),
+		);
+		$filtered_modules = image_prioritizer_filter_extension_module_urls( $initial_modules );
+		$this->assertCount( 2, $filtered_modules );
+		$this->assertSame( $initial_modules[0], $filtered_modules[0] );
+		$this->assertStringContainsString( 'detect.', $filtered_modules[1] );
+	}
+
+	/**
+	 * Test image_prioritizer_add_element_item_schema_properties.
+	 *
+	 * @covers ::image_prioritizer_add_element_item_schema_properties
+	 */
+	public function test_image_prioritizer_add_element_item_schema_properties(): void {
+		$initial_schema  = array(
+			'foo' => array(
+				'type' => 'string',
+			),
+		);
+		$filtered_schema = image_prioritizer_add_element_item_schema_properties( $initial_schema );
+		$this->assertCount( 2, $filtered_schema );
+		$this->assertArrayHasKey( 'foo', $filtered_schema );
+		$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $filtered_schema );
+		$this->assertSame( 'object', $filtered_schema['lcpElementExternalBackgroundImage']['type'] );
+		$this->assertSameSets( array( 'url', 'id', 'tag', 'class' ), array_keys( $filtered_schema['lcpElementExternalBackgroundImage']['properties'] ) );
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function data_provider_for_test_image_prioritizer_add_element_item_schema_properties_inputs(): array {
+		return array(
+			'bad_type'         => array(
+				'input_value'        => 'not_an_object',
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage] is not of type object.',
+				'output_value'       => null,
+			),
+			'missing_props'    => array(
+				'input_value'        => array(),
+				'expected_exception' => 'url is a required property of OD_URL_Metric[lcpElementExternalBackgroundImage].',
+				'output_value'       => null,
+			),
+			'bad_url_protocol' => array(
+				'input_value'        => array(
+					'url'   => 'javascript:alert(1)',
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][url] does not match pattern ^https?://.',
+				'output_value'       => null,
+			),
+			'bad_url_format'   => array(
+				'input_value'        => array(
+					'url'   => 'https://not a valid URL!!!',
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => null,
+				'output_value'       => array(
+					'url'   => 'https://not%20a%20valid%20URL!!!', // This is due to sanitize_url() being used in core. More validation is needed.
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+			),
+			'bad_url_length'   => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/' . str_repeat( 'a', 501 ),
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][url] must be at most 500 characters long.',
+				'output_value'       => null,
+			),
+			'bad_null_tag'     => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => null,
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][tag] is not of type string.',
+				'output_value'       => null,
+			),
+			'bad_format_tag'   => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => 'bad tag name!!',
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][tag] does not match pattern ^[a-zA-Z0-9\-]+\z.',
+				'output_value'       => null,
+			),
+			'bad_length_tag'   => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => str_repeat( 'a', 101 ),
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][tag] must be at most 100 characters long.',
+				'output_value'       => null,
+			),
+			'bad_type_id'      => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => 'DIV',
+					'id'    => array( 'bad' ),
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][id] is not of type string,null.',
+				'output_value'       => null,
+			),
+			'bad_length_id'    => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => 'DIV',
+					'id'    => str_repeat( 'a', 101 ),
+					'class' => null,
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][id] must be at most 100 characters long.',
+				'output_value'       => null,
+			),
+			'bad_type_class'   => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => 'DIV',
+					'id'    => 'main',
+					'class' => array( 'bad' ),
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][class] is not of type string,null.',
+				'output_value'       => null,
+			),
+			'bad_length_class' => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/',
+					'tag'   => 'DIV',
+					'id'    => 'main',
+					'class' => str_repeat( 'a', 501 ),
+				),
+				'expected_exception' => 'OD_URL_Metric[lcpElementExternalBackgroundImage][class] must be at most 500 characters long.',
+				'output_value'       => null,
+			),
+			'ok_minimal'       => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/bg.jpg',
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+				'expected_exception' => null,
+				'output_value'       => array(
+					'url'   => 'https://example.com/bg.jpg',
+					'tag'   => 'DIV',
+					'id'    => null,
+					'class' => null,
+				),
+			),
+			'ok_maximal'       => array(
+				'input_value'        => array(
+					'url'   => 'https://example.com/' . str_repeat( 'a', 476 ) . '.jpg',
+					'tag'   => str_repeat( 'a', 100 ),
+					'id'    => str_repeat( 'b', 100 ),
+					'class' => str_repeat( 'c', 500 ),
+				),
+				'expected_exception' => null,
+				'output_value'       => array(
+					'url'   => 'https://example.com/' . str_repeat( 'a', 476 ) . '.jpg',
+					'tag'   => str_repeat( 'a', 100 ),
+					'id'    => str_repeat( 'b', 100 ),
+					'class' => str_repeat( 'c', 500 ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Test image_prioritizer_add_element_item_schema_properties for various inputs.
+	 *
+	 * @covers ::image_prioritizer_add_element_item_schema_properties
+	 *
+	 * @dataProvider data_provider_for_test_image_prioritizer_add_element_item_schema_properties_inputs
+	 *
+	 * @param mixed                     $input_value        Input value.
+	 * @param string|null               $expected_exception Expected exception message.
+	 * @param array<string, mixed>|null $output_value       Output value.
+	 */
+	public function test_image_prioritizer_add_element_item_schema_properties_inputs( $input_value, ?string $expected_exception, ?array $output_value ): void {
+		$data                                      = $this->get_sample_url_metric( array() )->jsonSerialize();
+		$data['lcpElementExternalBackgroundImage'] = $input_value;
+		$exception_message                         = null;
+		try {
+			$url_metric = new OD_URL_Metric( $data );
+		} catch ( OD_Data_Validation_Exception $e ) {
+			$exception_message = $e->getMessage();
+		}
+
+		$this->assertSame(
+			$expected_exception,
+			$exception_message,
+			isset( $url_metric ) ? 'Data: ' . wp_json_encode( $url_metric->jsonSerialize(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) : ''
+		);
+		if ( isset( $url_metric ) ) {
+			$this->assertSame( $output_value, $url_metric->jsonSerialize()['lcpElementExternalBackgroundImage'] );
+		}
+	}
+
+	/**
 	 * Test image_prioritizer_get_video_lazy_load_script.
 	 *
 	 * @covers ::image_prioritizer_get_video_lazy_load_script
+	 * @covers ::image_prioritizer_get_asset_path
 	 */
 	public function test_image_prioritizer_get_video_lazy_load_script(): void {
-		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_video_lazy_load_script() ) );
+		$this->assertStringContainsString( 'new IntersectionObserver', image_prioritizer_get_video_lazy_load_script() );
 	}
 
 	/**
 	 * Test image_prioritizer_get_lazy_load_bg_image_script.
 	 *
 	 * @covers ::image_prioritizer_get_lazy_load_bg_image_script
+	 * @covers ::image_prioritizer_get_asset_path
 	 */
 	public function test_image_prioritizer_get_lazy_load_bg_image_script(): void {
-		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_script() ) );
+		$this->assertStringContainsString( 'new IntersectionObserver', image_prioritizer_get_lazy_load_bg_image_script() );
 	}
 
 	/**
 	 * Test image_prioritizer_get_lazy_load_bg_image_stylesheet.
 	 *
 	 * @covers ::image_prioritizer_get_lazy_load_bg_image_stylesheet
+	 * @covers ::image_prioritizer_get_asset_path
 	 */
 	public function test_image_prioritizer_get_lazy_load_bg_image_stylesheet(): void {
-		$this->assertGreaterThan( 0, strlen( image_prioritizer_get_lazy_load_bg_image_stylesheet() ) );
+		$this->assertStringContainsString( '.od-lazy-bg-image', image_prioritizer_get_lazy_load_bg_image_stylesheet() );
 	}
 }
