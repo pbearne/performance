@@ -82,13 +82,20 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 		 */
 		$filter = static function ( $sizes, $size ) use ( $block ) {
 
-			$block_name    = $block->name;
 			$id            = $block->attributes['id'] ?? 0;
 			$alignment     = $block->attributes['align'] ?? '';
 			$width         = $block->attributes['width'] ?? '';
 			$max_alignment = $block->context['max_alignment'];
 
-			$better_sizes = auto_sizes_calculate_better_sizes( (string) $block_name, (int) $id, (string) $size, (string) $alignment, (string) $width, (string) $max_alignment );
+			/*
+			 * Update width for cover block.
+			 * See https://github.com/WordPress/gutenberg/blob/938720602082dc50a1746bd2e33faa3d3a6096d4/packages/block-library/src/cover/style.scss#L82-L87.
+			 */
+			if ( 'core/cover' === $block->name && in_array( $alignment, array( 'left', 'right' ), true ) ) {
+				$size = array( 420, 420 );
+			}
+
+			$better_sizes = auto_sizes_calculate_better_sizes( (int) $id, $size, (string) $alignment, (string) $width, (string) $max_alignment );
 
 			// If better sizes can't be calculated, use the default sizes.
 			return false !== $better_sizes ? $better_sizes : $sizes;
@@ -125,15 +132,14 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  *
  * @since n.e.x.t
  *
- * @param string $block_name    The block name.
- * @param int    $id            The image id.
- * @param string $size          The image size data.
- * @param string $align         The image alignment.
- * @param string $resize_width  Resize image width.
- * @param string $max_alignment The maximum usable layout alignment.
+ * @param int          $id            The image id.
+ * @param string|int[] $size          The image size data.
+ * @param string       $align         The image alignment.
+ * @param string       $resize_width  Resize image width.
+ * @param string       $max_alignment The maximum usable layout alignment.
  * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
-function auto_sizes_calculate_better_sizes( string $block_name, int $id, string $size, string $align, string $resize_width, string $max_alignment ) {
+function auto_sizes_calculate_better_sizes( int $id, $size, string $align, string $resize_width, string $max_alignment ) {
 	// Without an image ID or a resize width, we cannot calculate a better size.
 	if ( ! (bool) $id && ! (bool) $resize_width ) {
 		return false;
@@ -189,13 +195,6 @@ function auto_sizes_calculate_better_sizes( string $block_name, int $id, string 
 
 		case 'left':
 		case 'right':
-			/*
-			 * Update width for cover block.
-			 * See https://github.com/WordPress/gutenberg/blob/938720602082dc50a1746bd2e33faa3d3a6096d4/packages/block-library/src/cover/style.scss#L82-L87.
-			 */
-			if ( 'core/cover' === $block_name ) {
-				$image_width = $image_width * 0.5;
-			}
 			$layout_width = sprintf( '%1$spx', $image_width );
 			break;
 

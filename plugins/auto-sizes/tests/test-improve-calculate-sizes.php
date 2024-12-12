@@ -368,8 +368,8 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 	 */
 	public function data_image_left_right_center_alignment(): array {
 		return array(
-			array( 'left', 'sizes="(max-width: 540px) 100vw, 540px' ),
-			array( 'right', 'sizes="(max-width: 540px) 100vw, 540px' ),
+			array( 'left', 'sizes="(max-width: 420px) 100vw, 420px' ),
+			array( 'right', 'sizes="(max-width: 420px) 100vw, 420px' ),
 			array( 'center', 'sizes="(max-width: 620px) 100vw, 620px' ),
 		);
 	}
