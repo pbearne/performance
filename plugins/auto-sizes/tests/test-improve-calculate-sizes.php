@@ -34,6 +34,9 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 
 		// Disable lazy loading attribute.
 		add_filter( 'wp_img_tag_add_loading_attr', '__return_false' );
+
+		// Run each test with fresh WP_Theme_JSON data so we can filter layout values.
+		wp_clean_theme_json_cache();
 	}
 
 	/**
@@ -512,6 +515,125 @@ class Tests_Improve_Calculate_Sizes extends WP_UnitTestCase {
 				'sizes="(max-width: 1024px) 100vw, 1024px" ',
 			),
 		);
+	}
+
+	/**
+	 * Test sizes attributes when alignments use relative units.
+	 *
+	 * @dataProvider data_image_blocks_with_relative_alignment
+	 *
+	 * @param string $ancestor_alignment Ancestor alignment.
+	 * @param string $image_alignment    Image alignment.
+	 * @param string $expected           Expected output.
+	 */
+	public function test_sizes_with_relative_layout_sizes( string $ancestor_alignment, string $image_alignment, string $expected ): void {
+		add_filter( 'wp_theme_json_data_user', array( $this, 'filter_theme_json_layout_sizes' ) );
+
+		$block_content = $this->get_group_block_markup(
+			$this->get_image_block_markup( self::$image_id, 'large', $image_alignment ),
+			array(
+				'align' => $ancestor_alignment,
+			)
+		);
+
+		$result = apply_filters( 'the_content', $block_content );
+
+		$this->assertStringContainsString( $expected, $result );
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array<string, array<int, bool|string>> The ancestor and image alignments.
+	 */
+	public function data_image_blocks_with_relative_alignment(): array {
+		return array(
+			// Parent default alignment.
+			'Return contentSize 50vw, parent block default alignment, image block default alignment' => array(
+				'',
+				'',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return contentSize 50vw, parent block default alignment, image block wide alignment'    => array(
+				'',
+				'wide',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return contentSize 50vw, parent block default alignment, image block full alignment'    => array(
+				'',
+				'full',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return contentSize 50vw, parent block default alignment, image block left alignment'    => array(
+				'',
+				'left',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return contentSize 50vw, parent block default alignment, image block center alignment'  => array(
+				'',
+				'center',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return contentSize 50vw, parent block default alignment, image block right alignment'   => array(
+				'',
+				'right',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+
+			// Parent wide alignment.
+			'Return contentSize 50vw, parent block wide alignment, image block default alignment'    => array(
+				'wide',
+				'',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return wideSize 75vw, parent block wide alignment, image block wide alignment'         => array(
+				'wide',
+				'wide',
+				'sizes="(max-width: 75vw) 100vw, 75vw" ',
+			),
+			'Return wideSize 75vw, parent block wide alignment, image block full alignment'         => array(
+				'wide',
+				'full',
+				'sizes="(max-width: 75vw) 100vw, 75vw" ',
+			),
+			'Return image size 1024px, parent block wide alignment, image block left alignment'       => array(
+				'wide',
+				'left',
+				'sizes="(max-width: min(75vw, 1024px)) 100vw, min(75vw, 1024px)" ',
+			),
+			'Return image size 620px, parent block wide alignment, image block center alignment'     => array(
+				'wide',
+				'center',
+				'sizes="(max-width: min(50vw, 1024px)) 100vw, min(50vw, 1024px)" ',
+			),
+			'Return image size 1024px, parent block wide alignment, image block right alignment'      => array(
+				'wide',
+				'right',
+				'sizes="(max-width: min(75vw, 1024px)) 100vw, min(75vw, 1024px)" ',
+			),
+		);
+	}
+
+	/**
+	 * Filter the theme.json data to include relative layout sizes.
+	 *
+	 * @param WP_Theme_JSON_Data $theme_json Theme JSON object.
+	 * @return WP_Theme_JSON_Data Updated theme JSON object.
+	 */
+	public function filter_theme_json_layout_sizes( WP_Theme_JSON_Data $theme_json ): WP_Theme_JSON_Data {
+		$data = array(
+			'version'  => 2,
+			'settings' => array(
+				'layout' => array(
+					'contentSize' => '50vw',
+					'wideSize'    => '75vw',
+				),
+			),
+		);
+
+		$theme_json = $theme_json->update_with( $data );
+
+		return $theme_json;
 	}
 
 	/**

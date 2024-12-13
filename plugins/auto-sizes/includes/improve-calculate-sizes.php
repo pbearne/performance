@@ -304,9 +304,5 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
  * @return array<string, mixed> Associative array of layout settings.
  */
 function auto_sizes_get_layout_settings(): array {
-	static $layout = array();
-	if ( count( $layout ) === 0 ) {
-		$layout = wp_get_global_settings( array( 'layout' ) );
-	}
-	return $layout;
+	return wp_get_global_settings( array( 'layout' ) );
 }
