@@ -24,11 +24,17 @@ function plwwo_google_site_kit_configure( $configuration ): array {
 	$configuration = (array) $configuration;
 
 	$configuration['globalFns'][] = 'gtag'; // Because gtag() is defined in one script and called in another.
+	$configuration['globalFns'][] = 'wp_has_consent'; // See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/assets/js/consent-mode/consent-mode.js#L61C13-L61C27>.
 	$configuration['forward'][]   = 'dataLayer.push'; // See <https://partytown.builder.io/forwarding-event>.
 
-	// See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/includes/Core/Consent_Mode/Consent_Mode.php#L244-L259>.
+	// See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/includes/Core/Consent_Mode/Consent_Mode.php#L244-L259>,
+	// and <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/assets/js/consent-mode/consent-mode.js>.
 	$configuration['mainWindowAccessors'][] = '_googlesitekitConsentCategoryMap';
 	$configuration['mainWindowAccessors'][] = '_googlesitekitConsents';
+	$configuration['mainWindowAccessors'][] = 'wp_consent_type';
+	$configuration['mainWindowAccessors'][] = 'wp_fallback_consent_type';
+	$configuration['mainWindowAccessors'][] = 'wp_has_consent';
+	$configuration['mainWindowAccessors'][] = 'waitfor_consent_hook';
 
 	return $configuration;
 }
