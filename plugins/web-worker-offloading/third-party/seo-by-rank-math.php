@@ -24,7 +24,7 @@ function plwwo_rank_math_configure( $configuration ): array {
 	$configuration = (array) $configuration;
 
 	$configuration['globalFns'][] = 'gtag'; // Because gtag() is defined in one script and called in another.
-	$configuration['forward'][]   = 'dataLayer.push'; // Because the Partytown integration has this in its example config.
+	$configuration['forward'][]   = 'dataLayer.push'; // See <https://partytown.builder.io/forwarding-event>.
 	return $configuration;
 }
 add_filter( 'plwwo_configuration', 'plwwo_rank_math_configure' );

@@ -12,6 +12,7 @@ const { plugins: standalonePlugins } = require( './plugins.json' );
 const {
 	createPluginZip,
 	assetDataTransformer,
+	cssMinifyTransformer,
 	deleteFileOrDirectory,
 	generateBuildManifest,
 } = require( './tools/webpack/utils' );
@@ -35,11 +36,45 @@ const sharedConfig = {
 
 // Store plugins that require build process.
 const pluginsWithBuild = [
+	'performance-lab',
 	'embed-optimizer',
 	'image-prioritizer',
 	'optimization-detective',
 	'web-worker-offloading',
 ];
+
+/**
+ * Webpack Config: Performance Lab
+ *
+ * @param {*} env Webpack environment
+ * @return {Object} Webpack configuration
+ */
+const performanceLab = ( env ) => {
+	if ( env.plugin && env.plugin !== 'performance-lab' ) {
+		return defaultBuildConfig;
+	}
+
+	const pluginDir = path.resolve( __dirname, 'plugins/performance-lab' );
+
+	return {
+		...sharedConfig,
+		name: 'performance-lab',
+		plugins: [
+			new CopyWebpackPlugin( {
+				patterns: [
+					{
+						from: `${ pluginDir }/includes/admin/plugin-activate-ajax.js`,
+						to: `${ pluginDir }/includes/admin/plugin-activate-ajax.min.js`,
+					},
+				],
+			} ),
+			new WebpackBar( {
+				name: 'Building Performance Lab Assets',
+				color: '#2196f3',
+			} ),
+		],
+	};
+};
 
 /**
  * Webpack Config: Embed Optimizer
@@ -98,8 +133,24 @@ const imagePrioritizer = ( env ) => {
 			new CopyWebpackPlugin( {
 				patterns: [
 					{
-						from: `${ pluginDir }/lazy-load.js`,
-						to: `${ pluginDir }/lazy-load.min.js`,
+						from: `${ pluginDir }/detect.js`,
+						to: `${ pluginDir }/detect.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load-video.js`,
+						to: `${ pluginDir }/lazy-load-video.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load-bg-image.js`,
+						to: `${ pluginDir }/lazy-load-bg-image.min.js`,
+					},
+					{
+						from: `${ pluginDir }/lazy-load-bg-image.css`,
+						to: `${ pluginDir }/lazy-load-bg-image.min.css`,
+						transform: {
+							transformer: cssMinifyTransformer,
+							cache: false,
+						},
 					},
 				],
 			} ),
@@ -286,6 +337,7 @@ const buildPlugin = ( env ) => {
 };
 
 module.exports = [
+	performanceLab,
 	embedOptimizer,
 	imagePrioritizer,
 	optimizationDetective,

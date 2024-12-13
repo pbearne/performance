@@ -1,6 +1,11 @@
 /**
  * @typedef {import("web-vitals").LCPMetric} LCPMetric
  * @typedef {import("./types.ts").ElementData} ElementData
+ * @typedef {import("./types.ts").OnTTFBFunction} OnTTFBFunction
+ * @typedef {import("./types.ts").OnFCPFunction} OnFCPFunction
+ * @typedef {import("./types.ts").OnLCPFunction} OnLCPFunction
+ * @typedef {import("./types.ts").OnINPFunction} OnINPFunction
+ * @typedef {import("./types.ts").OnCLSFunction} OnCLSFunction
  * @typedef {import("./types.ts").URLMetric} URLMetric
  * @typedef {import("./types.ts").URLMetricGroupStatus} URLMetricGroupStatus
  * @typedef {import("./types.ts").Extension} Extension
@@ -237,6 +242,7 @@ function extendElementData( xpath, properties ) {
  * @param {number}                 args.maxViewportAspectRatio     Maximum aspect ratio allowed for the viewport.
  * @param {boolean}                args.isDebug                    Whether to show debug messages.
  * @param {string}                 args.restApiEndpoint            URL for where to send the detection data.
+ * @param {string}                 args.currentETag                Current ETag.
  * @param {string}                 args.currentUrl                 Current URL.
  * @param {string}                 args.urlMetricSlug              Slug for URL Metric.
  * @param {number|null}            args.cachePurgePostId           Cache purge post ID.
@@ -252,6 +258,7 @@ export default async function detect( {
 	isDebug,
 	extensionModuleUrls,
 	restApiEndpoint,
+	currentETag,
 	currentUrl,
 	urlMetricSlug,
 	cachePurgePostId,
@@ -323,6 +330,24 @@ export default async function detect( {
 		return;
 	}
 
+	// Keep track of whether the window resized. If it resized, we abort sending the URLMetric.
+	let didWindowResize = false;
+	window.addEventListener(
+		'resize',
+		() => {
+			didWindowResize = true;
+		},
+		{ once: true }
+	);
+
+	const {
+		/** @type OnTTFBFunction */ onTTFB,
+		/** @type OnFCPFunction */ onFCP,
+		/** @type OnLCPFunction */ onLCP,
+		/** @type OnINPFunction */ onINP,
+		/** @type OnCLSFunction */ onCLS,
+	} = await import( webVitalsLibrarySrc );
+
 	// TODO: Does this make sense here?
 	// Prevent detection when page is not scrolled to the initial viewport.
 	if ( doc.documentElement.scrollTop > 0 ) {
@@ -340,19 +365,53 @@ export default async function detect( {
 
 	/** @type {Map<string, Extension>} */
 	const extensions = new Map();
+
+	/** @type {Promise[]} */
+	const extensionInitializePromises = [];
+
+	/** @type {string[]} */
+	const initializingExtensionModuleUrls = [];
+
 	for ( const extensionModuleUrl of extensionModuleUrls ) {
 		try {
 			/** @type {Extension} */
 			const extension = await import( extensionModuleUrl );
 			extensions.set( extensionModuleUrl, extension );
-			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args. It's important to pass webVitalsLibrarySrc to the extension so that onLCP, onCLS, or onINP can be obtained.
+			// TODO: There should to be a way to pass additional args into the module. Perhaps extensionModuleUrls should be a mapping of URLs to args.
 			if ( extension.initialize instanceof Function ) {
-				extension.initialize( { isDebug } );
+				const initializePromise = extension.initialize( {
+					isDebug,
+					onTTFB,
+					onFCP,
+					onLCP,
+					onINP,
+					onCLS,
+				} );
+				if ( initializePromise instanceof Promise ) {
+					extensionInitializePromises.push( initializePromise );
+					initializingExtensionModuleUrls.push( extensionModuleUrl );
+				}
 			}
 		} catch ( err ) {
 			error(
-				`Failed to initialize extension '${ extensionModuleUrl }':`,
+				`Failed to start initializing extension '${ extensionModuleUrl }':`,
 				err
+			);
+		}
+	}
+
+	// Wait for all extensions to finish initializing.
+	const settledInitializePromises = await Promise.allSettled(
+		extensionInitializePromises
+	);
+	for ( const [
+		i,
+		settledInitializePromise,
+	] of settledInitializePromises.entries() ) {
+		if ( settledInitializePromise.status === 'rejected' ) {
+			error(
+				`Failed to initialize extension '${ initializingExtensionModuleUrls[ i ] }':`,
+				settledInitializePromise.reason
 			);
 		}
 	}
@@ -411,8 +470,6 @@ export default async function detect( {
 			passive: true,
 		} );
 	}
-
-	const { onLCP } = await import( webVitalsLibrarySrc );
 
 	/** @type {LCPMetric[]} */
 	const lcpMetricCandidates = [];
@@ -505,26 +562,65 @@ export default async function detect( {
 		);
 	} );
 
+	// Only proceed with submitting the URL Metric if viewport stayed the same size. Changing the viewport size (e.g. due
+	// to resizing a window or changing the orientation of a device) will result in unexpected metrics being collected.
+	if ( didWindowResize ) {
+		if ( isDebug ) {
+			log(
+				'Aborting URL Metric collection due to viewport size change.'
+			);
+		}
+		return;
+	}
+
 	if ( extensions.size > 0 ) {
+		/** @type {Promise[]} */
+		const extensionFinalizePromises = [];
+
+		/** @type {string[]} */
+		const finalizingExtensionModuleUrls = [];
+
 		for ( const [
 			extensionModuleUrl,
 			extension,
 		] of extensions.entries() ) {
 			if ( extension.finalize instanceof Function ) {
 				try {
-					await extension.finalize( {
+					const finalizePromise = extension.finalize( {
 						isDebug,
 						getRootData,
 						getElementData,
 						extendElementData,
 						extendRootData,
 					} );
+					if ( finalizePromise instanceof Promise ) {
+						extensionFinalizePromises.push( finalizePromise );
+						finalizingExtensionModuleUrls.push(
+							extensionModuleUrl
+						);
+					}
 				} catch ( err ) {
 					error(
-						`Unable to finalize module '${ extensionModuleUrl }':`,
+						`Unable to start finalizing extension '${ extensionModuleUrl }':`,
 						err
 					);
 				}
+			}
+		}
+
+		// Wait for all extensions to finish finalizing.
+		const settledFinalizePromises = await Promise.allSettled(
+			extensionFinalizePromises
+		);
+		for ( const [
+			i,
+			settledFinalizePromise,
+		] of settledFinalizePromises.entries() ) {
+			if ( settledFinalizePromise.status === 'rejected' ) {
+				error(
+					`Failed to finalize extension '${ finalizingExtensionModuleUrls[ i ] }':`,
+					settledFinalizePromise.reason
+				);
 			}
 		}
 	}
@@ -539,6 +635,7 @@ export default async function detect( {
 
 	const url = new URL( restApiEndpoint );
 	url.searchParams.set( 'slug', urlMetricSlug );
+	url.searchParams.set( 'current_etag', currentETag );
 	if ( typeof cachePurgePostId === 'number' ) {
 		url.searchParams.set(
 			'cache_purge_post_id',
