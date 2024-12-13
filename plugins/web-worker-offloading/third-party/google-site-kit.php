@@ -23,9 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 function plwwo_google_site_kit_configure( $configuration ): array {
 	$configuration = (array) $configuration;
 
-	$configuration['globalFns'][] = 'gtag'; // Because gtag() is defined in one script and called in another.
-	$configuration['globalFns'][] = 'wp_has_consent'; // See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/assets/js/consent-mode/consent-mode.js#L61C13-L61C27>.
-	$configuration['forward'][]   = 'dataLayer.push'; // See <https://partytown.builder.io/forwarding-event>.
+	$configuration['globalFns'][] = 'gtag'; // Allow calling from other Partytown scripts.
+	$configuration['globalFns'][] = 'wp_has_consent'; // Allow calling function from main thread. See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/assets/js/consent-mode/consent-mode.js#L61C13-L61C27>.
+
+	// Expose on the main tread. See <https://partytown.builder.io/forwarding-event>.
+	$configuration['forward'][] = 'dataLayer.push';
+	$configuration['forward'][] = 'gtag';
 
 	// See <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/includes/Core/Consent_Mode/Consent_Mode.php#L244-L259>,
 	// and <https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/assets/js/consent-mode/consent-mode.js>.
