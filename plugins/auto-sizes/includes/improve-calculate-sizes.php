@@ -204,7 +204,7 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
 			 * on the server. Otherwise, we need to rely on CSS functions.
 			 */
 			if ( str_ends_with( $layout_width, 'px' ) ) {
-				$layout_width = sprintf( '%1$spx', min( (int) $layout_width, $image_width ) );
+				$layout_width = sprintf( '%dpx', min( (int) $layout_width, $image_width ) );
 			} else {
 				$layout_width = sprintf( 'min(%1$s, %2$spx)', $layout_width, $image_width );
 			}
