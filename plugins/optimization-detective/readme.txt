@@ -250,7 +250,7 @@ When the ETag for URL Metrics in a complete viewport group no longer matches the
 
 Filters whether a URL Metric is valid for storage.
 
-Three paramters are passed to this filter:
+Three parameters are passed to this filter:
 
 1. `$validity` (`bool|WP_Error`): Validity. Invalid if false or a WP_Error with errors.
 2. `$url_metric` (`OD_Strict_URL_Metric`): URL Metric, already validated against the JSON Schema.
