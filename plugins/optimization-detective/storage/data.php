@@ -158,15 +158,14 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, $current_template ): string {
 	$queried_object      = $wp_query->get_queried_object();
 	$queried_object_data = array(
-		'id'            => null,
-		'type'          => null,
-		'last_modified' => null,
+		'id'   => null,
+		'type' => null,
 	);
 
 	if ( $queried_object instanceof WP_Post ) {
-		$queried_object_data['id']            = $queried_object->ID;
-		$queried_object_data['type']          = 'post';
-		$queried_object_data['last_modified'] = $queried_object->post_modified_gmt;
+		$queried_object_data['id']                = $queried_object->ID;
+		$queried_object_data['type']              = 'post';
+		$queried_object_data['post_modified_gmt'] = $queried_object->post_modified_gmt;
 	} elseif ( $queried_object instanceof WP_Term ) {
 		$queried_object_data['id']   = $queried_object->term_id;
 		$queried_object_data['type'] = 'term';
