@@ -293,7 +293,14 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 */
 	public function test_od_get_current_url_metrics_etag(): void {
 		remove_all_filters( 'od_current_url_metrics_etag_data' );
-		$post_ids         = self::factory()->post->create_many( 3 );
+		$force_old_post_modified_data = static function ( $data ) {
+			$data['post_modified']     = '1970-01-01 00:00:00';
+			$data['post_modified_gmt'] = '1970-01-01 00:00:00';
+			return $data;
+		};
+		add_filter( 'wp_insert_post_data', $force_old_post_modified_data );
+		$post_ids = self::factory()->post->create_many( 3 );
+		remove_filter( 'wp_insert_post_data', $force_old_post_modified_data );
 		$registry         = new OD_Tag_Visitor_Registry();
 		$wp_the_query     = new WP_Query();
 		$current_template = 'index.php';
@@ -358,13 +365,13 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 
 		// Add new post.
 		$post_ids[] = self::factory()->post->create();
+
 		$wp_the_query->query( array() );
 		$etag3 = od_get_current_url_metrics_etag( $registry, $wp_the_query, $current_template );
 		$this->assertNotEquals( $etag2, $etag3 ); // Etag should change.
 		$this->assertNotEquals( $captured_etag_data[ count( $captured_etag_data ) - 2 ], $captured_etag_data[ count( $captured_etag_data ) - 1 ] );
 
 		// Update the post content.
-		usleep( 1000000 ); // Sleep for 1 second to ensure the post_modified_gmt is different from the previous value.
 		wp_update_post(
 			array(
 				'ID'           => $post_ids[0],
