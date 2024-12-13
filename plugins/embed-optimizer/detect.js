@@ -51,7 +51,7 @@ const loadedElementContentRects = new Map();
  * @type {InitializeCallback}
  * @param {InitializeArgs} args Args.
  */
-export function initialize( { isDebug } ) {
+export async function initialize( { isDebug } ) {
 	/** @type NodeListOf<HTMLDivElement> */
 	const embedWrappers = document.querySelectorAll(
 		'.wp-block-embed > .wp-block-embed__wrapper[data-od-xpath]'
