@@ -24,7 +24,7 @@ function plwwo_google_site_kit_configure( $configuration ): array {
 	$configuration = (array) $configuration;
 
 	$configuration['globalFns'][] = 'gtag'; // Because gtag() is defined in one script and called in another.
-	$configuration['forward'][]   = 'dataLayer.push'; // Because the Partytown integration has this in its example config.
+	$configuration['forward'][]   = 'dataLayer.push'; // See <https://partytown.builder.io/forwarding-event>.
 
 	// See <https://github.com/google/site-kit-wp/blob/440dcd6e8289a8776acc60ecb3c13f99bfd0ac5a/includes/Core/Consent_Mode/Consent_Mode.php#L239-L240>.
 	$configuration['mainWindowAccessors'][] = '_googlesitekitConsentCategoryMap';
