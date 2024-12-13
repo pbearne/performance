@@ -1087,4 +1087,36 @@ class Test_WebP_Uploads_Load extends TestCase {
 
 		wp_delete_attachment( $attachment_id );
 	}
+
+	/**
+	 * Convert WebP to AVIF on uploads.
+	 */
+	public function test_that_it_should_convert_webp_to_avif_on_upload(): void {
+		// Ensure the AVIF MIME type is supported; skip the test if not.
+		if ( ! webp_uploads_mime_type_supported( 'image/avif' ) ) {
+			$this->markTestSkipped( 'Mime type image/avif is not supported.' );
+		}
+
+		$this->set_image_output_type( 'avif' );
+
+		$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/balloons.webp' );
+
+		// There should be a AVIF source, but no WebP source for the full image.
+		$this->assertImageNotHasSource( $attachment_id, 'image/webp' );
+		$this->assertImageHasSource( $attachment_id, 'image/avif' );
+
+		$metadata = wp_get_attachment_metadata( $attachment_id );
+
+		// The full image should be a AVIF.
+		$this->assertArrayHasKey( 'file', $metadata );
+		$this->assertStringEndsWith( $metadata['sources']['image/avif']['file'], $metadata['file'] );
+		$this->assertStringEndsWith( $metadata['sources']['image/avif']['file'], get_attached_file( $attachment_id ) );
+
+		// There should be a AVIF source, but no WebP source for all sizes.
+		foreach ( array_keys( $metadata['sizes'] ) as $size_name ) {
+			$this->assertImageNotHasSizeSource( $attachment_id, $size_name, 'image/webp' );
+			$this->assertImageHasSizeSource( $attachment_id, $size_name, 'image/avif' );
+		}
+		wp_delete_attachment( $attachment_id );
+	}
 }
