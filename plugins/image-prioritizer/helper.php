@@ -138,13 +138,114 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 }
 
 /**
- * Validates that the provided background image URL is valid.
+ * Validates URL for a background image.
  *
  * @since n.e.x.t
+ *
+ * @param string $url Background image URL.
+ * @return true|WP_Error Validity.
+ */
+function image_prioritizer_validate_background_image_url( string $url ) {
+	$parsed_url = wp_parse_url( $url );
+	if ( false === $parsed_url || ! isset( $parsed_url['host'] ) ) {
+		return new WP_Error(
+			'background_image_url_lacks_host',
+			__( 'Supplied background image URL does not have a host.', 'image-prioritizer' )
+		);
+	}
+
+	$allowed_hosts = array_map(
+		static function ( $host ) {
+			return wp_parse_url( $host, PHP_URL_HOST );
+		},
+		get_allowed_http_origins()
+	);
+
+	// Obtain the host of an image attachment's URL in case a CDN is pointing all images to an origin other than the home or site URLs.
+	$image_attachment_query = new WP_Query(
+		array(
+			'post_type'      => 'attachment',
+			'post_mime_type' => 'image',
+			'post_status'    => 'inherit',
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+		)
+	);
+	if ( isset( $image_attachment_query->posts[0] ) && is_int( $image_attachment_query->posts[0] ) ) {
+		$src = wp_get_attachment_image_src( $image_attachment_query->posts[0] );
+		if ( is_array( $src ) ) {
+			$attachment_image_src_host = wp_parse_url( $src[0], PHP_URL_HOST );
+			if ( is_string( $attachment_image_src_host ) ) {
+				$allowed_hosts[] = $attachment_image_src_host;
+			}
+		}
+	}
+
+	// Validate that the background image URL is for an allowed host.
+	if ( ! in_array( $parsed_url['host'], $allowed_hosts, true ) ) {
+		return new WP_Error(
+			'disallowed_background_image_url_host',
+			sprintf(
+				/* translators: %s is the list of allowed hosts */
+				__( 'Background image URL host is not among allowed: %s.', 'image-prioritizer' ),
+				join( ', ', $allowed_hosts )
+			)
+		);
+	}
+
+	// Validate that the URL points to a valid resource.
+	$r = wp_safe_remote_head(
+		$url,
+		array(
+			'redirection' => 3, // Allow up to 3 redirects.
+		)
+	);
+	if ( $r instanceof WP_Error ) {
+		return $r;
+	}
+	$response_code = wp_remote_retrieve_response_code( $r );
+	if ( $response_code < 200 || $response_code >= 400 ) {
+		return new WP_Error(
+			'background_image_response_not_ok',
+			sprintf(
+				/* translators: %s is the HTTP status code */
+				__( 'HEAD request for background image URL did not return with a success status code: %s.', 'image-prioritizer' ),
+				$response_code
+			)
+		);
+	}
+
+	// Validate that the Content-Type is an image.
+	$content_type = (array) wp_remote_retrieve_header( $r, 'Content-Type' );
+	if ( ! is_string( $content_type[0] ) || ! str_starts_with( $content_type[0], 'image/' ) ) {
+		return new WP_Error(
+			'background_image_response_not_image',
+			sprintf(
+				/* translators: %s is the content type of the response */
+				__( 'HEAD request for background image URL did not return an image Content-Type: %s.', 'image-prioritizer' ),
+				$content_type[0]
+			)
+		);
+	}
+
+	// TODO: Check for the Content-Length and return invalid if it is gigantic?
+	return true;
+}
+
+/**
+ * Filters the validity of a URL Metric with an LCP element background image.
+ *
+ * This removes the lcpElementExternalBackgroundImage from the URL Metric prior to it being stored if the background
+ * image URL is not valid. Removal of the property is preferable to
+ *
+ * @since        n.e.x.t
  *
  * @param bool|WP_Error|mixed  $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
  * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
  * @return bool|WP_Error Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
+ *
+ * @noinspection PhpDocMissingThrowsInspection
+ * @throws OD_Data_Validation_Exception Except it won't because lcpElementExternalBackgroundImage is not a required property.
  */
 function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Strict_URL_Metric $url_metric ) {
 	if ( ! is_bool( $validity ) && ! ( $validity instanceof WP_Error ) ) {
@@ -152,48 +253,19 @@ function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Stric
 	}
 
 	$data = $url_metric->get( 'lcpElementExternalBackgroundImage' );
-	if ( ! is_array( $data ) ) {
-		return $validity;
+	if ( is_array( $data ) && isset( $data['url'] ) && is_string( $data['url'] ) ) { // Note: The isset() and is_string() checks aren't necessary since the JSON Schema enforces them to be set.
+		$validity = image_prioritizer_validate_background_image_url( $data['url'] );
+		if ( is_wp_error( $validity ) ) {
+			/**
+			 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
+			 *
+			 * @noinspection PhpUnhandledExceptionInspection
+			 */
+			wp_trigger_error( __FUNCTION__, $validity->get_error_message() . ' Background image URL: ' . $data['url'] );
+			$url_metric->unset( 'lcpElementExternalBackgroundImage' );
+		}
 	}
 
-	$r = wp_safe_remote_head(
-		$data['url'],
-		array(
-			'redirection' => 3, // Allow up to 3 redirects.
-		)
-	);
-	if ( $r instanceof WP_Error ) {
-		return new WP_Error(
-			WP_DEBUG ? $r->get_error_code() : 'head_request_failure',
-			__( 'HEAD request for background image URL failed.', 'image-prioritizer' ) . ( WP_DEBUG ? ' ' . $r->get_error_message() : '' ),
-			array(
-				'code' => 500,
-			)
-		);
-	}
-	$response_code = wp_remote_retrieve_response_code( $r );
-	if ( $response_code < 200 || $response_code >= 400 ) {
-		return new WP_Error(
-			'background_image_response_not_ok',
-			__( 'HEAD request for background image URL did not return with a success status code.', 'image-prioritizer' ),
-			array(
-				'code' => WP_DEBUG ? $response_code : 400,
-			)
-		);
-	}
-
-	$content_type = wp_remote_retrieve_header( $r, 'Content-Type' );
-	if ( ! is_string( $content_type ) || ! str_starts_with( $content_type, 'image/' ) ) {
-		return new WP_Error(
-			'background_image_response_not_image',
-			__( 'HEAD request for background image URL did not return an image Content-Type.', 'image-prioritizer' ),
-			array(
-				'code' => 400,
-			)
-		);
-	}
-
-	// TODO: Check for the Content-Length and return invalid if it is gigantic?
 	return $validity;
 }
 

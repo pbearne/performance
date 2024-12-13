@@ -223,12 +223,37 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 	 * loaded from the od_url_metric post type. This means that validation logic enforced via this filter can be more
 	 * expensive, such as doing filesystem checks or HTTP requests.
 	 *
+	 * In addition to having the filter return `false` or a non-empty `WP_Error` to block storing the URL Metric, a
+	 * plugin may also mutate the OD_URL_Metric instance passed by reference to the filter callback. This is useful
+	 * for plugins in particular to unset extended properties which couldn't be validated using JSON Schema alone.
+	 *
 	 * @since n.e.x.t
 	 *
-	 * @param bool|WP_Error        $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
-	 * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
+	 * @param bool|WP_Error        $validity        Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
+	 * @param OD_Strict_URL_Metric $url_metric      URL Metric, already validated against the JSON Schema.
+	 * @param array<string, mixed> $url_metric_data Original URL Metric data before any mutations.
 	 */
-	$validity = apply_filters( 'od_store_url_metric_validity', true, $url_metric );
+	try {
+		$validity = apply_filters( 'od_store_url_metric_validity', true, $url_metric, $url_metric->jsonSerialize() ); // TODO: A better name might be `od_url_metric_storage_validity`.
+	} catch ( Exception $e ) {
+		$error_data = null;
+		if ( WP_DEBUG ) {
+			$error_data = array(
+				'exception_class'   => get_class( $e ),
+				'exception_message' => $e->getMessage(),
+				'exception_code'    => $e->getCode(),
+			);
+		}
+		$validity = new WP_Error(
+			'exception',
+			sprintf(
+				/* translators: %s is the filter name 'od_store_url_metric_validity' */
+				__( 'An %s filter callback threw an exception.', 'optimization-detective' ),
+				'od_store_url_metric_validity'
+			),
+			$error_data
+		);
+	}
 	if ( false === $validity || ( $validity instanceof WP_Error && $validity->has_errors() ) ) {
 		if ( false === $validity ) {
 			$validity = new WP_Error( 'invalid_url_metric', __( 'Validity of URL Metric was rejected by filter.', 'optimization-detective' ) );
