@@ -221,11 +221,11 @@ function dominant_color_admin_script(): void {
 		const tmpl = document.getElementById( 'tmpl-attachment' );
 		if ( tmpl ) {
 			tmpl.textContent = tmpl.textContent.replace( /^\s*<div[^>]*?(?=>)/, ( match ) => {
-				let replaced = match.replace( /\sclass="/, " class=\"{{ data.hasTransparency ? \'has-transparency\' : \'not-transparent\' }} " );
+				let replaced = match.replace( /\sclass="/, " class=\"{{ data.hasTransparency ? 'has-transparency' : 'not-transparent' }} " );
 				replaced += ' data-dominant-color="{{ data.dominantColor }}"';
 				replaced += ' data-has-transparency="{{ data.hasTransparency }}"';
 				let hasStyleAttr = false;
-				const colorStyle = '--dominant-color: #{{ data.dominantColor }};';
+				const colorStyle = "{{ data.dominantColor ? '--dominant-color: #' + data.dominantColor + ';' : '' }}";
 				replaced = replaced.replace( /\sstyle="/, ( styleMatch ) => {
 					hasStyleAttr = true;
 					return styleMatch + colorStyle;
