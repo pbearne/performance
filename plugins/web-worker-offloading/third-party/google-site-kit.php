@@ -48,7 +48,7 @@ plwwo_mark_scripts_for_offloading(
 );
 
 /**
- * Filters inline script attributes to offload Rank Math's GTag script tag to Partytown.
+ * Filters inline script attributes to offload Google Site Kit's GTag script tag to Partytown.
  *
  * @since n.e.x.t
  * @access private
