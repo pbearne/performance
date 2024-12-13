@@ -198,8 +198,7 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  */
 function dominant_color_admin_inline_style(): void {
 	$handle = 'dominant-color-admin-styles';
-	// PHPCS ignore reason: Version not used since this handle is only registered for adding an inline style.
-	// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+	// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- Version not used since this handle is only registered for adding an inline style.
 	wp_register_style( $handle, false );
 	wp_enqueue_style( $handle );
 	$custom_css = '.wp-core-ui .attachment-preview[data-dominant-color]:not(.has-transparency) { background-color: var(--dominant-color); }';
