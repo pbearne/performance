@@ -52,7 +52,7 @@ plwwo_mark_scripts_for_offloading(
  *
  * @since n.e.x.t
  * @access private
- * @link https://github.com/rankmath/seo-by-rank-math/blob/c78adba6f78079f27ff1430fabb75c6ac3916240/includes/modules/analytics/class-gtag.php#L169-L174
+ * @link https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/includes/Core/Consent_Mode/Consent_Mode.php#L244-L259
  *
  * @param array|mixed $attributes Script attributes.
  * @return array|mixed Filtered inline script attributes.
