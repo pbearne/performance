@@ -220,14 +220,14 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
 	return $layout_width;
 }
 
-	/**
-	 * Retrieves the layout width for an alignment defined in theme.json.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param string $alignment The alignment value.
-	 * @return string The alignment width based.
-	 */
+/**
+ * Retrieves the layout width for an alignment defined in theme.json.
+ *
+ * @since n.e.x.t
+ *
+ * @param string $alignment The alignment value.
+ * @return string The alignment width based.
+ */
 function auto_sizes_get_layout_width( string $alignment ): string {
 	$layout = auto_sizes_get_layout_settings();
 
@@ -240,15 +240,15 @@ function auto_sizes_get_layout_width( string $alignment ): string {
 	return $layout_widths[ $alignment ] ?? '';
 }
 
-	/**
-	 * Filters the context keys that a block type uses.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param string[]      $uses_context Array of registered uses context for a block type.
-	 * @param WP_Block_Type $block_type   The full block type object.
-	 * @return string[] The filtered context keys used by the block type.
-	 */
+/**
+ * Filters the context keys that a block type uses.
+ *
+ * @since n.e.x.t
+ *
+ * @param string[]      $uses_context Array of registered uses context for a block type.
+ * @param WP_Block_Type $block_type   The full block type object.
+ * @return string[] The filtered context keys used by the block type.
+ */
 function auto_sizes_filter_uses_context( array $uses_context, WP_Block_Type $block_type ): array {
 	// The list of blocks that can consume outer layout context.
 	$consumer_blocks = array(
@@ -263,15 +263,15 @@ function auto_sizes_filter_uses_context( array $uses_context, WP_Block_Type $blo
 	return $uses_context;
 }
 
-	/**
-	 * Modifies the block context during rendering to blocks.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param array<string, mixed> $context Current block context.
-	 * @param array<string, mixed> $block   The block being rendered.
-	 * @return array<string, mixed> Modified block context.
-	 */
+/**
+ * Modifies the block context during rendering to blocks.
+ *
+ * @since n.e.x.t
+ *
+ * @param array<string, mixed> $context Current block context.
+ * @param array<string, mixed> $block   The block being rendered.
+ * @return array<string, mixed> Modified block context.
+ */
 function auto_sizes_filter_render_block_context( array $context, array $block ): array {
 	// When no max alignment is set, the maximum is assumed to be 'full'.
 	$context['max_alignment'] = $context['max_alignment'] ?? 'full';
@@ -296,13 +296,13 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
 	return $context;
 }
 
-	/**
-	 * Retrieves the layout settings defined in theme.json.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @return array<string, mixed> Associative array of layout settings.
-	 */
+/**
+ * Retrieves the layout settings defined in theme.json.
+ *
+ * @since n.e.x.t
+ *
+ * @return array<string, mixed> Associative array of layout settings.
+ */
 function auto_sizes_get_layout_settings(): array {
 	static $layout = array();
 	if ( count( $layout ) === 0 ) {
