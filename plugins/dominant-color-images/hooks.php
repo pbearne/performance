@@ -261,13 +261,19 @@ function dominant_color_prepare_attachment_for_js( $response, WP_Post $attachmen
 	}
 
 	$response['dominantColor'] = '';
-	if ( isset( $meta['dominant_color'] ) && str_starts_with( '#', $meta['dominant_color'] ) ) {
-		$response['dominantColor'] = sanitize_hex_color( $meta['dominant_color'] );
+	if (
+		isset( $meta['dominant_color'] )
+		&&
+		1 === preg_match( '/^[0-9A-F]+$/', $meta['dominant_color'] ) // See format returned by dominant_color_rgb_to_hex().
+	) {
+		$response['dominantColor'] = $meta['dominant_color'];
 	}
 	$response['hasTransparency'] = '';
 	if ( isset( $meta['has_transparency'] ) ) {
 		$response['hasTransparency'] = (bool) $meta['has_transparency'];
 	}
+
+	$response['testMeta'] = $meta;
 
 	return $response;
 }
