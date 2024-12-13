@@ -236,12 +236,14 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		 */
 		$validity = apply_filters( 'od_url_metric_storage_validity', true, $url_metric, $url_metric->jsonSerialize() );
 	} catch ( Exception $e ) {
-		$error_data = null;
+		$error_data = array(
+			'status' => 500,
+		);
 		if ( WP_DEBUG ) {
-			$error_data = array(
-				'exception_class'   => get_class( $e ),
-				'exception_message' => $e->getMessage(),
-				'exception_code'    => $e->getCode(),
+			$error_data['exception'] = array(
+				'class'   => get_class( $e ),
+				'message' => $e->getMessage(),
+				'code'    => $e->getCode(),
 			);
 		}
 		$validity = new WP_Error(
@@ -254,12 +256,13 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 			$error_data
 		);
 	}
-	if ( false === $validity || ( $validity instanceof WP_Error && $validity->has_errors() ) ) {
+	if ( false === (bool) $validity || ( $validity instanceof WP_Error && $validity->has_errors() ) ) {
 		if ( false === $validity ) {
 			$validity = new WP_Error( 'invalid_url_metric', __( 'Validity of URL Metric was rejected by filter.', 'optimization-detective' ) );
 		}
-		if ( ! isset( $validity->error_data['status'] ) ) {
-			$validity->error_data['status'] = 400;
+		$error_code = $validity->get_error_code();
+		if ( ! isset( $validity->error_data[ $error_code ]['status'] ) ) {
+			$validity->error_data[ $error_code ]['status'] = 400;
 		}
 		return $validity;
 	}
@@ -269,9 +272,19 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		$request->get_param( 'slug' ),
 		$url_metric
 	);
-
 	if ( $result instanceof WP_Error ) {
-		return $result;
+		$error_data = array(
+			'status' => 500,
+		);
+		if ( WP_DEBUG ) {
+			$error_data['code']    = $result->get_error_code();
+			$error_data['message'] = $result->get_error_message();
+		}
+		return new WP_Error(
+			'unable_to_store_url_metric',
+			__( 'Unable to store URL Metric.', 'optimization-detective' ),
+			$error_data
+		);
 	}
 	$post_id = $result;
 
