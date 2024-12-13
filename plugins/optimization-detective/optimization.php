@@ -213,10 +213,10 @@ function od_optimize_template_output_buffer( string $buffer ): string {
 	do_action( 'od_register_tag_visitors', $tag_visitor_registry );
 
 	$current_template = null;
-	if ( wp_is_block_theme() && $_wp_current_template_id ) {
+	if ( wp_is_block_theme() && isset( $_wp_current_template_id ) ) {
 		$current_template = get_block_template( $_wp_current_template_id, 'wp_template' );
 	}
-	if ( null === $current_template && $template && is_string( $template ) ) {
+	if ( null === $current_template && isset( $template ) && is_string( $template ) ) {
 		$current_template = basename( $template );
 	}
 
