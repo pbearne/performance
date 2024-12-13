@@ -194,13 +194,21 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
 
 		case 'left':
 		case 'right':
-			$layout_width = sprintf( '%1$spx', $image_width );
-			break;
-
 		case 'center':
 		default:
-			$alignment    = auto_sizes_get_layout_width( 'default' );
-			$layout_width = sprintf( '%1$spx', min( (int) $alignment, $image_width ) );
+			$layout_alignment = in_array( $alignment, array( 'left', 'right' ), true ) ? 'wide' : 'default';
+			$layout_width     = auto_sizes_get_layout_width( $layout_alignment );
+
+			/*
+			 * If the layout width is in pixels, we can compare against the image width
+			 * on the server. Otherwise, we need to rely on CSS functions.
+			 */
+			if ( str_ends_with( $layout_width, 'px' ) ) {
+				$layout_width = sprintf( '%dpx', min( (int) $layout_width, $image_width ) );
+			} else {
+				$layout_width = sprintf( 'min(%1$s, %2$spx)', $layout_width, $image_width );
+			}
+
 			break;
 	}
 
@@ -296,9 +304,5 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
  * @return array<string, mixed> Associative array of layout settings.
  */
 function auto_sizes_get_layout_settings(): array {
-	static $layout = array();
-	if ( count( $layout ) === 0 ) {
-		$layout = wp_get_global_settings( array( 'layout' ) );
-	}
-	return $layout;
+	return wp_get_global_settings( array( 'layout' ) );
 }
