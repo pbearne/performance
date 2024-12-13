@@ -214,6 +214,7 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  * to the template, allowing these properties to be displayed in the media library.
  *
  * @since n.e.x.t
+ * @see wp_print_media_templates()
  */
 function dominant_color_admin_script(): void {
 	?>
