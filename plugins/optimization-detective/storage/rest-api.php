@@ -210,31 +210,31 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		);
 	}
 
-	/**
-	 * Filters whether a URL Metric is valid for storage.
-	 *
-	 * This allows for custom validation constraints to be applied beyond what can be expressed in JSON Schema. This is
-	 * also necessary because the 'validate_callback' key in a JSON Schema is not respected when gathering the REST API
-	 * endpoint args via the {@see rest_get_endpoint_args_for_schema()} function. Besides this, the REST API doesn't
-	 * support 'validate_callback' for any nested arguments in any case, meaning that custom constraints would be able
-	 * to be applied to multidimensional objects, such as the items inside 'elements'.
-	 *
-	 * This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric
-	 * loaded from the od_url_metric post type. This means that validation logic enforced via this filter can be more
-	 * expensive, such as doing filesystem checks or HTTP requests.
-	 *
-	 * In addition to having the filter return `false` or a non-empty `WP_Error` to block storing the URL Metric, a
-	 * plugin may also mutate the OD_URL_Metric instance passed by reference to the filter callback. This is useful
-	 * for plugins in particular to unset extended properties which couldn't be validated using JSON Schema alone.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param bool|WP_Error        $validity        Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
-	 * @param OD_Strict_URL_Metric $url_metric      URL Metric, already validated against the JSON Schema.
-	 * @param array<string, mixed> $url_metric_data Original URL Metric data before any mutations.
-	 */
 	try {
-		$validity = apply_filters( 'od_store_url_metric_validity', true, $url_metric, $url_metric->jsonSerialize() ); // TODO: A better name might be `od_url_metric_storage_validity`.
+		/**
+		 * Filters whether a URL Metric is valid for storage.
+		 *
+		 * This allows for custom validation constraints to be applied beyond what can be expressed in JSON Schema. This is
+		 * also necessary because the 'validate_callback' key in a JSON Schema is not respected when gathering the REST API
+		 * endpoint args via the {@see rest_get_endpoint_args_for_schema()} function. Besides this, the REST API doesn't
+		 * support 'validate_callback' for any nested arguments in any case, meaning that custom constraints would be able
+		 * to be applied to multidimensional objects, such as the items inside 'elements'.
+		 *
+		 * This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric is
+		 * loaded from the od_url_metrics post type. This means that validation logic enforced via this filter can be more
+		 * expensive, such as doing filesystem checks or HTTP requests.
+		 *
+		 * In addition to having the filter return `false` or a non-empty `WP_Error` to block storing the URL Metric, a
+		 * plugin may also mutate the OD_URL_Metric instance passed by reference to the filter callback. This is useful
+		 * for plugins in particular to unset extended properties which couldn't be validated using JSON Schema alone.
+		 *
+		 * @since n.e.x.t
+		 *
+		 * @param bool|WP_Error        $validity        Validity. Invalid if false or a WP_Error with errors.
+		 * @param OD_Strict_URL_Metric $url_metric      URL Metric, already validated against the JSON Schema.
+		 * @param array<string, mixed> $url_metric_data Original URL Metric data before any mutations.
+		 */
+		$validity = apply_filters( 'od_url_metric_storage_validity', true, $url_metric, $url_metric->jsonSerialize() );
 	} catch ( Exception $e ) {
 		$error_data = null;
 		if ( WP_DEBUG ) {
@@ -247,9 +247,9 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		$validity = new WP_Error(
 			'exception',
 			sprintf(
-				/* translators: %s is the filter name 'od_store_url_metric_validity' */
+				/* translators: %s is the filter name 'od_url_metric_storage_validity' */
 				__( 'An %s filter callback threw an exception.', 'optimization-detective' ),
-				'od_store_url_metric_validity'
+				'od_url_metric_storage_validity'
 			),
 			$error_data
 		);

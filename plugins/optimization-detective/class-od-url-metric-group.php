@@ -471,7 +471,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	}
 
 	/**
-	 * Clear result cache.
+	 * Clears result cache.
 	 *
 	 * @since n.e.x.t
 	 */

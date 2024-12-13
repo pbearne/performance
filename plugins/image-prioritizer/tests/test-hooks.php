@@ -14,6 +14,6 @@ class Test_Image_Prioritizer_Hooks extends WP_UnitTestCase {
 		$this->assertEquals( 10, has_action( 'od_init', 'image_prioritizer_init' ) );
 		$this->assertEquals( 10, has_filter( 'od_extension_module_urls', 'image_prioritizer_filter_extension_module_urls' ) );
 		$this->assertEquals( 10, has_filter( 'od_url_metric_schema_root_additional_properties', 'image_prioritizer_add_element_item_schema_properties' ) );
-		$this->assertEquals( 10, has_filter( 'od_store_url_metric_validity', 'image_prioritizer_filter_store_url_metric_validity' ) );
+		$this->assertEquals( 10, has_filter( 'od_url_metric_storage_validity', 'image_prioritizer_filter_store_url_metric_validity' ) );
 	}
 }

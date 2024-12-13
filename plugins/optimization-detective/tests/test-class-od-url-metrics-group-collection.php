@@ -226,9 +226,6 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
 
 		// Test that adding a URL metric to a collection clears the caches.
-		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
-		$group_result_cache_reflection_property->setValue( $group, $populated_value );
-
 		add_filter(
 			'od_url_metric_schema_root_additional_properties',
 			static function ( $schema ) {
@@ -247,7 +244,8 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 				return $schema;
 			}
 		);
-
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$group_result_cache_reflection_property->setValue( $group, $populated_value );
 		$collection->add_url_metric(
 			$this->get_sample_url_metric(
 				array(

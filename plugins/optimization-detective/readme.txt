@@ -246,6 +246,20 @@ The ETag is a unique identifier that changes whenever the underlying data used t
 
 When the ETag for URL Metrics in a complete viewport group no longer matches the current environment's ETag, new URL Metrics will then begin to be collected until there are no more stored URL Metrics with the old ETag. These new URL Metrics will include data relevant to the newly activated plugins and their tag visitors.
 
+**Filter:** `od_url_metric_storage_validity` (default args: true)
+
+Filters whether a URL Metric is valid for storage.
+
+Three paramters are passed to this filter:
+
+1. `$validity` (`bool|WP_Error`): Validity. Invalid if false or a WP_Error with errors.
+2. `$url_metric` (`OD_Strict_URL_Metric`): URL Metric, already validated against the JSON Schema.
+3. `$url_metric_data` (`array<string, mixed>`): Original URL Metric data before any mutations.
+
+This allows for custom validation constraints to be applied beyond what can be expressed in JSON Schema. This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric is loaded from the `od_url_metrics` post type. This means that validation logic enforced via this filter can be more expensive, such as doing filesystem checks or HTTP requests.
+
+In addition to having the filter return `false` or a non-empty `WP_Error` to block storing the URL Metric, a plugin may also mutate the `OD_URL_Metric` instance passed by reference to the filter callback. This is useful for plugins in particular to unset extended properties which couldn't be validated using JSON Schema alone.
+
 **Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
 
 Fires whenever a URL Metric was successfully stored.
