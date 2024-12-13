@@ -264,7 +264,7 @@ function dominant_color_prepare_attachment_for_js( $response, WP_Post $attachmen
 	if (
 		isset( $meta['dominant_color'] )
 		&&
-		1 === preg_match( '/^[0-9A-F]+$/', $meta['dominant_color'] ) // See format returned by dominant_color_rgb_to_hex().
+		1 === preg_match( '/^[0-9a-f]+$/', $meta['dominant_color'] ) // See format returned by dominant_color_rgb_to_hex().
 	) {
 		$response['dominantColor'] = $meta['dominant_color'];
 	}
@@ -272,8 +272,6 @@ function dominant_color_prepare_attachment_for_js( $response, WP_Post $attachmen
 	if ( isset( $meta['has_transparency'] ) ) {
 		$response['hasTransparency'] = (bool) $meta['has_transparency'];
 	}
-
-	$response['testMeta'] = $meta;
 
 	return $response;
 }
