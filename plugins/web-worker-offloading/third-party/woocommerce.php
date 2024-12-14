@@ -23,10 +23,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 function plwwo_woocommerce_configure( $configuration ): array {
 	$configuration = (array) $configuration;
 
+	$configuration['globalFns'][] = 'gtag'; // Allow calling from other Partytown scripts.
+
+	// Expose on the main tread. See <https://partytown.builder.io/forwarding-event>.
+	$configuration['forward'][] = 'dataLayer.push';
+	$configuration['forward'][] = 'gtag';
+
 	$configuration['mainWindowAccessors'][] = 'wp';   // Because woocommerce-google-analytics-integration needs to access wp.i18n.
 	$configuration['mainWindowAccessors'][] = 'ga4w'; // Because woocommerce-google-analytics-integration needs to access window.ga4w.
-	$configuration['globalFns'][]           = 'gtag'; // Because gtag() is defined in one script and called in another.
-	$configuration['forward'][]             = 'dataLayer.push'; // Because the Partytown integration has this in its example config.
+
 	return $configuration;
 }
 add_filter( 'plwwo_configuration', 'plwwo_woocommerce_configure' );
