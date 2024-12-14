@@ -29,17 +29,14 @@ function plwwo_woocommerce_configure( $configuration ): array {
 	$configuration['forward'][] = 'dataLayer.push';
 	$configuration['forward'][] = 'gtag';
 
-	$configuration['mainWindowAccessors'][] = 'wp';   // Because woocommerce-google-analytics-integration needs to access wp.i18n.
-	$configuration['mainWindowAccessors'][] = 'ga4w'; // Because woocommerce-google-analytics-integration needs to access window.ga4w.
-
 	return $configuration;
 }
 add_filter( 'plwwo_configuration', 'plwwo_woocommerce_configure' );
 
 plwwo_mark_scripts_for_offloading(
+	// Note: 'woocommerce-google-analytics-integration' is intentionally not included because for some reason events like add_to_cart don't get tracked.
 	array(
 		'google-tag-manager',
-		'woocommerce-google-analytics-integration',
 		'woocommerce-google-analytics-integration-gtag',
 	)
 );
