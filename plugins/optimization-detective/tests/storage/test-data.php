@@ -292,7 +292,17 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 * @covers ::od_get_current_url_metrics_etag
 	 */
 	public function test_od_get_current_url_metrics_etag(): void {
-		remove_all_filters( 'od_current_url_metrics_etag_data' );
+		$initial_active_theme = array(
+			'template'   => array(
+				'name'    => get_template(),
+				'version' => wp_get_theme( get_template() )->get( 'Version' ),
+			),
+			'stylesheet' => array(
+				'name'    => get_stylesheet(),
+				'version' => wp_get_theme( get_stylesheet() )->get( 'Version' ),
+			),
+		);
+
 		$force_old_post_modified_data = static function ( $data ) {
 			$data['post_modified']     = '1970-01-01 00:00:00';
 			$data['post_modified_gmt'] = '1970-01-01 00:00:00';
@@ -301,6 +311,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 		add_filter( 'wp_insert_post_data', $force_old_post_modified_data );
 		$post_ids = self::factory()->post->create_many( 3 );
 		remove_filter( 'wp_insert_post_data', $force_old_post_modified_data );
+
 		$registry         = new OD_Tag_Visitor_Registry();
 		$wp_the_query     = new WP_Query();
 		$current_template = 'index.php';
@@ -313,22 +324,6 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 				return $data;
 			},
 			PHP_INT_MAX
-		);
-		add_filter(
-			'od_current_url_metrics_etag_data',
-			static function ( $data ) {
-				$data['active_theme'] = array(
-					'template'   => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-					'stylesheet' => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-				);
-				return $data;
-			}
 		);
 
 		$wp_the_query->query( array() );
@@ -346,16 +341,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'type' => null,
 				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
-				'active_theme'     => array(
-					'template'   => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-					'stylesheet' => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-				),
+				'active_theme'     => $initial_active_theme,
 				'current_template' => 'index.php',
 			),
 			$captured_etag_data[0]
@@ -397,27 +383,20 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'type' => null,
 				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
-				'active_theme'     => array(
-					'template'   => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-					'stylesheet' => array(
-						'name'    => 'od-theme',
-						'version' => '1.0.0',
-					),
-				),
+				'active_theme'     => $initial_active_theme,
 				'current_template' => 'index.php',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
 		);
 
 		// Modify data using filters.
+		$active_theme_override                          = $initial_active_theme;
+		$active_theme_override['template']['version']   = '2.0.0';
+		$active_theme_override['stylesheet']['version'] = '2.0.0';
 		add_filter(
 			'od_current_url_metrics_etag_data',
-			static function ( $data ) {
-				$data['active_theme']['template']['version']   = '2.0.0';
-				$data['active_theme']['stylesheet']['version'] = '2.0.0';
+			static function ( $data ) use ( $active_theme_override ) {
+				$data['active_theme'] = $active_theme_override;
 				return $data;
 			}
 		);
@@ -432,16 +411,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'type' => null,
 				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
-				'active_theme'     => array(
-					'template'   => array(
-						'name'    => 'od-theme',
-						'version' => '2.0.0',
-					),
-					'stylesheet' => array(
-						'name'    => 'od-theme',
-						'version' => '2.0.0',
-					),
-				),
+				'active_theme'     => $active_theme_override,
 				'current_template' => 'index.php',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
@@ -468,16 +438,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					'last_modified' => '2024-03-02T01:00:00',
 				),
 				'queried_posts'    => wp_list_pluck( $wp_the_query->posts, 'post_modified_gmt', 'ID' ),
-				'active_theme'     => array(
-					'template'   => array(
-						'name'    => 'od-theme',
-						'version' => '2.0.0',
-					),
-					'stylesheet' => array(
-						'name'    => 'od-theme',
-						'version' => '2.0.0',
-					),
-				),
+				'active_theme'     => $active_theme_override,
 				'current_template' => 'index.php',
 			),
 			$captured_etag_data[ count( $captured_etag_data ) - 1 ]
