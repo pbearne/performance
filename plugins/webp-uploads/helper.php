@@ -28,7 +28,7 @@ function webp_uploads_get_upload_image_mime_transforms(): array {
 
 	$default_transforms = array(
 		'image/jpeg' => array( 'image/' . $output_format ),
-		'image/webp' => array( 'image/webp' ),
+		'image/webp' => array( 'image/' . $output_format ),
 		'image/avif' => array( 'image/avif' ),
 		'image/png'  => array( 'image/' . $output_format ),
 	);

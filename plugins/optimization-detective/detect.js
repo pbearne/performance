@@ -234,6 +234,11 @@ function extendElementData( xpath, properties ) {
 }
 
 /**
+ * @typedef {{timestamp: number, creationDate: Date}} UrlMetricDebugData
+ * @typedef {{groups: Array<{url_metrics: Array<UrlMetricDebugData>}>}} CollectionDebugData
+ */
+
+/**
  * Detects the LCP element, loaded images, client viewport and store for future optimizations.
  *
  * @param {Object}                 args                            Args.
@@ -250,7 +255,7 @@ function extendElementData( xpath, properties ) {
  * @param {URLMetricGroupStatus[]} args.urlMetricGroupStatuses     URL Metric group statuses.
  * @param {number}                 args.storageLockTTL             The TTL (in seconds) for the URL Metric storage lock.
  * @param {string}                 args.webVitalsLibrarySrc        The URL for the web-vitals library.
- * @param {Object}                 [args.urlMetricGroupCollection] URL Metric group collection, when in debug mode.
+ * @param {CollectionDebugData}    [args.urlMetricGroupCollection] URL Metric group collection, when in debug mode.
  */
 export default async function detect( {
 	minViewportAspectRatio,
@@ -269,7 +274,21 @@ export default async function detect( {
 	urlMetricGroupCollection,
 } ) {
 	if ( isDebug ) {
-		log( 'Stored URL Metric group collection:', urlMetricGroupCollection );
+		const allUrlMetrics = /** @type Array<UrlMetricDebugData> */ [];
+		for ( const group of urlMetricGroupCollection.groups ) {
+			for ( const otherUrlMetric of group.url_metrics ) {
+				otherUrlMetric.creationDate = new Date(
+					otherUrlMetric.timestamp * 1000
+				);
+				allUrlMetrics.push( otherUrlMetric );
+			}
+		}
+		log( 'Stored URL Metric Group Collection:', urlMetricGroupCollection );
+		allUrlMetrics.sort( ( a, b ) => b.timestamp - a.timestamp );
+		log(
+			'Stored URL Metrics in reverse chronological order:',
+			allUrlMetrics
+		);
 	}
 
 	// Abort if the current viewport is not among those which need URL Metrics.
