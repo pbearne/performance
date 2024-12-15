@@ -232,7 +232,7 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 				'version' => wp_get_theme()->get( 'Version' ),
 			),
 		),
-		'current_template' => $current_template,
+		'current_template' => $current_template instanceof WP_Block_Template ? get_object_vars( $current_template ) : $current_template,
 	);
 
 	/**
