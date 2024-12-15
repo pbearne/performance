@@ -15,13 +15,19 @@ This plugin optimizes the loading of images (and videos) with prioritization, la
 
 The current optimizations include:
 
-1. Ensure `fetchpriority=high` is only added to an `IMG` when it is the Largest Contentful Paint (LCP) element across all responsive breakpoints.
-2. Add breakpoint-specific `fetchpriority=high` preload links for the LCP elements which are `IMG` elements or elements with a CSS `background-image` inline style.
-3. Apply lazy-loading to `IMG` tags based on whether they appear in any breakpoint’s initial viewport. (Additionally, [`sizes=auto`](https://make.wordpress.org/core/2024/10/18/auto-sizes-for-lazy-loaded-images-in-wordpress-6-7/) is then also correctly applied.)
-4. Implement lazy-loading of CSS background images added via inline `style` attributes.
-5. Add `fetchpriority=low` to `IMG` tags which appear in the initial viewport but are not visible, such as when they are subsequent carousel slides.
+1. Add breakpoint-specific `fetchpriority=high` preload links (`LINK[rel=preload]`) for image URLs of LCP elements:
+   1. An `IMG` element, including the `srcset`/`sizes` attributes supplied as `imagesrcset`/`imagesizes` on the `LINK`.
+   2. The first `SOURCE` element with a `type` attribute in a `PICTURE` element. (Art-directed `PICTURE` elements using media queries are not supported.)
+   3. An element with a CSS `background-image` inline `style` attribute.
+   4. An element with a CSS `background-image` applied with a stylesheet (when the image is from an allowed origin).
+2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the Largest Contentful Paint (LCP) element across all responsive breakpoints.
+3. Add `fetchpriority=low` to `IMG` tags which appear in the initial viewport but are not visible, such as when they are subsequent carousel slides.
+4. Lazy-Loading:
+   1. Apply lazy-loading to `IMG` tags based on whether they appear in any breakpoint’s initial viewport. (Additionally, [`sizes=auto`](https://make.wordpress.org/core/2024/10/18/auto-sizes-for-lazy-loaded-images-in-wordpress-6-7/) is then also correctly applied.)
+   2. Implement lazy-loading of CSS background images added via inline `style` attributes.
+   3. Lazy-load `VIDEO` tags by setting the appropriate attributes based on whether they appear in the initial viewport. If a `VIDEO` is the LCP element, it gets `preload=auto`; if it is in an initial viewport, the `preload=metadata` default is left; if it is not in an initial viewport, it gets `preload=none`. Lazy-loaded videos also get initial `preload`, `autoplay`, and `poster` attributes restored when the `VIDEO` is going to enter the viewport.
+5. Ensure that `sizes=auto` is added to all lazy-loaded `IMG` elements.
 6. Reduce the size of the `poster` image of a `VIDEO` from full size to the size appropriate for the maximum width of the video (on desktop).
-7. Lazy-load `VIDEO` tags by setting the appropriate attributes based on whether they appear in the initial viewport. If a `VIDEO` is the LCP element, it gets `preload=auto`; if it is in an initial viewport, the `preload=metadata` default is left; if it is not in an initial viewport, it gets `preload=none`. Lazy-loaded videos also get initial `preload`, `autoplay`, and `poster` attributes restored when the `VIDEO` is going to enter the viewport.
 
 **This plugin requires the [Optimization Detective](https://wordpress.org/plugins/optimization-detective/) plugin as a dependency.** Please refer to that plugin for additional background on how this plugin works as well as additional developer options.
 
