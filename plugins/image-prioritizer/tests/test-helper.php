@@ -659,6 +659,37 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 				'expect_error' => 'http_request_failed',
 			),
+
+			'good_same_origin'            => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/good.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => null,
+			),
 		);
 	}
 
@@ -681,12 +712,146 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function data_provider_to_test_image_prioritizer_filter_store_url_metric_validity(): array {
+		return array(
+			'pass_through_true'          => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( true, $url_metric );
+				},
+				'assert' => function ( $value ): void {
+					$this->assertTrue( $value );
+				},
+			),
+
+			'pass_through_false'         => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( false, $url_metric );
+				},
+				'assert' => function ( $value ): void {
+					$this->assertFalse( $value );
+				},
+			),
+
+			'pass_through_truthy_string' => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( 'so true', $url_metric );
+				},
+				'assert' => function ( $value ): void {
+					$this->assertTrue( $value );
+				},
+			),
+
+			'pass_through_falsy_string'  => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( '', $url_metric );
+				},
+				'assert' => function ( $value ): void {
+					$this->assertFalse( $value );
+				},
+			),
+
+			'pass_through_wp_error'      => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( new WP_Error( 'bad', 'Evil' ), $url_metric );
+				},
+				'assert' => function ( $value ): void {
+					$this->assertInstanceOf( WP_Error::class, $value );
+					$this->assertSame( 'bad', $value->get_error_code() );
+				},
+			),
+
+			'invalid_external_bg_image'  => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$sample_url_metric_data['lcpElementExternalBackgroundImage'] = array(
+						'url'   => 'https://bad-origin.example.com/image.jpg',
+						'tag'   => 'DIV',
+						'id'    => null,
+						'class' => null,
+					);
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( true, $url_metric );
+				},
+				'assert' => function ( $value, OD_Strict_URL_Metric $url_metric ): void {
+					$this->assertTrue( $value );
+					$this->assertNull( $url_metric->get( 'lcpElementExternalBackgroundImage' ) );
+				},
+			),
+
+			'valid_external_bg_image'    => array(
+				'set_up' => static function ( array $sample_url_metric_data ): array {
+					$image_url = home_url( '/good.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					$sample_url_metric_data['lcpElementExternalBackgroundImage'] = array(
+						'url'   => $image_url,
+						'tag'   => 'DIV',
+						'id'    => null,
+						'class' => null,
+					);
+					$url_metric = new OD_Strict_URL_Metric( $sample_url_metric_data );
+					return array( true, $url_metric );
+				},
+				'assert' => function ( $value, OD_Strict_URL_Metric $url_metric ): void {
+					$this->assertTrue( $value );
+					$this->assertIsArray( $url_metric->get( 'lcpElementExternalBackgroundImage' ) );
+					$this->assertSame(
+						array(
+							'url'   => home_url( '/good.jpg' ),
+							'tag'   => 'DIV',
+							'id'    => null,
+							'class' => null,
+						),
+						$url_metric->get( 'lcpElementExternalBackgroundImage' )
+					);
+				},
+			),
+		);
+	}
+
+	/**
 	 * Tests image_prioritizer_filter_store_url_metric_validity().
 	 *
+	 * @dataProvider data_provider_to_test_image_prioritizer_filter_store_url_metric_validity
+	 *
 	 * @covers ::image_prioritizer_filter_store_url_metric_validity
+	 * @covers ::image_prioritizer_validate_background_image_url
 	 */
-	public function test_image_prioritizer_filter_store_url_metric_validity(): void {
-		$this->markTestIncomplete();
+	public function test_image_prioritizer_filter_store_url_metric_validity( Closure $set_up, Closure $assert ): void {
+		$sample_url_metric_data        = $this->get_sample_url_metric( array() )->jsonSerialize();
+		list( $validity, $url_metric ) = $set_up( $sample_url_metric_data );
+
+		$validity = image_prioritizer_filter_store_url_metric_validity( $validity, $url_metric );
+		$assert( $validity, $url_metric );
 	}
 
 	/**
