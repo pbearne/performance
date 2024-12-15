@@ -389,14 +389,14 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 
 			'user_archive'                => array(
 				'set_up' => function (): Closure {
-					$user = self::factory()->user->create_and_get();
-					$this->assertInstanceOf( WP_User::class, $user );
-					$post_ids = self::factory()->post->create_many( 3, array( 'post_author' => $user->ID ) );
-					$this->go_to( get_author_posts_url( $user->ID ) );
+					$user_id = self::factory()->user->create();
+					$this->assertIsInt( $user_id );
+					$post_ids = self::factory()->post->create_many( 3, array( 'post_author' => $user_id ) );
+					$this->go_to( get_author_posts_url( $user_id ) );
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'author.php';
 
-					return function ( array $etag_data ) use ( $user, $post_ids ): void {
-						$this->assertSame( $user->ID, $etag_data['queried_object']['id'] );
+					return function ( array $etag_data ) use ( $user_id, $post_ids ): void {
+						$this->assertSame( $user_id, $etag_data['queried_object']['id'] );
 						$this->assertSame( 'user', $etag_data['queried_object']['type'] );
 						$this->assertCount( 3, $etag_data['queried_posts'] );
 						$this->assertEqualSets( $post_ids, wp_list_pluck( $etag_data['queried_posts'], 'id' ) );
