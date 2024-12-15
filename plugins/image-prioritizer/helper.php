@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Initializes Image Prioritizer when Optimization Detective has loaded.
  *
  * @since 0.2.0
+ * @access private
  *
  * @param string $optimization_detective_version Current version of the optimization detective plugin.
  */
@@ -52,6 +53,7 @@ function image_prioritizer_init( string $optimization_detective_version ): void 
  * See {@see 'wp_head'}.
  *
  * @since 0.1.0
+ * @access private
  */
 function image_prioritizer_render_generator_meta_tag(): void {
 	// Use the plugin slug as it is immutable.
@@ -62,6 +64,7 @@ function image_prioritizer_render_generator_meta_tag(): void {
  * Registers tag visitors.
  *
  * @since 0.1.0
+ * @access private
  *
  * @param OD_Tag_Visitor_Registry $registry Tag visitor registry.
  */
@@ -81,6 +84,7 @@ function image_prioritizer_register_tag_visitors( OD_Tag_Visitor_Registry $regis
  * Filters the list of Optimization Detective extension module URLs to include the extension for Image Prioritizer.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @param string[]|mixed $extension_module_urls Extension module URLs.
  * @return string[] Extension module URLs.
@@ -97,6 +101,7 @@ function image_prioritizer_filter_extension_module_urls( $extension_module_urls 
  * Filters additional properties for the element item schema for Optimization Detective.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @param array<string, array{type: string}> $additional_properties Additional properties.
  * @return array<string, array{type: string}> Additional properties.
@@ -141,6 +146,7 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
  * Validates URL for a background image.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @param string $url Background image URL.
  * @return true|WP_Error Validity.
@@ -238,7 +244,8 @@ function image_prioritizer_validate_background_image_url( string $url ) {
  * This removes the lcpElementExternalBackgroundImage from the URL Metric prior to it being stored if the background
  * image URL is not valid. Removal of the property is preferable to
  *
- * @since        n.e.x.t
+ * @since n.e.x.t
+ * @access private
  *
  * @param bool|WP_Error|mixed  $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
  * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
@@ -273,6 +280,7 @@ function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Stric
  * Gets the path to a script or stylesheet.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @param string      $src_path Source path, relative to plugin root.
  * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
@@ -319,6 +327,7 @@ function image_prioritizer_get_asset_path( string $src_path, ?string $min_path =
  * Handles 'autoplay' and 'preload' attributes accordingly.
  *
  * @since 0.2.0
+ * @access private
  *
  * @return string Lazy load script.
  */
@@ -333,6 +342,7 @@ function image_prioritizer_get_video_lazy_load_script(): string {
  * Load the background image when it approaches the viewport using an IntersectionObserver.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @return string Lazy load script.
  */
@@ -345,6 +355,7 @@ function image_prioritizer_get_lazy_load_bg_image_script(): string {
  * Gets the stylesheet to lazy-load background images.
  *
  * @since n.e.x.t
+ * @access private
  *
  * @return string Lazy load stylesheet.
  */
