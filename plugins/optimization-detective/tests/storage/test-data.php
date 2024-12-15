@@ -300,7 +300,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$post = self::factory()->post->create_and_get();
 					$this->assertInstanceOf( WP_Post::class, $post );
 					$this->go_to( '/' );
-					$GLOBALS['template'] = 'home.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'home.php';
 
 					return function ( array $etag_data, Closure $get_etag ) use ( $post ): void {
 						$this->assertNull( $etag_data['queried_object']['id'] );
@@ -337,7 +337,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$this->assertInstanceOf( WP_Post::class, $post );
 					remove_filter( 'wp_insert_post_data', $force_old_post_modified_data );
 					$this->go_to( get_permalink( $post ) );
-					$GLOBALS['template'] = 'single.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'single.php';
 
 					return function ( array $etag_data, Closure $get_etag ) use ( $post ): void {
 						$this->assertSame( $post->ID, $etag_data['queried_object']['id'] );
@@ -375,7 +375,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 						wp_set_post_terms( $post_id, array( $term->term_id ), 'category' );
 					}
 					$this->go_to( get_category_link( $term ) );
-					$GLOBALS['template'] = 'category.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'category.php';
 
 					return function ( array $etag_data ) use ( $term, $post_ids ): void {
 						$this->assertSame( $term->term_id, $etag_data['queried_object']['id'] );
@@ -393,7 +393,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$this->assertInstanceOf( WP_User::class, $user );
 					$post_ids = self::factory()->post->create_many( 3, array( 'post_author' => $user->ID ) );
 					$this->go_to( get_author_posts_url( $user->ID ) );
-					$GLOBALS['template'] = 'author.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'author.php';
 
 					return function ( array $etag_data ) use ( $user, $post_ids ): void {
 						$this->assertSame( $user->ID, $etag_data['queried_object']['id'] );
@@ -416,7 +416,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					);
 					$post_ids = self::factory()->post->create_many( 4, array( 'post_type' => 'book' ) );
 					$this->go_to( get_post_type_archive_link( 'book' ) );
-					$GLOBALS['template'] = 'archive-book.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'archive-book.php';
 
 					return function ( array $etag_data ) use ( $post_ids ): void {
 						$this->assertNull( $etag_data['queried_object']['id'] );
@@ -436,7 +436,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 
 					$post_ids = self::factory()->post->create_many( 5 );
 					$this->go_to( get_page_link( $page_id ) );
-					$GLOBALS['template'] = 'home.php';
+					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'home.php';
 
 					return function ( array $etag_data ) use ( $page_id, $post_ids ): void {
 						$this->assertSame( $page_id, $etag_data['queried_object']['id'] );
@@ -478,9 +478,6 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 	 * @covers ::od_get_current_theme_template
 	 */
 	public function test_od_get_current_url_metrics_etag( Closure $set_up ): void {
-		global $template;
-		$template = 'index.php';
-
 		$captured_etag_data = null;
 		add_filter(
 			'od_current_url_metrics_etag_data',
