@@ -194,7 +194,7 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 			sprintf(
 				/* translators: %s is the list of allowed hosts */
 				__( 'Background image URL host is not among allowed: %s.', 'image-prioritizer' ),
-				join( ', ', $allowed_hosts )
+				join( ', ', array_unique( $allowed_hosts ) )
 			)
 		);
 	}
@@ -222,7 +222,7 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 	}
 
 	// Validate that the Content-Type is an image.
-	$content_type = (array) wp_remote_retrieve_header( $r, 'Content-Type' );
+	$content_type = (array) wp_remote_retrieve_header( $r, 'content-type' );
 	if ( ! is_string( $content_type[0] ) || ! str_starts_with( $content_type[0], 'image/' ) ) {
 		return new WP_Error(
 			'background_image_response_not_image',

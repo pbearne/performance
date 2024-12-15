@@ -474,26 +474,191 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 */
 	public function data_provider_to_test_image_prioritizer_validate_background_image_url(): array {
 		return array(
-			'url_parse_error'       => array(
+			'bad_url_parse_error'         => array(
 				'set_up'       => static function (): string {
 					return 'https:///www.example.com';
 				},
 				'expect_error' => 'background_image_url_lacks_host',
 			),
-			'url_no_host'           => array(
+			'bad_url_no_host'             => array(
 				'set_up'       => static function (): string {
 					return '/foo/bar?baz=1';
 				},
 				'expect_error' => 'background_image_url_lacks_host',
 			),
-			'url_disallowed_origin' => array(
+
+			'bad_url_disallowed_origin'   => array(
 				'set_up'       => static function (): string {
 					return 'https://bad.example.com/foo.jpg';
 				},
 				'expect_error' => 'disallowed_background_image_url_host',
 			),
-			// TODO: Try uploading image attachment and have it point to a CDN.
-			// TODO: Try a URL that returns a non image Content-Type.
+
+			'good_other_origin_via_allowed_http_origins_filter' => array(
+				'set_up'       => static function (): string {
+					$image_url = 'https://other-origin.example.com/foo.jpg';
+
+					add_filter(
+						'allowed_http_origins',
+						static function ( array $allowed_origins ): array {
+							$allowed_origins[] = 'https://other-origin.example.com';
+							return $allowed_origins;
+						}
+					);
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => null,
+			),
+
+			'good_url_allowed_cdn_origin' => array(
+				'set_up'       => function (): string {
+					$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/car.jpeg' );
+					$this->assertIsInt( $attachment_id );
+
+					add_filter(
+						'wp_get_attachment_image_src',
+						static function ( $src ): array {
+							$src[0] = preg_replace( '#^https?://#i', 'https://my-image-cdn.example.com/', $src[0] );
+							return $src;
+						}
+					);
+
+					$src = wp_get_attachment_image_src( $attachment_id, 'large' );
+					$this->assertIsArray( $src );
+					$this->assertStringStartsWith( 'https://my-image-cdn.example.com/', $src[0] );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $src ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $src[0] !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $src[0];
+				},
+				'expect_error' => null,
+			),
+
+			'bad_not_found'               => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/bad.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'text/html',
+									'content-length' => 1000,
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 404,
+									'message' => 'Not Found',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => 'background_image_response_not_ok',
+			),
+
+			'bad_content_type'            => array(
+				'set_up'       => static function (): string {
+					$video_url = home_url( '/bad.mp4' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $video_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $video_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'video/mp4',
+									'content-length' => '288449000',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $video_url;
+				},
+				'expect_error' => 'background_image_response_not_image',
+			),
+
+			'bad_redirect'                => array(
+				'set_up'       => static function (): string {
+					$redirect_url = home_url( '/redirect.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $redirect_url ) {
+							if ( $redirect_url === $url ) {
+								return new WP_Error( 'http_request_failed', 'Too many redirects.' );
+							}
+							return $pre;
+						},
+						10,
+						3
+					);
+
+					return $redirect_url;
+				},
+				'expect_error' => 'http_request_failed',
+			),
 		);
 	}
 
