@@ -205,7 +205,23 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 	$data = array(
 		'tag_visitors'     => array_keys( iterator_to_array( $tag_visitor_registry ) ),
 		'queried_object'   => $queried_object_data,
-		'queried_posts'    => wp_list_pluck( $wp_query->posts, 'post_modified_gmt', 'ID' ),
+		'queried_posts'    => array_filter(
+			array_map(
+				static function ( $post ): ?array {
+					if ( is_int( $post ) ) {
+						$post = get_post( $post );
+					}
+					if ( ! ( $post instanceof WP_Post ) ) {
+						return null;
+					}
+					return array(
+						'id'                => $post->ID,
+						'post_modified_gmt' => $post->post_modified_gmt,
+					);
+				},
+				0 === $wp_query->post_count ? array() : $wp_query->posts // Needed in case WP_Query has not been initialized.
+			)
+		),
 		'active_theme'     => array(
 			'template'   => array(
 				'name'    => get_template(),
