@@ -234,7 +234,30 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 		);
 	}
 
-	// TODO: Check for the Content-Length and return invalid if it is gigantic?
+	/*
+	 * Validate that the Content-Length is not too massive, as it would be better to err on the side of
+	 * not preloading something so weighty in case the image won't actually end up as LCP.
+	 * The value of 2MB is chosen because according to Web Almanac 2022, the largest image by byte size
+	 * on a page is 1MB at the 90th percentile: <https://almanac.httparchive.org/en/2022/media#fig-12>.
+	 * The 2MB value is double this 1MB size.
+	 */
+	$content_length = (array) wp_remote_retrieve_header( $r, 'content-length' );
+	if ( ! is_numeric( $content_length[0] ) ) {
+		return new WP_Error(
+			'background_image_content_length_unknown',
+			__( 'HEAD request for background image URL did not include a Content-Length response header.', 'image-prioritizer' )
+		);
+	} elseif ( (int) $content_length[0] > 2 * MB_IN_BYTES ) {
+		return new WP_Error(
+			'background_image_content_length_too_large',
+			sprintf(
+				/* translators: %s is the content length of the response  */
+				__( 'HEAD request for background image URL returned Content-Length greater than 2MB: %s.', 'image-prioritizer' ),
+				$content_length[0]
+			)
+		);
+	}
+
 	return true;
 }
 

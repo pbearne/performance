@@ -639,6 +639,37 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				'expect_error' => 'background_image_response_not_image',
 			),
 
+			'bad_content_length'          => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/massive-image.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => (string) ( 2 * MB_IN_BYTES + 1 ),
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => 'background_image_content_length_too_large',
+			),
+
 			'bad_redirect'                => array(
 				'set_up'       => static function (): string {
 					$redirect_url = home_url( '/redirect.jpg' );
