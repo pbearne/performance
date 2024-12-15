@@ -141,6 +141,32 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
+ * Gets the current template for a block theme or a classic theme.
+ *
+ * @since n.e.x.t
+ * @access private
+ *
+ * @global string|null $_wp_current_template_id Current template ID.
+ * @global string|null $template                Template file path.
+ *
+ * @return string|WP_Block_Template|null Template.
+ */
+function od_get_current_theme_template() {
+	global $template, $_wp_current_template_id;
+
+	if ( wp_is_block_theme() && isset( $_wp_current_template_id ) ) {
+		$block_template = get_block_template( $_wp_current_template_id, 'wp_template' );
+		if ( $block_template instanceof WP_Block_Template ) {
+			return $block_template;
+		}
+	}
+	if ( isset( $template ) && is_string( $template ) ) {
+		return basename( $template );
+	}
+	return null;
+}
+
+/**
  * Gets the current ETag for URL Metrics.
  *
  * Generates a hash based on the IDs of registered tag visitors, the queried object,
