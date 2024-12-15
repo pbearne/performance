@@ -303,6 +303,8 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'home.php';
 
 					return function ( array $etag_data, Closure $get_etag ) use ( $post ): void {
+						$this->assertTrue( is_home() );
+						$this->assertTrue( is_front_page() );
 						$this->assertNull( $etag_data['queried_object']['id'] );
 						$this->assertNull( $etag_data['queried_object']['type'] );
 						$this->assertCount( 1, $etag_data['queried_posts'] );
@@ -340,6 +342,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'single.php';
 
 					return function ( array $etag_data, Closure $get_etag ) use ( $post ): void {
+						$this->assertTrue( is_single( $post ) );
 						$this->assertSame( $post->ID, $etag_data['queried_object']['id'] );
 						$this->assertSame( 'post', $etag_data['queried_object']['type'] );
 						$this->assertArrayHasKey( 'post_modified_gmt', $etag_data['queried_object'] );
@@ -378,6 +381,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'category.php';
 
 					return function ( array $etag_data ) use ( $term, $post_ids ): void {
+						$this->assertTrue( is_category( $term ) );
 						$this->assertSame( $term->term_id, $etag_data['queried_object']['id'] );
 						$this->assertSame( 'term', $etag_data['queried_object']['type'] );
 						$this->assertCount( 2, $etag_data['queried_posts'] );
@@ -396,6 +400,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'author.php';
 
 					return function ( array $etag_data ) use ( $user_id, $post_ids ): void {
+						$this->assertTrue( is_author( $user_id ), 'Expected is_author() after having gone to ' . get_author_posts_url( $user_id ) );
 						$this->assertSame( $user_id, $etag_data['queried_object']['id'] );
 						$this->assertSame( 'user', $etag_data['queried_object']['type'] );
 						$this->assertCount( 3, $etag_data['queried_posts'] );
@@ -419,6 +424,7 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'archive-book.php';
 
 					return function ( array $etag_data ) use ( $post_ids ): void {
+						$this->assertTrue( is_post_type_archive( 'book' ) );
 						$this->assertNull( $etag_data['queried_object']['id'] );
 						$this->assertSame( 'book', $etag_data['queried_object']['type'] );
 						$this->assertCount( 4, $etag_data['queried_posts'] );
@@ -439,6 +445,8 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'home.php';
 
 					return function ( array $etag_data ) use ( $page_id, $post_ids ): void {
+						$this->assertTrue( is_home() );
+						$this->assertFalse( is_front_page() );
 						$this->assertSame( $page_id, $etag_data['queried_object']['id'] );
 						$this->assertSame( 'post', $etag_data['queried_object']['type'] );
 						$this->assertCount( 5, $etag_data['queried_posts'] );
@@ -455,6 +463,8 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					update_option( 'template', 'block-theme' );
 					update_option( 'stylesheet', 'block-theme' );
 					$this->go_to( '/' );
+					$this->assertTrue( is_home() );
+					$this->assertTrue( is_front_page() );
 					$GLOBALS['_wp_current_template_id'] = 'block-theme//index';
 
 					return function ( array $etag_data ): void {
