@@ -468,6 +468,63 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function data_provider_to_test_image_prioritizer_validate_background_image_url(): array {
+		return array(
+			'url_parse_error'       => array(
+				'set_up'       => static function (): string {
+					return 'https:///www.example.com';
+				},
+				'expect_error' => 'background_image_url_lacks_host',
+			),
+			'url_no_host'           => array(
+				'set_up'       => static function (): string {
+					return '/foo/bar?baz=1';
+				},
+				'expect_error' => 'background_image_url_lacks_host',
+			),
+			'url_disallowed_origin' => array(
+				'set_up'       => static function (): string {
+					return 'https://bad.example.com/foo.jpg';
+				},
+				'expect_error' => 'disallowed_background_image_url_host',
+			),
+			// TODO: Try uploading image attachment and have it point to a CDN.
+			// TODO: Try a URL that returns a non image Content-Type.
+		);
+	}
+
+	/**
+	 * Tests image_prioritizer_validate_background_image_url().
+	 *
+	 * @covers ::image_prioritizer_validate_background_image_url
+	 *
+	 * @dataProvider data_provider_to_test_image_prioritizer_validate_background_image_url
+	 */
+	public function test_image_prioritizer_validate_background_image_url( Closure $set_up, ?string $expect_error ): void {
+		$url      = $set_up();
+		$validity = image_prioritizer_validate_background_image_url( $url );
+		if ( null === $expect_error ) {
+			$this->assertTrue( $validity );
+		} else {
+			$this->assertInstanceOf( WP_Error::class, $validity );
+			$this->assertSame( $expect_error, $validity->get_error_code() );
+		}
+	}
+
+	/**
+	 * Tests image_prioritizer_filter_store_url_metric_validity().
+	 *
+	 * @covers ::image_prioritizer_filter_store_url_metric_validity
+	 */
+	public function test_image_prioritizer_filter_store_url_metric_validity(): void {
+		$this->markTestIncomplete();
+	}
+
+	/**
 	 * Test image_prioritizer_get_video_lazy_load_script.
 	 *
 	 * @covers ::image_prioritizer_get_video_lazy_load_script
