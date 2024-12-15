@@ -177,12 +177,12 @@ function od_get_current_theme_template() {
  * @access private
  *
  * @param OD_Tag_Visitor_Registry       $tag_visitor_registry Tag visitor registry.
- * @param WP_Query                      $wp_query             The WP_Query instance.
+ * @param WP_Query|null                 $wp_query             The WP_Query instance.
  * @param string|WP_Block_Template|null $current_template     The current template being used.
  * @return non-empty-string Current ETag.
  */
-function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, WP_Query $wp_query, $current_template ): string {
-	$queried_object      = $wp_query->get_queried_object();
+function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, ?WP_Query $wp_query, $current_template ): string {
+	$queried_object      = $wp_query instanceof WP_Query ? $wp_query->get_queried_object() : null;
 	$queried_object_data = array(
 		'id'   => null,
 		'type' => null,
@@ -219,7 +219,7 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 						'post_modified_gmt' => $post->post_modified_gmt,
 					);
 				},
-				0 === $wp_query->post_count ? array() : $wp_query->posts // Needed in case WP_Query has not been initialized.
+				( $wp_query instanceof WP_Query && $wp_query->post_count > 0 ) ? $wp_query->posts : array()
 			)
 		),
 		'active_theme'     => array(
