@@ -15,21 +15,12 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 */
 	public function set_up(): void {
 		parent::set_up();
-		$GLOBALS['template'] = '/path/to/theme/index.php';
 
 		// Normalize the data for computing the current URL Metrics ETag to work around the issue where there is no
 		// global variable storing the OD_Tag_Visitor_Registry instance along with any registered tag visitors, so
 		// during set up we do not know what the ETag will look like. The current ETag is only established when
 		// the output begins to be processed by od_optimize_template_output_buffer().
 		add_filter( 'od_current_url_metrics_etag_data', '__return_empty_array' );
-	}
-
-	/**
-	 * Runs the routine after each test is executed.
-	 */
-	public function tear_down(): void {
-		unset( $GLOBALS['template'] );
-		parent::tear_down();
 	}
 
 	/**
