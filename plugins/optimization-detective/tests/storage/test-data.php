@@ -396,6 +396,16 @@ class Test_OD_Storage_Data extends WP_UnitTestCase {
 					$user_id = self::factory()->user->create();
 					$this->assertIsInt( $user_id );
 					$post_ids = self::factory()->post->create_many( 3, array( 'post_author' => $user_id ) );
+
+					// This is a workaround because the author URL pretty permalink is failing for some reason only on GHA.
+					add_filter(
+						'author_link',
+						static function ( $link, $author_id ) {
+							return add_query_arg( 'author', $author_id, home_url( '/' ) );
+						},
+						10,
+						2
+					);
 					$this->go_to( get_author_posts_url( $user_id ) );
 					$GLOBALS['template'] = trailingslashit( get_template_directory() ) . 'author.php';
 
