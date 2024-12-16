@@ -170,11 +170,13 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 	// Obtain the host of an image attachment's URL in case a CDN is pointing all images to an origin other than the home or site URLs.
 	$image_attachment_query = new WP_Query(
 		array(
-			'post_type'      => 'attachment',
-			'post_mime_type' => 'image',
-			'post_status'    => 'inherit',
-			'posts_per_page' => 1,
-			'fields'         => 'ids',
+			'post_type'              => 'attachment',
+			'post_mime_type'         => 'image',
+			'post_status'            => 'inherit',
+			'posts_per_page'         => 1,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_term_cache' => false, // Note that update_post_meta_cache is not included as well because wp_get_attachment_image_src() needs postmeta.
 		)
 	);
 	if ( isset( $image_attachment_query->posts[0] ) && is_int( $image_attachment_query->posts[0] ) ) {
