@@ -291,8 +291,11 @@ function perflab_render_plugins_ui(): void {
 		</div>
 		<div class="clear"></div>
 	</div>
-	<p>
-		<?php
+	<?php
+	if ( current_user_can( 'activate_plugins' ) ) {
+		?>
+		<p>
+			<?php
 			$plugins_url = add_query_arg(
 				array(
 					's'             => 'WordPress Performance Team',
@@ -310,8 +313,10 @@ function perflab_render_plugins_ui(): void {
 					'a' => array( 'href' => true ),
 				)
 			);
-		?>
-	</p>
+			?>
+		</p>
+		<?php
+	}
 	<?php
 }
 
