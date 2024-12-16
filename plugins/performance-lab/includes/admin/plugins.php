@@ -292,6 +292,31 @@ function perflab_render_plugins_ui(): void {
 		<div class="clear"></div>
 	</div>
 	<?php
+	if ( current_user_can( 'activate_plugins' ) ) {
+		?>
+		<p>
+			<?php
+			$plugins_url = add_query_arg(
+				array(
+					's'             => 'WordPress Performance Team',
+					'plugin_status' => 'all',
+				),
+				admin_url( 'plugins.php' )
+			);
+			echo wp_kses(
+				sprintf(
+					/* translators: %s is the URL to the plugins screen */
+					__( 'Performance features are installed as plugins. To update features or remove them, <a href="%s">manage them on the plugins screen</a>.', 'performance-lab' ),
+					esc_url( $plugins_url )
+				),
+				array(
+					'a' => array( 'href' => true ),
+				)
+			);
+			?>
+		</p>
+		<?php
+	}
 }
 
 /**

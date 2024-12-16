@@ -234,7 +234,7 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
  * @return string The alignment width based.
  */
 function auto_sizes_get_layout_width( string $alignment ): string {
-	$layout = auto_sizes_get_layout_settings();
+	$layout = wp_get_global_settings( array( 'layout' ) );
 
 	$layout_widths = array(
 		'full'    => '100vw', // Todo: incorporate useRootPaddingAwareAlignments.
@@ -299,15 +299,4 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
 	}
 
 	return $context;
-}
-
-/**
- * Retrieves the layout settings defined in theme.json.
- *
- * @since n.e.x.t
- *
- * @return array<string, mixed> Associative array of layout settings.
- */
-function auto_sizes_get_layout_settings(): array {
-	return wp_get_global_settings( array( 'layout' ) );
 }
