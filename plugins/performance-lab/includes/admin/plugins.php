@@ -317,7 +317,6 @@ function perflab_render_plugins_ui(): void {
 		</p>
 		<?php
 	}
-	<?php
 }
 
 /**
