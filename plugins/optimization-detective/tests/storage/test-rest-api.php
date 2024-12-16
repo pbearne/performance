@@ -61,7 +61,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 			'rejected_by_generic_exception'    => array(
 				'set_up'          => function (): array {
 					add_filter(
-						'od_url_metric_data_pre_storage',
+						'od_store_url_metric_data',
 						static function ( $data ): array {
 							if ( count( $data ) > 0 ) {
 								throw new Exception( 'bad' );
@@ -77,7 +77,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 			'rejected_by_validation_exception' => array(
 				'set_up'          => function (): array {
 					add_filter(
-						'od_url_metric_data_pre_storage',
+						'od_store_url_metric_data',
 						static function ( $data ): array {
 							if ( count( $data ) > 0 ) {
 								throw new OD_Data_Validation_Exception( 'bad' );
@@ -118,7 +118,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$filtered_url_metric_data = null;
 		$filter_called            = 0;
 		add_filter(
-			'od_url_metric_data_pre_storage',
+			'od_store_url_metric_data',
 			function ( $url_metric_data ) use ( &$filter_called, &$filtered_url_metric_data ) {
 				$this->assertIsArray( $url_metric_data );
 				$filtered_url_metric_data = $url_metric_data;

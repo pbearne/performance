@@ -216,7 +216,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		 *
 		 * @param array<string, mixed> $data URL Metric data. This is the Data type from OD_URL_Metric.
 		 */
-		$data = apply_filters( 'od_url_metric_data_pre_storage', $data );
+		$data = apply_filters( 'od_store_url_metric_data', $data );
 
 		// The "strict" URL Metric class is being used here to ensure additionalProperties of all objects are disallowed.
 		$url_metric = new OD_Strict_URL_Metric( $data );

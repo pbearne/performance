@@ -275,7 +275,7 @@ function image_prioritizer_validate_background_image_url( string $url ) {
  *
  * @noinspection PhpDocMissingThrowsInspection
  */
-function image_prioritizer_filter_url_metric_data_pre_storage( $data ): array {
+function image_prioritizer_filter_store_url_metric_data( $data ): array {
 	if ( ! is_array( $data ) ) {
 		$data = array();
 	}

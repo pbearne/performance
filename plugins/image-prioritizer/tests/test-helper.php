@@ -747,7 +747,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function data_provider_to_test_image_prioritizer_filter_url_metric_data_pre_storage(): array {
+	public function data_provider_to_test_image_prioritizer_filter_store_url_metric_data(): array {
 		return array(
 			'invalid_external_bg_image' => array(
 				'set_up' => static function ( array $url_metric_data ): array {
@@ -835,17 +835,17 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Tests image_prioritizer_filter_url_metric_data_pre_storage().
+	 * Tests image_prioritizer_filter_store_url_metric_data().
 	 *
-	 * @dataProvider data_provider_to_test_image_prioritizer_filter_url_metric_data_pre_storage
+	 * @dataProvider data_provider_to_test_image_prioritizer_filter_store_url_metric_data
 	 *
-	 * @covers ::image_prioritizer_filter_url_metric_data_pre_storage
+	 * @covers ::image_prioritizer_filter_store_url_metric_data
 	 * @covers ::image_prioritizer_validate_background_image_url
 	 */
-	public function test_image_prioritizer_filter_url_metric_data_pre_storage( Closure $set_up, Closure $assert ): void {
+	public function test_image_prioritizer_filter_store_url_metric_data( Closure $set_up, Closure $assert ): void {
 		$url_metric_data = $set_up( $this->get_sample_url_metric( array() )->jsonSerialize() );
 
-		$url_metric_data = image_prioritizer_filter_url_metric_data_pre_storage( $url_metric_data );
+		$url_metric_data = image_prioritizer_filter_store_url_metric_data( $url_metric_data );
 		$assert( $url_metric_data );
 	}
 
