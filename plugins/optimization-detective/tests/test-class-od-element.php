@@ -24,7 +24,6 @@ class Test_OD_Element extends WP_UnitTestCase {
 	 * @covers ::offsetExists
 	 * @covers ::offsetGet
 	 * @covers ::offsetSet
-	 * @covers ::unset
 	 * @covers ::offsetUnset
 	 * @covers ::jsonSerialize
 	 */
@@ -131,68 +130,22 @@ class Test_OD_Element extends WP_UnitTestCase {
 		$this->assertTrue( isset( $element['customProp'] ) );
 		$this->assertTrue( $element->offsetExists( 'customProp' ) );
 
-		// Try setting property (which is not currently supported).
-		$functions = array(
-			static function ( OD_Element $element ): void {
-				$element['isLCP'] = true;
-			},
-			static function ( OD_Element $element ): void {
-				$element->offsetSet( 'isLCP', true );
-			},
-		);
-		foreach ( $functions as $function ) {
-			$exception = null;
-			try {
-				$function( $element );
-			} catch ( Exception $e ) {
-				$exception = $e;
-			}
-			$this->assertInstanceOf( Exception::class, $exception );
-			$this->assertFalse( $element->get( 'isLCP' ) );
-		}
-
-		// Try unsetting a required property.
-		$functions = array(
-			static function ( OD_Element $element ): void {
-				unset( $element['isLCP'] );
-			},
-			static function ( OD_Element $element ): void {
-				$element->unset( 'isLCP' );
-			},
-			static function ( OD_Element $element ): void {
-				$element->offsetUnset( 'isLCP' );
-			},
-		);
-		foreach ( $functions as $function ) {
-			$exception = null;
-			try {
-				$function( $element );
-			} catch ( Exception $e ) {
-				$exception = $e;
-			}
-			$this->assertInstanceOf( Exception::class, $exception );
-			$this->assertArrayHasKey( 'isLCP', $element->jsonSerialize() );
-		}
-
 		$this->assertEquals( $element_data, $element->jsonSerialize() );
 
-		// Try unsetting a non-required property.
-		$functions = array(
-			static function ( OD_Element $element ): void {
-				unset( $element['customProp'] );
-			},
-			static function ( OD_Element $element ): void {
-				$element->unset( 'customProp' );
-			},
-			static function ( OD_Element $element ): void {
-				$element->offsetUnset( 'customProp' );
-			},
-		);
-		foreach ( $functions as $function ) {
-			$cloned_element = clone $element;
-			$function( $cloned_element );
-			$this->assertFalse( $cloned_element->offsetExists( 'customProp' ) );
-			$this->assertArrayNotHasKey( 'customProp', $cloned_element->jsonSerialize() );
+		$exception = null;
+		try {
+			$element['isLCP'] = true;
+		} catch ( Exception $e ) {
+			$exception = $e;
 		}
+		$this->assertInstanceOf( Exception::class, $exception );
+
+		$exception = null;
+		try {
+			unset( $element['isLCP'] );
+		} catch ( Exception $e ) { // @phpstan-ignore catch.neverThrown (It is thrown by offsetUnset actually.)
+			$exception = $e;
+		}
+		$this->assertInstanceOf( Exception::class, $exception ); // @phpstan-ignore method.impossibleType (It is thrown by offsetUnset actually.)
 	}
 }

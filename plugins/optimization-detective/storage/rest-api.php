@@ -186,85 +186,64 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 	OD_Storage_Lock::set_lock();
 
 	try {
-		// The "strict" URL Metric class is being used here to ensure additionalProperties of all objects are disallowed.
-		$url_metric = new OD_Strict_URL_Metric(
-			array_merge(
-				$data,
-				array(
-					// Now supply the readonly args which were omitted from the REST API params due to being `readonly`.
-					'timestamp' => microtime( true ),
-					'uuid'      => wp_generate_uuid4(),
-					'etag'      => $request->get_param( 'current_etag' ),
-				)
+		$data = array_merge(
+			$data,
+			array(
+				// Now supply the readonly args which were omitted from the REST API params due to being `readonly`.
+				'timestamp' => microtime( true ),
+				'uuid'      => wp_generate_uuid4(),
+				'etag'      => $request->get_param( 'current_etag' ),
 			)
 		);
-	} catch ( OD_Data_Validation_Exception $e ) {
-		return new WP_Error(
-			'rest_invalid_param',
-			sprintf(
-				/* translators: %s is exception name */
-				__( 'Failed to validate URL Metric: %s', 'optimization-detective' ),
-				$e->getMessage()
-			),
-			array( 'status' => 400 )
-		);
-	}
 
-	try {
 		/**
-		 * Filters whether a URL Metric is valid for storage.
+		 * Filters the URL Metric data prior to validation for storage.
 		 *
-		 * This allows for custom validation constraints to be applied beyond what can be expressed in JSON Schema. This is
-		 * also necessary because the 'validate_callback' key in a JSON Schema is not respected when gathering the REST API
-		 * endpoint args via the {@see rest_get_endpoint_args_for_schema()} function. Besides this, the REST API doesn't
-		 * support 'validate_callback' for any nested arguments in any case, meaning that custom constraints would be able
-		 * to be applied to multidimensional objects, such as the items inside 'elements'.
+		 * This allows for custom sanitization and validation constraints to be applied beyond what can be expressed in
+		 * JSON Schema. This is also necessary because the 'validate_callback' key in a JSON Schema is not respected when
+		 * gathering the REST API endpoint args via the {@see rest_get_endpoint_args_for_schema()} function. Besides this,
+		 * the REST API doesn't support 'validate_callback' for any nested arguments in any case, meaning that custom
+		 * constraints would be able to be applied to multidimensional objects, such as the items inside 'elements'.
 		 *
 		 * This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric is
-		 * loaded from the od_url_metrics post type. This means that validation logic enforced via this filter can be more
-		 * expensive, such as doing filesystem checks or HTTP requests.
+		 * loaded from the od_url_metrics post type. This means that sanitization and validation logic enforced via this
+		 * filter can be more expensive, such as doing filesystem checks or HTTP requests.
 		 *
-		 * In addition to having the filter return `false` or a non-empty `WP_Error` to block storing the URL Metric, a
-		 * plugin may also mutate the OD_URL_Metric instance passed by reference to the filter callback. This is useful
-		 * for plugins in particular to unset extended properties which couldn't be validated using JSON Schema alone.
+		 * To fail validation for the provided URL Metric data, an OD_Data_Validation_Exception exception should be thrown.
+		 * Otherwise, any filter callbacks must return an array consisting of the sanitized URL Metric data.
 		 *
 		 * @since n.e.x.t
 		 *
-		 * @param bool|WP_Error        $validity        Validity. Invalid if false or a WP_Error with errors.
-		 * @param OD_Strict_URL_Metric $url_metric      URL Metric, already validated against the JSON Schema.
-		 * @param array<string, mixed> $url_metric_data Original URL Metric data before any mutations.
+		 * @param array<string, mixed> $data URL Metric data. This is the Data type from OD_URL_Metric.
 		 */
-		$validity = apply_filters( 'od_url_metric_storage_validity', true, $url_metric, $url_metric->jsonSerialize() );
+		$data = apply_filters( 'od_url_metric_data_pre_storage', $data );
+
+		// The "strict" URL Metric class is being used here to ensure additionalProperties of all objects are disallowed.
+		$url_metric = new OD_Strict_URL_Metric( $data );
 	} catch ( Exception $e ) {
-		$error_data = array(
-			'status' => 500,
-		);
-		if ( WP_DEBUG ) {
-			$error_data['exception'] = array(
-				'class'   => get_class( $e ),
-				'message' => $e->getMessage(),
-				'code'    => $e->getCode(),
+		$error_data = array();
+		if ( $e instanceof OD_Data_Validation_Exception ) {
+			$error_message = sprintf(
+				/* translators: %s is exception name */
+				__( 'Failed to validate URL Metric: %s', 'optimization-detective' ),
+				$e->getMessage()
 			);
+			$error_data['status'] = 400;
+		} else {
+			$error_message = sprintf(
+				/* translators: %s is exception name */
+				__( 'Failed to validate URL Metric: %s', 'optimization-detective' ),
+				__( 'An unrecognized exception was thrown', 'optimization-detective' )
+			);
+			$error_data['status'] = 500;
+			if ( WP_DEBUG ) {
+				$error_data['exception_class']   = get_class( $e );
+				$error_data['exception_message'] = $e->getMessage();
+				$error_data['exception_code']    = $e->getCode();
+			}
 		}
-		$validity = new WP_Error(
-			'exception',
-			sprintf(
-				/* translators: %s is the filter name 'od_url_metric_storage_validity' */
-				__( 'An %s filter callback threw an exception.', 'optimization-detective' ),
-				'od_url_metric_storage_validity'
-			),
-			$error_data
-		);
-	}
-	if ( false === (bool) $validity || ( $validity instanceof WP_Error && $validity->has_errors() ) ) {
-		if ( false === $validity ) {
-			$validity = new WP_Error( 'invalid_url_metric', __( 'Validity of URL Metric was rejected by filter.', 'optimization-detective' ) );
-		}
-		$error_code = $validity->get_error_code();
-		if ( ! isset( $validity->error_data[ $error_code ]['status'] ) ) {
-			$validity->error_data[ $error_code ]['status'] = 400;
-		}
-		return $validity;
+
+		return new WP_Error( 'rest_invalid_param', $error_message, $error_data );
 	}
 
 	// TODO: This should be changed from store_url_metric($slug, $url_metric) instead be update_post( $slug, $group_collection ). As it stands, store_url_metric() is duplicating logic here.
@@ -277,8 +256,8 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 			'status' => 500,
 		);
 		if ( WP_DEBUG ) {
-			$error_data['code']    = $result->get_error_code();
-			$error_data['message'] = $result->get_error_message();
+			$error_data['error_code']    = $result->get_error_code();
+			$error_data['error_message'] = $result->get_error_message();
 		}
 		return new WP_Error(
 			'unable_to_store_url_metric',

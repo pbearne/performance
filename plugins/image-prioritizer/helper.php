@@ -270,33 +270,30 @@ function image_prioritizer_validate_background_image_url( string $url ) {
  * @since n.e.x.t
  * @access private
  *
- * @param bool|WP_Error|mixed  $validity   Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
- * @param OD_Strict_URL_Metric $url_metric URL Metric, already validated against the JSON Schema.
- * @return bool|WP_Error Validity. Valid if true or a WP_Error without any errors, or invalid otherwise.
+ * @param array<string, mixed>|mixed $data URL Metric data.
+ * @return array<string, mixed> Sanitized URL Metric data.
  *
  * @noinspection PhpDocMissingThrowsInspection
- * @throws OD_Data_Validation_Exception Except it won't because lcpElementExternalBackgroundImage is not a required property.
  */
-function image_prioritizer_filter_store_url_metric_validity( $validity, OD_Strict_URL_Metric $url_metric ) {
-	if ( ! is_bool( $validity ) && ! ( $validity instanceof WP_Error ) ) {
-		$validity = (bool) $validity;
+function image_prioritizer_filter_url_metric_data_pre_storage( $data ): array {
+	if ( ! is_array( $data ) ) {
+		$data = array();
 	}
 
-	$data = $url_metric->get( 'lcpElementExternalBackgroundImage' );
-	if ( is_array( $data ) && isset( $data['url'] ) && is_string( $data['url'] ) ) { // Note: The isset() and is_string() checks aren't necessary since the JSON Schema enforces them to be set.
-		$image_validity = image_prioritizer_validate_background_image_url( $data['url'] );
+	if ( isset( $data['lcpElementExternalBackgroundImage']['url'] ) && is_string( $data['lcpElementExternalBackgroundImage']['url'] ) ) {
+		$image_validity = image_prioritizer_validate_background_image_url( $data['lcpElementExternalBackgroundImage']['url'] );
 		if ( is_wp_error( $image_validity ) ) {
 			/**
 			 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
 			 *
 			 * @noinspection PhpUnhandledExceptionInspection
 			 */
-			wp_trigger_error( __FUNCTION__, $image_validity->get_error_message() . ' Background image URL: ' . $data['url'] );
-			$url_metric->unset( 'lcpElementExternalBackgroundImage' );
+			wp_trigger_error( __FUNCTION__, $image_validity->get_error_message() . ' Background image URL: ' . $data['lcpElementExternalBackgroundImage']['url'] );
+			unset( $data['lcpElementExternalBackgroundImage'] );
 		}
 	}
 
-	return $validity;
+	return $data;
 }
 
 /**

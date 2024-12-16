@@ -41,14 +41,14 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		};
 
 		return array(
-			'not_extended'                                => array(
+			'not_extended'                     => array(
 				'set_up'          => function (): array {
 					return $this->get_valid_params();
 				},
 				'expect_stored'   => true,
 				'expected_status' => 200,
 			),
-			'extended'                                    => array(
+			'extended'                         => array(
 				'set_up'          => function () use ( $add_root_extra_property ): array {
 					$add_root_extra_property( 'extra' );
 					$params = $this->get_valid_params();
@@ -58,84 +58,39 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				'expect_stored'   => true,
 				'expected_status' => 200,
 			),
-			'extended_but_unset'                          => array(
-				'set_up'          => function () use ( $add_root_extra_property ): array {
-					$add_root_extra_property( 'unset_prop' );
-					add_filter(
-						'od_url_metric_storage_validity',
-						static function ( $validity, OD_URL_Metric $url_metric ) {
-							$url_metric->unset( 'extra' );
-							return $validity;
-						},
-						10,
-						2
-					);
-					$params = $this->get_valid_params();
-					$params['unset_prop'] = 'bar';
-					return $params;
-				},
-				'expect_stored'   => true,
-				'expected_status' => 200,
-			),
-			'extended_and_rejected_by_returning_false'    => array(
-				'set_up'          => function () use ( $add_root_extra_property ): array {
-					$add_root_extra_property( 'extra' );
-					add_filter( 'od_url_metric_storage_validity', '__return_false' );
-
-					$params = $this->get_valid_params();
-					$params['extra'] = 'foo';
-					return $params;
-				},
-				'expect_stored'   => false,
-				'expected_status' => 400,
-			),
-			'extended_and_rejected_by_returning_wp_error' => array(
-				'set_up'          => function () use ( $add_root_extra_property ): array {
-					$add_root_extra_property( 'extra' );
-					add_filter(
-						'od_url_metric_storage_validity',
-						static function () {
-							return new WP_Error( 'rejected', 'Rejected!' );
-						}
-					);
-
-					$params = $this->get_valid_params();
-					$params['extra'] = 'foo';
-					return $params;
-				},
-				'expect_stored'   => false,
-				'expected_status' => 400,
-			),
-			'rejected_by_returning_wp_error_with_forbidden_status' => array(
+			'rejected_by_generic_exception'    => array(
 				'set_up'          => function (): array {
 					add_filter(
-						'od_url_metric_storage_validity',
-						static function () {
-							return new WP_Error( 'forbidden', 'Forbidden!', array( 'status' => 403 ) );
+						'od_url_metric_data_pre_storage',
+						static function ( $data ): array {
+							if ( count( $data ) > 0 ) {
+								throw new Exception( 'bad' );
+							}
+							return $data;
 						}
-					);
-					return $this->get_valid_params();
-				},
-				'expect_stored'   => false,
-				'expected_status' => 403,
-			),
-			'rejected_by_exception'                       => array(
-				'set_up'          => function (): array {
-					add_filter(
-						'od_url_metric_storage_validity',
-						static function ( $validity, OD_URL_Metric $url_metric ) {
-							$url_metric->unset( 'viewport' );
-							return $validity;
-						},
-						10,
-						2
 					);
 					return $this->get_valid_params();
 				},
 				'expect_stored'   => false,
 				'expected_status' => 500,
 			),
-			'with_cache_purge_post_id'                    => array(
+			'rejected_by_validation_exception' => array(
+				'set_up'          => function (): array {
+					add_filter(
+						'od_url_metric_data_pre_storage',
+						static function ( $data ): array {
+							if ( count( $data ) > 0 ) {
+								throw new OD_Data_Validation_Exception( 'bad' );
+							}
+							return $data;
+						}
+					);
+					return $this->get_valid_params();
+				},
+				'expect_stored'   => false,
+				'expected_status' => 400,
+			),
+			'with_cache_purge_post_id'         => array(
 				'set_up'          => function (): array {
 					$params = $this->get_valid_params();
 					$params['cache_purge_post_id'] = self::factory()->post->create();
@@ -160,22 +115,17 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @covers ::od_trigger_page_cache_invalidation
 	 */
 	public function test_rest_request_good_params( Closure $set_up, bool $expect_stored, int $expected_status ): void {
-		$filtered_url_metric_obj  = null;
 		$filtered_url_metric_data = null;
 		$filter_called            = 0;
 		add_filter(
-			'od_url_metric_storage_validity',
-			function ( $validity, $url_metric, $url_metric_data ) use ( &$filter_called, &$filtered_url_metric_obj, &$filtered_url_metric_data ) {
-				$this->assertTrue( $validity );
-				$this->assertInstanceOf( OD_URL_Metric::class, $url_metric );
+			'od_url_metric_data_pre_storage',
+			function ( $url_metric_data ) use ( &$filter_called, &$filtered_url_metric_data ) {
 				$this->assertIsArray( $url_metric_data );
-				$filtered_url_metric_obj  = $url_metric;
 				$filtered_url_metric_data = $url_metric_data;
 				$filter_called++;
-				return $validity;
+				return $url_metric_data;
 			},
-			0,
-			3
+			0
 		);
 
 		$stored_context = null;
@@ -233,7 +183,6 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 			);
 
 			$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
-			$this->assertSame( $stored_context->url_metric, $filtered_url_metric_obj );
 			$this->assertSame( $stored_context->url_metric->jsonSerialize(), $filtered_url_metric_data );
 
 			// Now check that od_trigger_page_cache_invalidation() cleaned caches as expected.

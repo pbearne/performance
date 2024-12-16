@@ -208,53 +208,18 @@ class OD_Element implements ArrayAccess, JsonSerializable {
 	}
 
 	/**
-	 * Unsets a property.
+	 * Offset to unset.
 	 *
-	 * This is particularly useful in conjunction with the `od_url_metric_schema_element_item_additional_properties` filter.
-	 * This will throw an exception if the property is required by the schema.
+	 * This is disallowed. Attempting to unset a property will throw an error.
 	 *
-	 * @since n.e.x.t
-	 *
-	 * @param string $key Property.
-	 *
-	 * @throws OD_Data_Validation_Exception When attempting to unset a property required by the JSON Schema.
-	 */
-	public function unset( string $key ): void {
-		$schema = OD_URL_Metric::get_json_schema(); // TODO: This should be a non-static method once the URL Metric is instantiated.
-		if (
-			isset( $schema['properties']['elements']['items']['properties'][ $key ]['required'] )
-			&& true === $schema['properties']['elements']['items']['properties'][ $key ]['required']
-		) {
-			throw new OD_Data_Validation_Exception(
-				esc_html(
-					sprintf(
-						/* translators: %s is the property key. */
-						__( 'The %s key is required for an item of elements in a URL Metric.', 'optimization-detective' ),
-						$key
-					)
-				)
-			);
-		}
-		unset( $this->data[ $key ] ); // @phpstan-ignore assign.propertyType (Above required check ensures $key is not isLCP, isLCPCandidate, xpath, intersectionRatio, intersectionRect, boundingClientRect.)
-		$group = $this->url_metric->get_group();
-		if ( $group instanceof OD_URL_Metric_Group ) {
-			$group->clear_cache();
-		}
-	}
-
-	/**
-	 * Unsets an offset.
-	 *
-	 * This will throw an exception if the offset is required by the schema.
-	 *
-	 * @since n.e.x.t
+	 * @since 0.7.0
 	 *
 	 * @param mixed $offset Offset.
 	 *
-	 * @throws OD_Data_Validation_Exception When attempting to unset a property required by the JSON Schema.
+	 * @throws Exception When attempting to unset a property.
 	 */
 	public function offsetUnset( $offset ): void {
-		$this->unset( (string) $offset );
+		throw new Exception( 'Element data may not be unset.' );
 	}
 
 	/**
