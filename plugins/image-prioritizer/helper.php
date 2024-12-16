@@ -290,7 +290,15 @@ function image_prioritizer_filter_store_url_metric_data( $data ): array {
 			 *
 			 * @noinspection PhpUnhandledExceptionInspection
 			 */
-			wp_trigger_error( __FUNCTION__, $image_validity->get_error_message() . ' Background image URL: ' . $data['lcpElementExternalBackgroundImage']['url'] );
+			wp_trigger_error(
+				__FUNCTION__,
+				sprintf(
+					/* translators: 1: error message. 2: image url */
+					__( 'Error: %1$s. Background image URL: %2$s.', 'image-prioritizer' ),
+					rtrim( $image_validity->get_error_message(), '.' ),
+					$data['lcpElementExternalBackgroundImage']['url']
+				)
+			);
 			unset( $data['lcpElementExternalBackgroundImage'] );
 		}
 	}
