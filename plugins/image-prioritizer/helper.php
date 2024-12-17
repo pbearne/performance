@@ -264,7 +264,7 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 }
 
 /**
- * Filters the response before executing any REST API callbacks.
+ * Sanitizes the lcpElementExternalBackgroundImage property from the request URL Metric storage request.
  *
  * This removes the lcpElementExternalBackgroundImage from the URL Metric prior to it being stored if the background
  * image URL is not valid. Removal of the property is preferable to invalidating the entire URL Metric because then
@@ -288,8 +288,8 @@ function image_prioritizer_filter_rest_request_before_callbacks( $response, arra
 	if (
 		$request->get_method() !== 'POST'
 		||
-		// The strtolower()  is due to \WP_REST_Server::match_request_to_handler() using case-insensitive pattern match.
-		OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== strtolower( trim( $request->get_route(), '/' ) )
+		// The strtolower() is due to \WP_REST_Server::match_request_to_handler() using case-insensitive pattern match.
+		OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== trim( strtolower( trim( $request->get_route(), '/' ) ) )
 	) {
 		return $response;
 	}
