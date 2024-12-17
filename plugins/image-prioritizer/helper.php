@@ -285,7 +285,12 @@ function image_prioritizer_validate_background_image_url( string $url ) {
  * @noinspection PhpDocMissingThrowsInspection
  */
 function image_prioritizer_filter_rest_request_before_callbacks( $response, array $handler, WP_REST_Request $request ) {
-	if ( $request->get_method() !== 'POST' || OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== trim( $request->get_route(), '/' ) ) {
+	if (
+		$request->get_method() !== 'POST'
+		||
+		// The strtolower()  is due to \WP_REST_Server::match_request_to_handler() using case-insensitive pattern match.
+		OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== strtolower( trim( $request->get_route(), '/' ) )
+	) {
 		return $response;
 	}
 

@@ -760,7 +760,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 		};
 
 		return array(
-			'invalid_external_bg_image' => array(
+			'invalid_external_bg_image'               => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 
@@ -786,7 +786,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'valid_external_bg_image'   => array(
+			'valid_external_bg_image'                 => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 					$image_url = home_url( '/good.jpg' );
@@ -846,7 +846,26 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'not_store_post_request'    => array(
+			'invalid_external_bg_image_variant_route' => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+
+					$url_metric_data['lcpElementExternalBackgroundImage'] = array(
+						'url'   => 'https://bad-origin.example.com/image.jpg',
+						'tag'   => 'DIV',
+						'id'    => null,
+						'class' => null,
+					);
+					$request = $create_request( $url_metric_data );
+					$request->set_route( str_replace( 'store', 'STORE', $request->get_route() ) );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
+				},
+			),
+
+			'not_store_post_request'                  => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
@@ -860,7 +879,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'not_store_request'         => array(
+			'not_store_request'                       => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
