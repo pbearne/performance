@@ -62,6 +62,12 @@ By default, the Modern Image Formats plugin will only generate WebP versions of 
 
 = 2.4.0 =
 
+**Enhancements**
+
+* Automatically opt into 1536x1536 and 2048x2048 sizes when generating fallback images. ([1679](https://github.com/WordPress/performance/pull/1679))
+* Convert WebP to AVIF on upload. ([1724](https://github.com/WordPress/performance/pull/1724))
+* Enable end user opt-in to generate all sizes in fallback format. ([1689](https://github.com/WordPress/performance/pull/1689))
+
 = 2.3.0 =
 
 **Enhancements**

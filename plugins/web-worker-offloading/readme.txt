@@ -96,6 +96,15 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 = 0.2.0 =
 
+**Enhancements**
+
+* Integrate Web Worker Offloading with Google Site Kit. ([1686](https://github.com/WordPress/performance/pull/1686))
+* Integrate Web Worker Offloading with Rank Math SEO. ([1685](https://github.com/WordPress/performance/pull/1685))
+
+**Bug Fixes**
+
+* Fix tracking events like add_to_cart in WooCommerce integration. ([1740](https://github.com/WordPress/performance/pull/1740))
+
 = 0.1.1 =
 
 **Enhancements**

@@ -69,6 +69,10 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 = 0.4.0 =
 
+**Enhancements**
+
+* Incorporate breakpoints into preconnect links added by Embed Optimizer. ([1654](https://github.com/WordPress/performance/pull/1654))
+
 = 0.3.0 =
 
 **Enhancements**

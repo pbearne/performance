@@ -321,6 +321,18 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 = 0.9.0 =
 
+**Enhancements**
+
+* Add `fetchpriority=high` to `IMG` when it is the LCP element on desktop and mobile with other viewport groups empty. ([1723](https://github.com/WordPress/performance/pull/1723))
+* Improve debugging stored URL Metrics in Optimization Detective. ([1656](https://github.com/WordPress/performance/pull/1656))
+* Incorporate page state into ETag computation. ([1722](https://github.com/WordPress/performance/pull/1722))
+* Mark existing URL Metrics as stale when a new tag visitor is registered. ([1705](https://github.com/WordPress/performance/pull/1705))
+* Set development mode to 'plugin' in the dev environment and allow pages to be optimized when admin is logged-in (when in plugin dev mode). ([1700](https://github.com/WordPress/performance/pull/1700))
+
+**Bug Fixes**
+
+* Prevent submitting URL Metric if viewport size changed. ([1712](https://github.com/WordPress/performance/pull/1712))
+
 = 0.8.0 =
 
 **Enhancements**

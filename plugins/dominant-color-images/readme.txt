@@ -49,6 +49,10 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 = 1.2.0 =
 
+**Enhancements**
+
+* Enhance admin media UI with dominant color support. ([1719](https://github.com/WordPress/performance/pull/1719))
+
 = 1.1.2 =
 
 **Enhancements**

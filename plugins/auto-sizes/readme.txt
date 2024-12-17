@@ -54,6 +54,21 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 = 1.4.0 =
 
+**Features**
+
+* Accurate Sizes: Incorporate layout constraints in image sizes calculations. ([1738](https://github.com/WordPress/performance/pull/1738))
+
+**Enhancements**
+
+* Accurate sizes: Pass parent alignment context to images. ([1701](https://github.com/WordPress/performance/pull/1701))
+* Accurate sizes: Reorganize file structure by feature. ([1699](https://github.com/WordPress/performance/pull/1699))
+* Accurate sizes: Support relative alignment widths. ([1737](https://github.com/WordPress/performance/pull/1737))
+* Remove `auto_sizes_get_layout_settings()`. ([1743](https://github.com/WordPress/performance/pull/1743))
+
+**Bug Fixes**
+
+* Accurate sizes: Disable layout calculations for classic themes. ([1744](https://github.com/WordPress/performance/pull/1744))
+
 = 1.3.0 =
 
 **Enhancements**
