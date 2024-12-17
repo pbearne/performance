@@ -81,7 +81,7 @@ final class Embed_Optimizer_Tag_Visitor {
 	 * Otherwise, if the embed is not in any initial viewport, it will add lazy-loading logic.
 	 *
 	 * @since 0.2.0
-	 * @since n.e.x.t Adds preconnect links for each viewport group and skips if the element is not in the viewport for that group.
+	 * @since 0.4.0 Adds preconnect links for each viewport group and skips if the element is not in the viewport for that group.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 * @return bool Whether the tag should be tracked in URL Metrics.

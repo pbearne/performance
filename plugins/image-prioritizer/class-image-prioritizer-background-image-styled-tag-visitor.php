@@ -29,7 +29,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Class name used to indicate a background image which is lazy-loaded.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 * @var string
 	 */
 	const LAZY_BG_IMAGE_CLASS_NAME = 'od-lazy-bg-image';
@@ -37,7 +37,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Whether the lazy-loading script and stylesheet have been added.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 * @var bool
 	 */
 	private $added_lazy_assets = false;
@@ -45,7 +45,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Tuples of URL Metric group and the common LCP element external background image.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 * @var array<array{OD_URL_Metric_Group, LcpElementExternalBackgroundImage}>
 	 */
 	private $group_common_lcp_element_external_background_images;
@@ -99,7 +99,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Gets the common LCP element external background image for a URL Metric group.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_URL_Metric_Group $group Group.
 	 * @return LcpElementExternalBackgroundImage|null
@@ -135,7 +135,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Maybe preloads external background image.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_Tag_Visitor_Context $context Context.
 	 */
@@ -182,7 +182,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Adds an image preload link for the group.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_Link_Collection  $link_collection Link collection.
 	 * @param OD_URL_Metric_Group $group           URL Metric group.
@@ -205,7 +205,7 @@ final class Image_Prioritizer_Background_Image_Styled_Tag_Visitor extends Image_
 	/**
 	 * Optimizes an element with a background image based on whether it is displayed in any initial viewport.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context, with the cursor currently at block with a background image.
 	 */

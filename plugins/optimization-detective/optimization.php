@@ -98,7 +98,7 @@ function od_maybe_add_template_output_buffer_filter(): void {
  * Determines whether the current response can be optimized.
  *
  * @since 0.1.0
- * @since n.e.x.t Response is optimized for admin users as well when in 'plugin' development mode.
+ * @since 0.9.0 Response is optimized for admin users as well when in 'plugin' development mode.
  *
  * @access private
  *

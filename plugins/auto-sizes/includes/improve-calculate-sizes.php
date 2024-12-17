@@ -3,13 +3,13 @@
  * Functionality to improve the calculation of image `sizes` attributes.
  *
  * @package auto-sizes
- * @since n.e.x.t
+ * @since 1.4.0
  */
 
 /**
  * Primes attachment into the cache with a single database query.
  *
- * @since n.e.x.t
+ * @since 1.4.0
  *
  * @param string|mixed $content The HTML content.
  * @return string The HTML content.
@@ -130,7 +130,7 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
 /**
  * Modifies the sizes attribute of an image based on layout context.
  *
- * @since n.e.x.t
+ * @since 1.4.0
  *
  * @param int                    $id            The image attachment post ID.
  * @param string|array{int, int} $size          Image size name or array of width and height.
@@ -228,7 +228,7 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
 /**
  * Retrieves the layout width for an alignment defined in theme.json.
  *
- * @since n.e.x.t
+ * @since 1.4.0
  *
  * @param string $alignment The alignment value.
  * @return string The alignment width based.
@@ -248,7 +248,7 @@ function auto_sizes_get_layout_width( string $alignment ): string {
 /**
  * Filters the context keys that a block type uses.
  *
- * @since n.e.x.t
+ * @since 1.4.0
  *
  * @param string[]      $uses_context Array of registered uses context for a block type.
  * @param WP_Block_Type $block_type   The full block type object.
@@ -271,7 +271,7 @@ function auto_sizes_filter_uses_context( array $uses_context, WP_Block_Type $blo
 /**
  * Modifies the block context during rendering to blocks.
  *
- * @since n.e.x.t
+ * @since 1.4.0
  *
  * @param array<string, mixed> $context Current block context.
  * @param array<string, mixed> $block   The block being rendered.
