@@ -174,7 +174,7 @@ function od_handle_rest_request( WP_REST_Request $request ) {
 		);
 	}
 
-	$data = $request->get_json_params(); // TODO: Why not just get_params()?
+	$data = $request->get_json_params();
 	if ( ! is_array( $data ) ) {
 		return new WP_Error(
 			'missing_array_json_body',
