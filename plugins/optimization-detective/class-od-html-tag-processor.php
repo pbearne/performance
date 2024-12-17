@@ -645,8 +645,15 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	 *
 	 * @param string $function_name Function name.
 	 * @param string $message       Warning message.
+	 *
+	 * @noinspection PhpDocMissingThrowsInspection
 	 */
 	private function warn( string $function_name, string $message ): void {
+		/**
+		 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
+		 *
+		 * @noinspection PhpUnhandledExceptionInspection
+		 */
 		wp_trigger_error(
 			$function_name,
 			esc_html( $message )

@@ -225,7 +225,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	}
 
 	/**
-	 * Clear result cache.
+	 * Clears result cache.
 	 *
 	 * @since 0.3.0
 	 */
@@ -234,7 +234,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	}
 
 	/**
-	 * Create groups.
+	 * Creates groups.
 	 *
 	 * @since 0.1.0
 	 *

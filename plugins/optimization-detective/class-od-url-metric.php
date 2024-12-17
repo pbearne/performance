@@ -511,6 +511,15 @@ class OD_URL_Metric implements JsonSerializable {
 	 * @return Data Exports to be serialized by json_encode().
 	 */
 	public function jsonSerialize(): array {
-		return $this->data;
+		$data = $this->data;
+
+		$data['elements'] = array_map(
+			static function ( OD_Element $element ): array {
+				return $element->jsonSerialize();
+			},
+			$this->get_elements()
+		);
+
+		return $data;
 	}
 }

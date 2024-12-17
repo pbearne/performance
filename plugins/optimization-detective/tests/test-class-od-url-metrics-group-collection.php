@@ -200,6 +200,40 @@ class Test_OD_URL_Metric_Group_Collection extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test clear_cache().
+	 *
+	 * @covers ::clear_cache
+	 * @covers OD_URL_Metric_Group::clear_cache
+	 */
+	public function test_clear_cache(): void {
+		$collection      = new OD_URL_Metric_Group_Collection( array(), md5( '' ), array(), 1, DAY_IN_SECONDS );
+		$populated_value = array( 'foo' => true );
+		$group           = $collection->get_first_group();
+
+		// Get private members.
+		$collection_result_cache_reflection_property = new ReflectionProperty( OD_URL_Metric_Group_Collection::class, 'result_cache' );
+		$collection_result_cache_reflection_property->setAccessible( true );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$group_result_cache_reflection_property = new ReflectionProperty( OD_URL_Metric_Group::class, 'result_cache' );
+		$group_result_cache_reflection_property->setAccessible( true );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+
+		// Test clear_cache() on collection.
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$collection->clear_cache();
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+
+		// Test that adding a URL metric to a collection clears the caches.
+		$collection_result_cache_reflection_property->setValue( $collection, $populated_value );
+		$group_result_cache_reflection_property->setValue( $group, $populated_value );
+		$collection->add_url_metric( $this->get_sample_url_metric( array() ) );
+		$url_metric = $group->getIterator()->current();
+		$this->assertInstanceOf( OD_URL_Metric::class, $url_metric );
+		$this->assertSame( array(), $collection_result_cache_reflection_property->getValue( $collection ) );
+		$this->assertSame( array(), $group_result_cache_reflection_property->getValue( $group ) );
+	}
+
+	/**
 	 * Test add_url_metric().
 	 *
 	 * @covers ::add_url_metric

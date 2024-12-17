@@ -468,6 +468,469 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function data_provider_to_test_image_prioritizer_validate_background_image_url(): array {
+		return array(
+			'bad_url_parse_error'         => array(
+				'set_up'       => static function (): string {
+					return 'https:///www.example.com';
+				},
+				'expect_error' => 'background_image_url_lacks_host',
+			),
+			'bad_url_no_host'             => array(
+				'set_up'       => static function (): string {
+					return '/foo/bar?baz=1';
+				},
+				'expect_error' => 'background_image_url_lacks_host',
+			),
+
+			'bad_url_disallowed_origin'   => array(
+				'set_up'       => static function (): string {
+					return 'https://bad.example.com/foo.jpg';
+				},
+				'expect_error' => 'disallowed_background_image_url_host',
+			),
+
+			'good_other_origin_via_allowed_http_origins_filter' => array(
+				'set_up'       => static function (): string {
+					$image_url = 'https://other-origin.example.com/foo.jpg';
+
+					add_filter(
+						'allowed_http_origins',
+						static function ( array $allowed_origins ): array {
+							$allowed_origins[] = 'https://other-origin.example.com';
+							return $allowed_origins;
+						}
+					);
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => null,
+			),
+
+			'good_url_allowed_cdn_origin' => array(
+				'set_up'       => function (): string {
+					$attachment_id = self::factory()->attachment->create_upload_object( TESTS_PLUGIN_DIR . '/tests/data/images/car.jpeg' );
+					$this->assertIsInt( $attachment_id );
+
+					add_filter(
+						'wp_get_attachment_image_src',
+						static function ( $src ): array {
+							$src[0] = preg_replace( '#^https?://#i', 'https://my-image-cdn.example.com/', $src[0] );
+							return $src;
+						}
+					);
+
+					$src = wp_get_attachment_image_src( $attachment_id, 'large' );
+					$this->assertIsArray( $src );
+					$this->assertStringStartsWith( 'https://my-image-cdn.example.com/', $src[0] );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $src ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $src[0] !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $src[0];
+				},
+				'expect_error' => null,
+			),
+
+			'bad_not_found'               => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/bad.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'text/html',
+									'content-length' => 1000,
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 404,
+									'message' => 'Not Found',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => 'background_image_response_not_ok',
+			),
+
+			'bad_content_type'            => array(
+				'set_up'       => static function (): string {
+					$video_url = home_url( '/bad.mp4' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $video_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $video_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'video/mp4',
+									'content-length' => '288449000',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $video_url;
+				},
+				'expect_error' => 'background_image_response_not_image',
+			),
+
+			'bad_content_length'          => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/massive-image.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => (string) ( 2 * MB_IN_BYTES + 1 ),
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => 'background_image_content_length_too_large',
+			),
+
+			'bad_redirect'                => array(
+				'set_up'       => static function (): string {
+					$redirect_url = home_url( '/redirect.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $redirect_url ) {
+							if ( $redirect_url === $url ) {
+								return new WP_Error( 'http_request_failed', 'Too many redirects.' );
+							}
+							return $pre;
+						},
+						10,
+						3
+					);
+
+					return $redirect_url;
+				},
+				'expect_error' => 'http_request_failed',
+			),
+
+			'good_same_origin'            => array(
+				'set_up'       => static function (): string {
+					$image_url = home_url( '/good.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					return $image_url;
+				},
+				'expect_error' => null,
+			),
+		);
+	}
+
+	/**
+	 * Tests image_prioritizer_validate_background_image_url().
+	 *
+	 * @covers ::image_prioritizer_validate_background_image_url
+	 *
+	 * @dataProvider data_provider_to_test_image_prioritizer_validate_background_image_url
+	 */
+	public function test_image_prioritizer_validate_background_image_url( Closure $set_up, ?string $expect_error ): void {
+		$url      = $set_up();
+		$validity = image_prioritizer_validate_background_image_url( $url );
+		if ( null === $expect_error ) {
+			$this->assertTrue( $validity );
+		} else {
+			$this->assertInstanceOf( WP_Error::class, $validity );
+			$this->assertSame( $expect_error, $validity->get_error_code() );
+		}
+	}
+
+	/**
+	 * Data provider.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function data_provider_to_test_image_prioritizer_filter_rest_request_before_callbacks(): array {
+		$get_sample_url_metric_data = function (): array {
+			return $this->get_sample_url_metric( array() )->jsonSerialize();
+		};
+
+		$create_request = static function ( array $url_metric_data ): WP_REST_Request {
+			$request = new WP_REST_Request( 'POST', '/' . OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE );
+			$request->set_header( 'content-type', 'application/json' );
+			$request->set_body( wp_json_encode( $url_metric_data ) );
+			return $request;
+		};
+
+		$bad_origin_data = array(
+			'url'   => 'https://bad-origin.example.com/image.jpg',
+			'tag'   => 'DIV',
+			'id'    => null,
+			'class' => null,
+		);
+
+		return array(
+			'invalid_external_bg_image'                 => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+
+					$url_metric_data['lcpElementExternalBackgroundImage'] = $bad_origin_data;
+					$url_metric_data['viewport']['width']  = 10101;
+					$url_metric_data['viewport']['height'] = 20202;
+					return $create_request( $url_metric_data );
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame(
+						array(
+							'width'  => 10101,
+							'height' => 20202,
+						),
+						$request['viewport']
+					);
+				},
+			),
+
+			'valid_external_bg_image'                   => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+					$image_url = home_url( '/good.jpg' );
+
+					add_filter(
+						'pre_http_request',
+						static function ( $pre, $parsed_args, $url ) use ( $image_url ) {
+							if ( 'HEAD' !== $parsed_args['method'] || $image_url !== $url ) {
+								return $pre;
+							}
+							return array(
+								'headers'  => array(
+									'content-type'   => 'image/jpeg',
+									'content-length' => '288449',
+								),
+								'body'     => '',
+								'response' => array(
+									'code'    => 200,
+									'message' => 'OK',
+								),
+							);
+						},
+						10,
+						3
+					);
+
+					$url_metric_data['lcpElementExternalBackgroundImage'] = array(
+						'url'   => $image_url,
+						'tag'   => 'DIV',
+						'id'    => null,
+						'class' => null,
+					);
+
+					$url_metric_data['viewport']['width']  = 30303;
+					$url_metric_data['viewport']['height'] = 40404;
+					return $create_request( $url_metric_data );
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertIsArray( $request['lcpElementExternalBackgroundImage'] );
+					$this->assertSame(
+						array(
+							'url'   => home_url( '/good.jpg' ),
+							'tag'   => 'DIV',
+							'id'    => null,
+							'class' => null,
+						),
+						$request['lcpElementExternalBackgroundImage']
+					);
+					$this->assertSame(
+						array(
+							'width'  => 30303,
+							'height' => 40404,
+						),
+						$request['viewport']
+					);
+				},
+			),
+
+			'invalid_external_bg_image_uppercase_route' => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
+					);
+					$request->set_route( str_replace( 'store', 'STORE', $request->get_route() ) );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
+				},
+			),
+
+			'invalid_external_bg_image_trailing_newline_route' => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
+					);
+					$request->set_route( $request->get_route() . "\n" );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
+				},
+			),
+
+			'not_store_post_request'                    => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
+					);
+					$request->set_method( 'GET' );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ) use ( $bad_origin_data ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame( $bad_origin_data, $request['lcpElementExternalBackgroundImage'] );
+				},
+			),
+
+			'not_store_request'                         => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
+					$request = $create_request( $url_metric_data );
+					$request->set_route( '/foo/v2/bar' );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame( 'https://totally-different.example.com/', $request['lcpElementExternalBackgroundImage'] );
+				},
+			),
+		);
+	}
+
+	/**
+	 * Tests image_prioritizer_filter_rest_request_before_callbacks().
+	 *
+	 * @dataProvider data_provider_to_test_image_prioritizer_filter_rest_request_before_callbacks
+	 *
+	 * @covers ::image_prioritizer_filter_rest_request_before_callbacks
+	 * @covers ::image_prioritizer_validate_background_image_url
+	 */
+	public function test_image_prioritizer_filter_rest_request_before_callbacks( Closure $set_up, Closure $assert ): void {
+		$request           = $set_up();
+		$response          = new WP_REST_Response();
+		$handler           = array();
+		$filtered_response = image_prioritizer_filter_rest_request_before_callbacks( $response, $handler, $request );
+		$this->assertSame( $response, $filtered_response );
+		$assert( $request );
+	}
+
+	/**
 	 * Test image_prioritizer_get_video_lazy_load_script.
 	 *
 	 * @covers ::image_prioritizer_get_video_lazy_load_script
