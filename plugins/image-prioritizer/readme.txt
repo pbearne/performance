@@ -11,7 +11,7 @@ Prioritizes the loading of images and videos based on how visible they are to ac
 
 == Description ==
 
-This plugin optimizes the loading of images (and videos) with prioritization, lazy loading, and more accurate image size selection.
+This plugin optimizes the loading of images (and videos) with prioritization to improve [Largest Contentful Paint](https://web.dev/articles/lcp) (LCP), lazy loading, and more accurate image size selection.
 
 The current optimizations include:
 
@@ -21,7 +21,7 @@ The current optimizations include:
    3. An element with a CSS `background-image` inline `style` attribute.
    4. An element with a CSS `background-image` applied with a stylesheet (when the image is from an allowed origin).
    5. A `VIDEO` element's `poster` image.
-2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the Largest Contentful Paint (LCP) element across all responsive breakpoints.
+2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the LCP element across all responsive breakpoints.
 3. Add `fetchpriority=low` to `IMG` tags which appear in the initial viewport but are not visible, such as when they are subsequent carousel slides.
 4. Lazy loading:
    1. Apply lazy loading to `IMG` tags based on whether they appear in any breakpoint’s initial viewport.
