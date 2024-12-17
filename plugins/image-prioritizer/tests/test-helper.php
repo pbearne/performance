@@ -759,17 +759,19 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 			return $request;
 		};
 
+		$bad_origin_data = array(
+			'url'   => 'https://bad-origin.example.com/image.jpg',
+			'tag'   => 'DIV',
+			'id'    => null,
+			'class' => null,
+		);
+
 		return array(
-			'invalid_external_bg_image'               => array(
-				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+			'invalid_external_bg_image'                 => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 
-					$url_metric_data['lcpElementExternalBackgroundImage'] = array(
-						'url'   => 'https://bad-origin.example.com/image.jpg',
-						'tag'   => 'DIV',
-						'id'    => null,
-						'class' => null,
-					);
+					$url_metric_data['lcpElementExternalBackgroundImage'] = $bad_origin_data;
 					$url_metric_data['viewport']['width']  = 10101;
 					$url_metric_data['viewport']['height'] = 20202;
 					return $create_request( $url_metric_data );
@@ -786,7 +788,7 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'valid_external_bg_image'                 => array(
+			'valid_external_bg_image'                   => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 					$image_url = home_url( '/good.jpg' );
@@ -846,17 +848,14 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'invalid_external_bg_image_variant_route' => array(
-				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
-					$url_metric_data = $get_sample_url_metric_data();
-
-					$url_metric_data['lcpElementExternalBackgroundImage'] = array(
-						'url'   => 'https://bad-origin.example.com/image.jpg',
-						'tag'   => 'DIV',
-						'id'    => null,
-						'class' => null,
+			'invalid_external_bg_image_uppercase_route' => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
 					);
-					$request = $create_request( $url_metric_data );
 					$request->set_route( str_replace( 'store', 'STORE', $request->get_route() ) );
 					return $request;
 				},
@@ -865,21 +864,40 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 				},
 			),
 
-			'not_store_post_request'                  => array(
-				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
-					$url_metric_data = $get_sample_url_metric_data();
-					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
-					$request = $create_request( $url_metric_data );
-					$request->set_method( 'GET' );
+			'invalid_external_bg_image_trailing_newline_route' => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
+					);
+					$request->set_route( $request->get_route() . "\n" );
 					return $request;
 				},
 				'assert' => function ( WP_REST_Request $request ): void {
-					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
-					$this->assertSame( 'https://totally-different.example.com/', $request['lcpElementExternalBackgroundImage'] );
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
 				},
 			),
 
-			'not_store_request'                       => array(
+			'not_store_post_request'                    => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request, $bad_origin_data ): WP_REST_Request {
+					$request = $create_request(
+						array_merge(
+							$get_sample_url_metric_data(),
+							array( 'lcpElementExternalBackgroundImage' => $bad_origin_data )
+						)
+					);
+					$request->set_method( 'GET' );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ) use ( $bad_origin_data ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame( $bad_origin_data, $request['lcpElementExternalBackgroundImage'] );
+				},
+			),
+
+			'not_store_request'                         => array(
 				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
 					$url_metric_data = $get_sample_url_metric_data();
 					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';

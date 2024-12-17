@@ -288,8 +288,8 @@ function image_prioritizer_filter_rest_request_before_callbacks( $response, arra
 	if (
 		$request->get_method() !== 'POST'
 		||
-		// The strtolower() is due to \WP_REST_Server::match_request_to_handler() using case-insensitive pattern match.
-		OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== trim( strtolower( trim( $request->get_route(), '/' ) ) )
+		// The strtolower() and outer trim are due to \WP_REST_Server::match_request_to_handler() using case-insensitive pattern match and using '$' instead of '\z'.
+		OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== rtrim( strtolower( ltrim( $request->get_route(), '/' ) ) )
 	) {
 		return $response;
 	}
