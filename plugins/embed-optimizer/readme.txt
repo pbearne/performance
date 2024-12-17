@@ -72,6 +72,7 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 **Enhancements**
 
 * Incorporate media queries into preconnect links to account for whether embeds are in viewport. ([1654](https://github.com/WordPress/performance/pull/1654))
+* Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
 
 = 0.3.0 =
 

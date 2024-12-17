@@ -100,6 +100,7 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 * Integrate Web Worker Offloading with Google Site Kit. ([1686](https://github.com/WordPress/performance/pull/1686))
 * Integrate Web Worker Offloading with Rank Math SEO. ([1685](https://github.com/WordPress/performance/pull/1685))
+* Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
 
 **Bug Fixes**
 

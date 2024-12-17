@@ -78,6 +78,7 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 * Harden validation of user-submitted LCP background image URL. ([1713](https://github.com/WordPress/performance/pull/1713))
 * Lazy load background images added via inline style attributes. ([1708](https://github.com/WordPress/performance/pull/1708))
 * Preload image URLs for LCP elements with external background images. ([1697](https://github.com/WordPress/performance/pull/1697))
+* Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
 
 = 0.2.0 =
 
