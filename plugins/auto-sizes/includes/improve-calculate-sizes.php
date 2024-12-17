@@ -140,6 +140,11 @@ function auto_sizes_filter_image_tag( $content, array $parsed_block, WP_Block $b
  * @return string|false An improved sizes attribute or false if a better size cannot be calculated.
  */
 function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $resize_width, string $max_alignment ) {
+	// Bail early if not a block theme.
+	if ( ! wp_is_block_theme() ) {
+		return false;
+	}
+
 	// Without an image ID or a resize width, we cannot calculate a better size.
 	if ( 0 === $id && 0 === $resize_width ) {
 		return false;
@@ -229,7 +234,7 @@ function auto_sizes_calculate_better_sizes( int $id, $size, string $align, int $
  * @return string The alignment width based.
  */
 function auto_sizes_get_layout_width( string $alignment ): string {
-	$layout = auto_sizes_get_layout_settings();
+	$layout = wp_get_global_settings( array( 'layout' ) );
 
 	$layout_widths = array(
 		'full'    => '100vw', // Todo: incorporate useRootPaddingAwareAlignments.
@@ -294,15 +299,4 @@ function auto_sizes_filter_render_block_context( array $context, array $block ):
 	}
 
 	return $context;
-}
-
-/**
- * Retrieves the layout settings defined in theme.json.
- *
- * @since n.e.x.t
- *
- * @return array<string, mixed> Associative array of layout settings.
- */
-function auto_sizes_get_layout_settings(): array {
-	return wp_get_global_settings( array( 'layout' ) );
 }
