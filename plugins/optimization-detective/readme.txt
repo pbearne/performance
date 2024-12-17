@@ -273,14 +273,6 @@ The ETag is a unique identifier that changes whenever the underlying data used t
 
 When the ETag for URL Metrics in a complete viewport group no longer matches the current environment's ETag, new URL Metrics will then begin to be collected until there are no more stored URL Metrics with the old ETag. These new URL Metrics will include data relevant to the newly activated plugins and their tag visitors.
 
-**Filter:** `od_url_metric_data_pre_storage` (default arg: URL Metric data array)
-
-Filters the URL Metric data prior to validation for storage.
-
-This allows for custom sanitization and validation constraints to be applied beyond what can be expressed in JSON Schema. This filter only applies when storing a URL Metric via the REST API. It does not run when a stored URL Metric is loaded from the od_url_metrics post type. This means that sanitization and validation logic enforced via this filter can be more expensive, such as doing filesystem checks or HTTP requests.
-
-To fail validation for the provided URL Metric data, an `OD_Data_Validation_Exception` exception should be thrown. Otherwise, any filter callbacks must return an array consisting of the sanitized URL Metric data.
-
 **Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
 
 Fires whenever a URL Metric was successfully stored.

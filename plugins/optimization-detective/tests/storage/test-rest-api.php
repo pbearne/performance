@@ -41,57 +41,21 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		};
 
 		return array(
-			'not_extended'                     => array(
-				'set_up'          => function (): array {
+			'not_extended'             => array(
+				'set_up' => function (): array {
 					return $this->get_valid_params();
 				},
-				'expect_stored'   => true,
-				'expected_status' => 200,
 			),
-			'extended'                         => array(
-				'set_up'          => function () use ( $add_root_extra_property ): array {
+			'extended'                 => array(
+				'set_up' => function () use ( $add_root_extra_property ): array {
 					$add_root_extra_property( 'extra' );
 					$params = $this->get_valid_params();
 					$params['extra'] = 'foo';
 					return $params;
 				},
-				'expect_stored'   => true,
-				'expected_status' => 200,
 			),
-			'rejected_by_generic_exception'    => array(
-				'set_up'          => function (): array {
-					add_filter(
-						'od_store_url_metric_data',
-						static function ( $data ): array {
-							if ( count( $data ) > 0 ) {
-								throw new Exception( 'bad' );
-							}
-							return $data;
-						}
-					);
-					return $this->get_valid_params();
-				},
-				'expect_stored'   => false,
-				'expected_status' => 500,
-			),
-			'rejected_by_validation_exception' => array(
-				'set_up'          => function (): array {
-					add_filter(
-						'od_store_url_metric_data',
-						static function ( $data ): array {
-							if ( count( $data ) > 0 ) {
-								throw new OD_Data_Validation_Exception( 'bad' );
-							}
-							return $data;
-						}
-					);
-					return $this->get_valid_params();
-				},
-				'expect_stored'   => false,
-				'expected_status' => 400,
-			),
-			'with_cache_purge_post_id'         => array(
-				'set_up'          => function (): array {
+			'with_cache_purge_post_id' => array(
+				'set_up' => function (): array {
 					$params = $this->get_valid_params();
 					$params['cache_purge_post_id'] = self::factory()->post->create();
 					$params['url'] = get_permalink( $params['cache_purge_post_id'] );
@@ -99,8 +63,6 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					$params['hmac'] = od_get_url_metrics_storage_hmac( $params['slug'], $params['current_etag'], $params['url'], $params['cache_purge_post_id'] );
 					return $params;
 				},
-				'expect_stored'   => true,
-				'expected_status' => 200,
 			),
 		);
 	}
@@ -114,20 +76,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @covers ::od_handle_rest_request
 	 * @covers ::od_trigger_page_cache_invalidation
 	 */
-	public function test_rest_request_good_params( Closure $set_up, bool $expect_stored, int $expected_status ): void {
-		$filtered_url_metric_data = null;
-		$filter_called            = 0;
-		add_filter(
-			'od_store_url_metric_data',
-			function ( $url_metric_data ) use ( &$filter_called, &$filtered_url_metric_data ) {
-				$this->assertIsArray( $url_metric_data );
-				$filtered_url_metric_data = $url_metric_data;
-				$filter_called++;
-				return $url_metric_data;
-			},
-			0
-		);
-
+	public function test_rest_request_good_params( Closure $set_up ): void {
 		$stored_context = null;
 		add_action(
 			'od_url_metric_stored',
@@ -151,49 +100,40 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$request  = $this->create_request( $valid_params );
 		$response = rest_get_server()->dispatch( $request );
 
-		$this->assertSame( 1, $filter_called );
-		$this->assertSame( $expect_stored ? 1 : 0, did_action( 'od_url_metric_stored' ) );
+		$this->assertSame( 1, did_action( 'od_url_metric_stored' ) );
 
-		$this->assertSame( $expected_status, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
+		$this->assertSame( 200, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
 		$data = $response->get_data();
-		$this->assertCount( $expect_stored ? 1 : 0, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
+		$this->assertCount( 1, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
 
-		if ( ! $expect_stored ) {
-			$this->assertArrayHasKey( 'code', $data );
-			$this->assertArrayHasKey( 'message', $data );
-			$this->assertNull( $stored_context );
-			$this->assertNull( OD_URL_Metrics_Post_Type::get_post( $valid_params['slug'] ) );
-		} else {
-			$this->assertTrue( $data['success'] );
+		$this->assertTrue( $data['success'] );
 
-			$post = OD_URL_Metrics_Post_Type::get_post( $valid_params['slug'] );
-			$this->assertInstanceOf( WP_Post::class, $post );
+		$post = OD_URL_Metrics_Post_Type::get_post( $valid_params['slug'] );
+		$this->assertInstanceOf( WP_Post::class, $post );
 
-			$url_metrics = OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post );
-			$this->assertCount( 1, $url_metrics, 'Expected number of URL Metrics stored.' );
-			$this->assertSame( $valid_params['elements'], $this->get_array_json_data( $url_metrics[0]->get( 'elements' ) ) );
-			$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
+		$url_metrics = OD_URL_Metrics_Post_Type::get_url_metrics_from_post( $post );
+		$this->assertCount( 1, $url_metrics, 'Expected number of URL Metrics stored.' );
+		$this->assertSame( $valid_params['elements'], $this->get_array_json_data( $url_metrics[0]->get( 'elements' ) ) );
+		$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
 
-			$expected_data = $valid_params;
-			unset( $expected_data['hmac'], $expected_data['slug'], $expected_data['current_etag'], $expected_data['cache_purge_post_id'] );
-			unset( $expected_data['unset_prop'] );
-			$this->assertSame(
-				$expected_data,
-				wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
-			);
+		$expected_data = $valid_params;
+		unset( $expected_data['hmac'], $expected_data['slug'], $expected_data['current_etag'], $expected_data['cache_purge_post_id'] );
+		unset( $expected_data['unset_prop'] );
+		$this->assertSame(
+			$expected_data,
+			wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
+		);
 
-			$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
-			$this->assertSame( $stored_context->url_metric->jsonSerialize(), $filtered_url_metric_data );
+		$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
 
-			// Now check that od_trigger_page_cache_invalidation() cleaned caches as expected.
-			$this->assertSame( $url_metrics[0]->jsonSerialize(), $stored_context->url_metric->jsonSerialize() );
-			if ( isset( $valid_params['cache_purge_post_id'] ) ) {
-				$cache_purge_post_id = $stored_context->request->get_param( 'cache_purge_post_id' );
-				$this->assertSame( $valid_params['cache_purge_post_id'], $cache_purge_post_id );
-				$scheduled = wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $cache_purge_post_id ) );
-				$this->assertIsInt( $scheduled );
-				$this->assertGreaterThan( time(), $scheduled );
-			}
+		// Now check that od_trigger_page_cache_invalidation() cleaned caches as expected.
+		$this->assertSame( $url_metrics[0]->jsonSerialize(), $stored_context->url_metric->jsonSerialize() );
+		if ( isset( $valid_params['cache_purge_post_id'] ) ) {
+			$cache_purge_post_id = $stored_context->request->get_param( 'cache_purge_post_id' );
+			$this->assertSame( $valid_params['cache_purge_post_id'], $cache_purge_post_id );
+			$scheduled = wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $cache_purge_post_id ) );
+			$this->assertIsInt( $scheduled );
+			$this->assertGreaterThan( time(), $scheduled );
 		}
 	}
 

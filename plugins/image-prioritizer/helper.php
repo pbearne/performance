@@ -264,26 +264,34 @@ function image_prioritizer_validate_background_image_url( string $url ) {
 }
 
 /**
- * Filters the validity of a URL Metric with an LCP element background image.
+ * Filters the response before executing any REST API callbacks.
  *
  * This removes the lcpElementExternalBackgroundImage from the URL Metric prior to it being stored if the background
- * image URL is not valid. Removal of the property is preferable to
+ * image URL is not valid. Removal of the property is preferable to invalidating the entire URL Metric because then
+ * potentially no URL Metrics would ever be collected if, for example, the background image URL is pointing to a
+ * disallowed origin. Then none of the other optimizations would be able to be applied.
  *
  * @since n.e.x.t
  * @access private
  *
- * @param array<string, mixed>|mixed $data URL Metric data.
- * @return array<string, mixed> Sanitized URL Metric data.
+ * @phpstan-param WP_REST_Request<array<string, mixed>> $request
  *
+ * @param WP_REST_Response|WP_HTTP_Response|WP_Error|mixed $response Result to send to the client.
+ *                                                                   Usually a WP_REST_Response or WP_Error.
+ * @param array<string, mixed>                             $handler  Route handler used for the request.
+ * @param WP_REST_Request                                  $request  Request used to generate the response.
+ *
+ * @return WP_REST_Response|WP_HTTP_Response|WP_Error|mixed Result to send to the client.
  * @noinspection PhpDocMissingThrowsInspection
  */
-function image_prioritizer_filter_store_url_metric_data( $data ): array {
-	if ( ! is_array( $data ) ) {
-		$data = array();
+function image_prioritizer_filter_rest_request_before_callbacks( $response, array $handler, WP_REST_Request $request ) {
+	if ( $request->get_method() !== 'POST' || OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE !== trim( $request->get_route(), '/' ) ) {
+		return $response;
 	}
 
-	if ( isset( $data['lcpElementExternalBackgroundImage']['url'] ) && is_string( $data['lcpElementExternalBackgroundImage']['url'] ) ) {
-		$image_validity = image_prioritizer_validate_background_image_url( $data['lcpElementExternalBackgroundImage']['url'] );
+	$lcp_external_background_image = $request['lcpElementExternalBackgroundImage'];
+	if ( is_array( $lcp_external_background_image ) && isset( $lcp_external_background_image['url'] ) && is_string( $lcp_external_background_image['url'] ) ) {
+		$image_validity = image_prioritizer_validate_background_image_url( $lcp_external_background_image['url'] );
 		if ( is_wp_error( $image_validity ) ) {
 			/**
 			 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
@@ -296,14 +304,14 @@ function image_prioritizer_filter_store_url_metric_data( $data ): array {
 					/* translators: 1: error message. 2: image url */
 					__( 'Error: %1$s. Background image URL: %2$s.', 'image-prioritizer' ),
 					rtrim( $image_validity->get_error_message(), '.' ),
-					$data['lcpElementExternalBackgroundImage']['url']
+					$lcp_external_background_image['url']
 				)
 			);
-			unset( $data['lcpElementExternalBackgroundImage'] );
+			unset( $request['lcpElementExternalBackgroundImage'] );
 		}
 	}
 
-	return $data;
+	return $response;
 }
 
 /**

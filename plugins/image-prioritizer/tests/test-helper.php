@@ -747,10 +747,23 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function data_provider_to_test_image_prioritizer_filter_store_url_metric_data(): array {
+	public function data_provider_to_test_image_prioritizer_filter_rest_request_before_callbacks(): array {
+		$get_sample_url_metric_data = function (): array {
+			return $this->get_sample_url_metric( array() )->jsonSerialize();
+		};
+
+		$create_request = static function ( array $url_metric_data ): WP_REST_Request {
+			$request = new WP_REST_Request( 'POST', '/' . OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE );
+			$request->set_header( 'content-type', 'application/json' );
+			$request->set_body( wp_json_encode( $url_metric_data ) );
+			return $request;
+		};
+
 		return array(
 			'invalid_external_bg_image' => array(
-				'set_up' => static function ( array $url_metric_data ): array {
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+
 					$url_metric_data['lcpElementExternalBackgroundImage'] = array(
 						'url'   => 'https://bad-origin.example.com/image.jpg',
 						'tag'   => 'DIV',
@@ -759,22 +772,23 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 					);
 					$url_metric_data['viewport']['width']  = 10101;
 					$url_metric_data['viewport']['height'] = 20202;
-					return $url_metric_data;
+					return $create_request( $url_metric_data );
 				},
-				'assert' => function ( array $url_metric_data ): void {
-					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $url_metric_data );
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayNotHasKey( 'lcpElementExternalBackgroundImage', $request );
 					$this->assertSame(
 						array(
 							'width'  => 10101,
 							'height' => 20202,
 						),
-						$url_metric_data['viewport']
+						$request['viewport']
 					);
 				},
 			),
 
 			'valid_external_bg_image'   => array(
-				'set_up' => static function ( array $url_metric_data ): array {
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
 					$image_url = home_url( '/good.jpg' );
 
 					add_filter(
@@ -808,11 +822,11 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 
 					$url_metric_data['viewport']['width']  = 30303;
 					$url_metric_data['viewport']['height'] = 40404;
-					return $url_metric_data;
+					return $create_request( $url_metric_data );
 				},
-				'assert' => function ( array $url_metric_data ): void {
-					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $url_metric_data );
-					$this->assertIsArray( $url_metric_data['lcpElementExternalBackgroundImage'] );
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertIsArray( $request['lcpElementExternalBackgroundImage'] );
 					$this->assertSame(
 						array(
 							'url'   => home_url( '/good.jpg' ),
@@ -820,33 +834,63 @@ class Test_Image_Prioritizer_Helper extends WP_UnitTestCase {
 							'id'    => null,
 							'class' => null,
 						),
-						$url_metric_data['lcpElementExternalBackgroundImage']
+						$request['lcpElementExternalBackgroundImage']
 					);
 					$this->assertSame(
 						array(
 							'width'  => 30303,
 							'height' => 40404,
 						),
-						$url_metric_data['viewport']
+						$request['viewport']
 					);
+				},
+			),
+
+			'not_store_post_request'    => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
+					$request = $create_request( $url_metric_data );
+					$request->set_method( 'GET' );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame( 'https://totally-different.example.com/', $request['lcpElementExternalBackgroundImage'] );
+				},
+			),
+
+			'not_store_request'         => array(
+				'set_up' => static function () use ( $get_sample_url_metric_data, $create_request ): WP_REST_Request {
+					$url_metric_data = $get_sample_url_metric_data();
+					$url_metric_data['lcpElementExternalBackgroundImage'] = 'https://totally-different.example.com/';
+					$request = $create_request( $url_metric_data );
+					$request->set_route( '/foo/v2/bar' );
+					return $request;
+				},
+				'assert' => function ( WP_REST_Request $request ): void {
+					$this->assertArrayHasKey( 'lcpElementExternalBackgroundImage', $request );
+					$this->assertSame( 'https://totally-different.example.com/', $request['lcpElementExternalBackgroundImage'] );
 				},
 			),
 		);
 	}
 
 	/**
-	 * Tests image_prioritizer_filter_store_url_metric_data().
+	 * Tests image_prioritizer_filter_rest_request_before_callbacks().
 	 *
-	 * @dataProvider data_provider_to_test_image_prioritizer_filter_store_url_metric_data
+	 * @dataProvider data_provider_to_test_image_prioritizer_filter_rest_request_before_callbacks
 	 *
-	 * @covers ::image_prioritizer_filter_store_url_metric_data
+	 * @covers ::image_prioritizer_filter_rest_request_before_callbacks
 	 * @covers ::image_prioritizer_validate_background_image_url
 	 */
-	public function test_image_prioritizer_filter_store_url_metric_data( Closure $set_up, Closure $assert ): void {
-		$url_metric_data = $set_up( $this->get_sample_url_metric( array() )->jsonSerialize() );
-
-		$url_metric_data = image_prioritizer_filter_store_url_metric_data( $url_metric_data );
-		$assert( $url_metric_data );
+	public function test_image_prioritizer_filter_rest_request_before_callbacks( Closure $set_up, Closure $assert ): void {
+		$request           = $set_up();
+		$response          = new WP_REST_Response();
+		$handler           = array();
+		$filtered_response = image_prioritizer_filter_rest_request_before_callbacks( $response, $handler, $request );
+		$this->assertSame( $response, $filtered_response );
+		$assert( $request );
 	}
 
 	/**
