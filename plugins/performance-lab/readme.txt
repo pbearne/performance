@@ -77,7 +77,7 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 
 * Add guidance for managing Performance feature plugins. ([1734](https://github.com/WordPress/performance/pull/1734))
 * Automatically discover plugin dependencies when obtaining Performance feature plugins from WordPress.org. ([1680](https://github.com/WordPress/performance/pull/1680))
-* Disregard transient cache in perflab_query_plugin_info() when a plugin is absent. ([1694](https://github.com/WordPress/performance/pull/1694))
+* Disregard transient cache in `perflab_query_plugin_info()` when a plugin is absent. ([1694](https://github.com/WordPress/performance/pull/1694))
 * Minify script used for ajax activation of features; warn if absent and serve original file when SCRIPT_DEBUG is enabled. ([1658](https://github.com/WordPress/performance/pull/1658))
 
 **Bug Fixes**

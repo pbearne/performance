@@ -328,10 +328,15 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 * Incorporate page state into ETag computation. ([1722](https://github.com/WordPress/performance/pull/1722))
 * Mark existing URL Metrics as stale when a new tag visitor is registered. ([1705](https://github.com/WordPress/performance/pull/1705))
 * Set development mode to 'plugin' in the dev environment and allow pages to be optimized when admin is logged-in (when in plugin dev mode). ([1700](https://github.com/WordPress/performance/pull/1700))
+* Add `get_xpath_elements_map()` helper methods to `OD_URL_Metric_Group_Collection` and `OD_URL_Metric_Group`, and add `get_all_element_max_intersection_ratios`/`get_element_max_intersection_ratio` methods to `OD_URL_Metric_Group`. ([1654](https://github.com/WordPress/performance/pull/1654))
+* Add `get_breadcrumbs()` method to `OD_HTML_Tag_Processor`. ([1707](https://github.com/WordPress/performance/pull/1707))
+* Add `get_sample_size()` and `get_freshness_ttl()` methods to `OD_URL_Metric_Group`. ([1697](https://github.com/WordPress/performance/pull/1697))
+* Expose `onTTFB`, `onFCP`, `onLCP`, `onINP`, and `onCLS` from web-vitals.js to extension JS modules via args their `initialize` functions. ([1697](https://github.com/WordPress/performance/pull/1697))
 
 **Bug Fixes**
 
 * Prevent submitting URL Metric if viewport size changed. ([1712](https://github.com/WordPress/performance/pull/1712))
+* Fix construction of XPath expressions for implicitly closed paragraphs. ([1707](https://github.com/WordPress/performance/pull/1707))
 
 = 0.8.0 =
 
