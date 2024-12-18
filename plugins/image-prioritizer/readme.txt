@@ -2,7 +2,7 @@
 
 Contributors: wordpressdotorg
 Tested up to: 6.7
-Stable tag:   0.2.0
+Stable tag:   0.3.0
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Tags:         performance, optimization, image, lcp, lazy-load
@@ -11,7 +11,7 @@ Prioritizes the loading of images and videos based on how visible they are to ac
 
 == Description ==
 
-This plugin optimizes the loading of images (and videos) with prioritization, lazy loading, and more accurate image size selection.
+This plugin optimizes the loading of images (and videos) with prioritization to improve [Largest Contentful Paint](https://web.dev/articles/lcp) (LCP), lazy loading, and more accurate image size selection.
 
 The current optimizations include:
 
@@ -21,7 +21,7 @@ The current optimizations include:
    3. An element with a CSS `background-image` inline `style` attribute.
    4. An element with a CSS `background-image` applied with a stylesheet (when the image is from an allowed origin).
    5. A `VIDEO` element's `poster` image.
-2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the Largest Contentful Paint (LCP) element across all responsive breakpoints.
+2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the LCP element across all responsive breakpoints.
 3. Add `fetchpriority=low` to `IMG` tags which appear in the initial viewport but are not visible, such as when they are subsequent carousel slides.
 4. Lazy loading:
    1. Apply lazy loading to `IMG` tags based on whether they appear in any breakpoint’s initial viewport.
@@ -69,6 +69,16 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plugins/image-prioritizer) is located in the [WordPress/performance](https://github.com/WordPress/performance) repo on GitHub.
 
 == Changelog ==
+
+= 0.3.0 =
+
+**Enhancements**
+
+* Add preload links LCP picture elements. ([1707](https://github.com/WordPress/performance/pull/1707))
+* Harden validation of user-submitted LCP background image URL. ([1713](https://github.com/WordPress/performance/pull/1713))
+* Lazy load background images added via inline style attributes. ([1708](https://github.com/WordPress/performance/pull/1708))
+* Preload image URLs for LCP elements with external background images. ([1697](https://github.com/WordPress/performance/pull/1697))
+* Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
 
 = 0.2.0 =
 

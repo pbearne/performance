@@ -784,7 +784,7 @@ add_action( 'init', 'webp_uploads_init' );
 /**
  * Automatically opt into extra image sizes when generating fallback images.
  *
- * @since n.e.x.t
+ * @since 2.4.0
  *
  * @global array $_wp_additional_image_sizes Associative array of additional image sizes.
  */
@@ -810,7 +810,7 @@ add_action( 'plugins_loaded', 'webp_uploads_opt_in_extra_image_sizes' );
 /**
  * Enables additional MIME type support for all image sizes based on the generate all fallback sizes settings.
  *
- * @since n.e.x.t
+ * @since 2.4.0
  *
  * @param array<string, bool> $allowed_sizes A map of image size names and whether they are allowed to have additional MIME types.
  * @return array<string, bool> Modified map of image sizes with additional MIME type support.

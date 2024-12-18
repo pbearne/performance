@@ -38,7 +38,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	/**
 	 * The current ETag.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 * @var non-empty-string
 	 */
 	private $current_etag;
@@ -186,7 +186,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	/**
 	 * Gets the current ETag.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @return non-empty-string Current ETag.
 	 */
@@ -427,7 +427,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * Gets common LCP element.
 	 *
 	 * @since 0.3.0
-	 * @since n.e.x.t An LCP element is also considered common if it is the same in the narrowest and widest viewport groups, and all intermediate groups are empty.
+	 * @since 0.9.0 An LCP element is also considered common if it is the same in the narrowest and widest viewport groups, and all intermediate groups are empty.
 	 *
 	 * @return OD_Element|null Common LCP element if it exists.
 	 */

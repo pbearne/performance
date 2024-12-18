@@ -34,7 +34,7 @@ const externalBackgroundImages = [];
 /**
  * Logs a message.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @param {...*} message
  */
@@ -46,7 +46,7 @@ function log( ...message ) {
 /**
  * Logs a warning.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @param {...*} message
  */
@@ -58,7 +58,7 @@ function warn( ...message ) {
 /**
  * Initializes extension.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @type {InitializeCallback}
  * @param {InitializeArgs} args Args.
@@ -80,7 +80,7 @@ export async function initialize( { isDebug, onLCP } ) {
 /**
  * Gets the performance resource entry for a given URL.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @param {string} url - Resource URL.
  * @return {PerformanceResourceTiming|null} Resource entry or null.
@@ -101,7 +101,7 @@ function getPerformanceResourceByURL( url ) {
 /**
  * Handles a new LCP metric being reported.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @param {LCPMetric} metric  - LCP Metric.
  * @param {boolean}   isDebug - Whether in debug mode.
@@ -203,7 +203,7 @@ function handleLCPMetric( metric, isDebug ) {
 /**
  * Finalizes extension.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  *
  * @type {FinalizeCallback}
  * @param {FinalizeArgs} args Args.
