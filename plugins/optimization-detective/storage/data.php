@@ -143,7 +143,7 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 /**
  * Gets the current template for a block theme or a classic theme.
  *
- * @since n.e.x.t
+ * @since 0.9.0
  * @access private
  *
  * @global string|null $_wp_current_template_id Current template ID.
@@ -173,7 +173,7 @@ function od_get_current_theme_template() {
  * posts in The Loop, and theme information in the current environment. This ETag
  * is used to assess if the URL Metrics are stale when its value changes.
  *
- * @since n.e.x.t
+ * @since 0.9.0
  * @access private
  *
  * @param OD_Tag_Visitor_Registry       $tag_visitor_registry Tag visitor registry.
@@ -238,7 +238,7 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
 	/**
 	 * Filters the data that goes into computing the current ETag for URL Metrics.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @param array<string, mixed> $data Data.
 	 */
@@ -253,7 +253,7 @@ function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_r
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
  * @since 0.8.0
- * @since n.e.x.t Introduced the `$current_etag` parameter.
+ * @since 0.9.0 Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
@@ -274,7 +274,7 @@ function od_get_url_metrics_storage_hmac( string $slug, string $current_etag, st
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
  * @since 0.8.0
- * @since n.e.x.t Introduced the `$current_etag` parameter.
+ * @since 0.9.0 Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()

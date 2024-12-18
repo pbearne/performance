@@ -414,7 +414,7 @@ function webp_uploads_is_fallback_enabled(): bool {
 /**
  * Checks if the `perflab_generate_all_fallback_sizes` option is enabled.
  *
- * @since n.e.x.t
+ * @since 2.4.0
  *
  * @return bool Whether the option is enabled. Default is false.
  */

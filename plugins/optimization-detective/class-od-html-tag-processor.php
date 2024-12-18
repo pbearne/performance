@@ -497,7 +497,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	 * A breadcrumb consists of a tag name and its sibling index.
 	 *
 	 * @since 0.4.0
-	 * @since n.e.x.t Renamed from get_breadcrumbs() to get_indexed_breadcrumbs().
+	 * @since 0.9.0 Renamed from get_breadcrumbs() to get_indexed_breadcrumbs().
 	 *
 	 * @return Generator<array{string, int}> Breadcrumb.
 	 */
@@ -513,7 +513,7 @@ final class OD_HTML_Tag_Processor extends WP_HTML_Tag_Processor {
 	 * Breadcrumbs start at the outermost parent and descend toward the matched element.
 	 * They always include the entire path from the root HTML node to the matched element.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 * @see WP_HTML_Processor::get_breadcrumbs()
 	 *
 	 * @return string[] Array of tag names representing path to matched node.

@@ -216,7 +216,7 @@ add_action( 'wp_ajax_dismiss-wp-pointer', 'perflab_dismiss_wp_pointer_wrapper', 
 /**
  * Gets the path to a script or stylesheet.
  *
- * @since n.e.x.t
+ * @since 3.7.0
  *
  * @param string      $src_path Source path.
  * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.

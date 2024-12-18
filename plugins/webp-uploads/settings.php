@@ -204,7 +204,7 @@ function webp_uploads_generate_webp_jpeg_setting_callback(): void {
 /**
  * Renders the settings field for generating all fallback image sizes.
  *
- * @since n.e.x.t
+ * @since 2.4.0
  */
 function webp_uploads_generate_all_fallback_sizes_callback(): void {
 	$all_fallback_sizes_enabled   = webp_uploads_should_generate_all_fallback_sizes();

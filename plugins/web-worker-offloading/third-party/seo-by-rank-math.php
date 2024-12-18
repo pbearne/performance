@@ -2,7 +2,7 @@
 /**
  * Web Worker Offloading integration with Rank Math SEO.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @package web-worker-offloading
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Configures WWO for Rank Math SEO and Google Analytics.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @access private
  * @link https://partytown.builder.io/google-tag-manager#forward-events
  *
@@ -43,7 +43,7 @@ add_filter( 'plwwo_configuration', 'plwwo_rank_math_configure' );
 /**
  * Filters script attributes to offload Rank Math's GTag script tag to Partytown.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @access private
  * @link https://github.com/rankmath/seo-by-rank-math/blob/c78adba6f78079f27ff1430fabb75c6ac3916240/includes/modules/analytics/class-gtag.php#L161-L167
  *
@@ -63,7 +63,7 @@ add_filter( 'wp_script_attributes', 'plwwo_rank_math_filter_script_attributes' )
 /**
  * Filters inline script attributes to offload Rank Math's GTag script tag to Partytown.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @access private
  * @link https://github.com/rankmath/seo-by-rank-math/blob/c78adba6f78079f27ff1430fabb75c6ac3916240/includes/modules/analytics/class-gtag.php#L169-L174
  *

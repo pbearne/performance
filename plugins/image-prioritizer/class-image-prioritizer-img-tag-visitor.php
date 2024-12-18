@@ -25,7 +25,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * Visits a tag.
 	 *
 	 * @since 0.1.0
-	 * @since n.e.x.t Separate the processing of IMG and PICTURE elements.
+	 * @since 0.3.0 Separate the processing of IMG and PICTURE elements.
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 * @return bool Whether the tag should be tracked in URL Metrics.
@@ -46,7 +46,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Process an IMG element.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
 	 * @param OD_Tag_Visitor_Context $context   Tag visitor context.
@@ -183,7 +183,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Process a PICTURE element.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_HTML_Tag_Processor  $processor HTML tag processor.
 	 * @param OD_Tag_Visitor_Context $context   Tag visitor context.
@@ -283,7 +283,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	 * Returns null if the src attribute is not a string (i.e. src was used as a boolean attribute was used), if it
 	 * it has an empty string value after trimming, or if it is a data: URL.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_HTML_Tag_Processor $processor      Processor.
 	 * @param 'src'|'srcset'        $attribute_name Attribute name.
@@ -304,7 +304,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Adds a LINK with the supplied attributes for each viewport group when the provided XPath is the LCP element.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_Tag_Visitor_Context          $context    Tag visitor context.
 	 * @param string                          $xpath      XPath of the element.
@@ -351,7 +351,7 @@ final class Image_Prioritizer_Img_Tag_Visitor extends Image_Prioritizer_Tag_Visi
 	/**
 	 * Gets the parent tag name.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.3.0
 	 *
 	 * @param OD_Tag_Visitor_Context $context Tag visitor context.
 	 * @return string|null The parent tag name or null if not found.

@@ -194,7 +194,7 @@ add_action( 'wp_head', 'dominant_color_render_generator' );
  * to apply background color based on the dominant color for attachment previews
  * in the WordPress admin interface.
  *
- * @since n.e.x.t
+ * @since 1.2.0
  */
 function dominant_color_admin_inline_style(): void {
 	$handle = 'dominant-color-admin-styles';
@@ -213,7 +213,7 @@ add_action( 'admin_enqueue_scripts', 'dominant_color_admin_inline_style' );
  * the attachment template. It adds attributes for dominant color and transparency
  * to the template, allowing these properties to be displayed in the media library.
  *
- * @since n.e.x.t
+ * @since 1.2.0
  * @see wp_print_media_templates()
  */
 function dominant_color_admin_script(): void {
@@ -249,7 +249,7 @@ add_action( 'admin_print_footer_scripts', 'dominant_color_admin_script' );
  * the dominant color and transparency of the image. It modifies the response array to include
  * these additional properties, which can be used in the media library interface.
  *
- * @since n.e.x.t
+ * @since 1.2.0
  *
  * @param array<string, mixed>|mixed $response   The current response array for the attachment.
  * @param WP_Post                    $attachment The attachment post object.
