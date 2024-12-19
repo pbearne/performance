@@ -44,18 +44,6 @@ function log( ...message ) {
 }
 
 /**
- * Logs a warning.
- *
- * @since 0.3.0
- *
- * @param {...*} message
- */
-function warn( ...message ) {
-	// eslint-disable-next-line no-console
-	console.warn( consoleLogPrefix, ...message );
-}
-
-/**
  * Initializes extension.
  *
  * @since 0.3.0
@@ -75,27 +63,6 @@ export async function initialize( { isDebug, onLCP } ) {
 			reportAllChanges: true,
 		}
 	);
-}
-
-/**
- * Gets the performance resource entry for a given URL.
- *
- * @since 0.3.0
- *
- * @param {string} url - Resource URL.
- * @return {PerformanceResourceTiming|null} Resource entry or null.
- */
-function getPerformanceResourceByURL( url ) {
-	const entries =
-		/** @type PerformanceResourceTiming[] */ performance.getEntriesByType(
-			'resource'
-		);
-	for ( const entry of entries ) {
-		if ( entry.name === url ) {
-			return entry;
-		}
-	}
-	return null;
 }
 
 /**
@@ -127,21 +94,6 @@ function handleLCPMetric( metric, isDebug ) {
 		// These are handled by Image_Prioritizer_Background_Image_Styled_Tag_Visitor.
 		if ( entry.element.style.backgroundImage ) {
 			continue;
-		}
-
-		// Now only consider proceeding with the URL if its loading was initiated with stylesheet or preload link.
-		const resourceEntry = getPerformanceResourceByURL( entry.url );
-		if (
-			! resourceEntry ||
-			! [ 'css', 'link' ].includes( resourceEntry.initiatorType )
-		) {
-			if ( isDebug ) {
-				warn(
-					`Skipped considering URL (${ entry.url }) due to unexpected performance resource timing entry:`,
-					resourceEntry
-				);
-			}
-			return;
 		}
 
 		// Skip URLs that are excessively long. This is the maxLength defined in image_prioritizer_add_element_item_schema_properties().
