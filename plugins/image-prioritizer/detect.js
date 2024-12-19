@@ -44,18 +44,6 @@ function log( ...message ) {
 }
 
 /**
- * Logs a warning.
- *
- * @since 0.3.0
- *
- * @param {...*} message
- */
-function warn( ...message ) {
-	// eslint-disable-next-line no-console
-	console.warn( consoleLogPrefix, ...message );
-}
-
-/**
  * Initializes extension.
  *
  * @since 0.3.0
