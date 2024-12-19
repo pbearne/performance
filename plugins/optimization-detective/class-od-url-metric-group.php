@@ -183,7 +183,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the sample size for URL Metrics for a given breakpoint.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @todo Eliminate in favor of readonly public property.
 	 * @phpstan-return positive-int
@@ -196,7 +196,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the freshness age (TTL) for a given URL Metric.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @todo Eliminate in favor of readonly public property.
 	 * @phpstan-return 0|positive-int
@@ -265,7 +265,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	 * and all of these URL Metrics are fresh.
 	 *
 	 * @since 0.1.0
-	 * @since n.e.x.t If the current environment's generated ETag does not match the URL Metric's ETag, the URL Metric is considered stale.
+	 * @since 0.9.0 If the current environment's generated ETag does not match the URL Metric's ETag, the URL Metric is considered stale.
 	 *
 	 * @return bool Whether complete.
 	 */
@@ -385,7 +385,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets all elements from all URL Metrics in the viewport group keyed by the elements' XPaths.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @return array<string, non-empty-array<int, OD_Element>> Keys are XPaths and values are the element instances.
 	 */
@@ -411,7 +411,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the max intersection ratios of all elements in the viewport group and its captured URL Metrics.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @return array<string, float> Keys are XPaths and values are the intersection ratios.
 	 */
@@ -439,7 +439,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Gets the max intersection ratio of an element in the viewport group and its captured URL Metrics.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 *
 	 * @param string $xpath XPath for the element.
 	 * @return float|null Max intersection ratio of null if tag is unknown (not captured).
@@ -473,7 +473,7 @@ final class OD_URL_Metric_Group implements IteratorAggregate, Countable, JsonSer
 	/**
 	 * Clears result cache.
 	 *
-	 * @since n.e.x.t
+	 * @since 0.9.0
 	 */
 	public function clear_cache(): void {
 		$this->result_cache = array();

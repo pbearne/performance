@@ -2,7 +2,7 @@
 /**
  * Web Worker Offloading integration with Site Kit by Google.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @package web-worker-offloading
  */
 
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Configures WWO for Site Kit and Google Analytics.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @access private
  * @link https://partytown.builder.io/google-tag-manager#forward-events
  *
@@ -53,7 +53,7 @@ plwwo_mark_scripts_for_offloading(
 /**
  * Filters inline script attributes to offload Google Site Kit's GTag script tag to Partytown.
  *
- * @since n.e.x.t
+ * @since 0.2.0
  * @access private
  * @link https://github.com/google/site-kit-wp/blob/abbb74ff21f98a8779fbab0eeb9a16279a122bc4/includes/Core/Consent_Mode/Consent_Mode.php#L244-L259
  *

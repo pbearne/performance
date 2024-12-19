@@ -83,7 +83,7 @@ function image_prioritizer_register_tag_visitors( OD_Tag_Visitor_Registry $regis
 /**
  * Filters the list of Optimization Detective extension module URLs to include the extension for Image Prioritizer.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @param string[]|mixed $extension_module_urls Extension module URLs.
@@ -100,7 +100,7 @@ function image_prioritizer_filter_extension_module_urls( $extension_module_urls 
 /**
  * Filters additional properties for the element item schema for Optimization Detective.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @param array<string, array{type: string}> $additional_properties Additional properties.
@@ -145,7 +145,7 @@ function image_prioritizer_add_element_item_schema_properties( array $additional
 /**
  * Validates URL for a background image.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @param string $url Background image URL.
@@ -271,7 +271,7 @@ function image_prioritizer_validate_background_image_url( string $url ) {
  * potentially no URL Metrics would ever be collected if, for example, the background image URL is pointing to a
  * disallowed origin. Then none of the other optimizations would be able to be applied.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @phpstan-param WP_REST_Request<array<string, mixed>> $request
@@ -322,7 +322,7 @@ function image_prioritizer_filter_rest_request_before_callbacks( $response, arra
 /**
  * Gets the path to a script or stylesheet.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @param string      $src_path Source path, relative to plugin root.
@@ -384,7 +384,7 @@ function image_prioritizer_get_video_lazy_load_script(): string {
  *
  * Load the background image when it approaches the viewport using an IntersectionObserver.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @return string Lazy load script.
@@ -397,7 +397,7 @@ function image_prioritizer_get_lazy_load_bg_image_script(): string {
 /**
  * Gets the stylesheet to lazy-load background images.
  *
- * @since n.e.x.t
+ * @since 0.3.0
  * @access private
  *
  * @return string Lazy load stylesheet.

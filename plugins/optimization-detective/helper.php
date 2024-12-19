@@ -68,7 +68,7 @@ function od_render_generator_meta_tag(): void {
 /**
  * Gets the path to a script or stylesheet.
  *
- * @since n.e.x.t
+ * @since 0.9.0
  *
  * @param string      $src_path Source path, relative to plugin root.
  * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
