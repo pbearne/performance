@@ -257,7 +257,7 @@ For example:
 add_filter(
 	'od_extension_module_urls',
 	static function ( array $extension_module_urls ): array {
-		$extension_module_urls[] = add_query_arg( 'ver', '1.0', plugin_dir_url( __FILE__ ) . 'detect.js' );
+		$extension_module_urls[] = plugins_url( add_query_arg( 'ver', '1.0', 'detect.js' ), __FILE__ );
 		return $extension_module_urls;
 	}
 );

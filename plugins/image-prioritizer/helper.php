@@ -93,7 +93,7 @@ function image_prioritizer_filter_extension_module_urls( $extension_module_urls 
 	if ( ! is_array( $extension_module_urls ) ) {
 		$extension_module_urls = array();
 	}
-	$extension_module_urls[] = add_query_arg( 'ver', IMAGE_PRIORITIZER_VERSION, plugin_dir_url( __FILE__ ) . image_prioritizer_get_asset_path( 'detect.js' ) );
+	$extension_module_urls[] = plugins_url( add_query_arg( 'ver', IMAGE_PRIORITIZER_VERSION, image_prioritizer_get_asset_path( 'detect.js' ) ), __FILE__ );
 	return $extension_module_urls;
 }
 
