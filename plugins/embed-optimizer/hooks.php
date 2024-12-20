@@ -121,7 +121,7 @@ function embed_optimizer_filter_extension_module_urls( $extension_module_urls ):
 	if ( ! is_array( $extension_module_urls ) ) {
 		$extension_module_urls = array();
 	}
-	$extension_module_urls[] = add_query_arg( 'ver', EMBED_OPTIMIZER_VERSION, plugin_dir_url( __FILE__ ) . embed_optimizer_get_asset_path( 'detect.js' ) );
+	$extension_module_urls[] = plugins_url( add_query_arg( 'ver', EMBED_OPTIMIZER_VERSION, embed_optimizer_get_asset_path( 'detect.js' ) ), __FILE__ );
 	return $extension_module_urls;
 }
 
