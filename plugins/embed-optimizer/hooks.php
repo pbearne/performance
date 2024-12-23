@@ -42,7 +42,7 @@ function embed_optimizer_add_non_optimization_detective_hooks(): void {
  * @param string $optimization_detective_version Current version of the optimization detective plugin.
  */
 function embed_optimizer_init_optimization_detective( string $optimization_detective_version ): void {
-	$required_od_version = '0.7.0';
+	$required_od_version = '0.9.0';
 	if ( version_compare( (string) strtok( $optimization_detective_version, '-' ), $required_od_version, '<' ) ) {
 		add_action(
 			'admin_notices',
@@ -121,7 +121,7 @@ function embed_optimizer_filter_extension_module_urls( $extension_module_urls ):
 	if ( ! is_array( $extension_module_urls ) ) {
 		$extension_module_urls = array();
 	}
-	$extension_module_urls[] = add_query_arg( 'ver', EMBED_OPTIMIZER_VERSION, plugin_dir_url( __FILE__ ) . sprintf( 'detect%s.js', wp_scripts_get_suffix() ) );
+	$extension_module_urls[] = plugins_url( add_query_arg( 'ver', EMBED_OPTIMIZER_VERSION, embed_optimizer_get_asset_path( 'detect.js' ) ), __FILE__ );
 	return $extension_module_urls;
 }
 
@@ -326,7 +326,7 @@ function embed_optimizer_lazy_load_scripts(): void {
  * @since 0.2.0
  */
 function embed_optimizer_get_lazy_load_script(): string {
-	$script = file_get_contents( __DIR__ . sprintf( '/lazy-load%s.js', wp_scripts_get_suffix() ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
+	$script = file_get_contents( __DIR__ . '/' . embed_optimizer_get_asset_path( 'lazy-load.js' ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- It's a local filesystem path not a remote request.
 
 	if ( false === $script ) {
 		return '';
@@ -423,4 +423,40 @@ add_action( 'after_plugin_row_meta', 'embed_optimizer_print_row_meta_install_not
 function embed_optimizer_render_generator(): void {
 	// Use the plugin slug as it is immutable.
 	echo '<meta name="generator" content="embed-optimizer ' . esc_attr( EMBED_OPTIMIZER_VERSION ) . '">' . "\n";
+}
+
+/**
+ * Gets the path to a script or stylesheet.
+ *
+ * @since 0.4.0
+ *
+ * @param string      $src_path Source path, relative to plugin root.
+ * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
+ * @return string URL to script or stylesheet.
+ */
+function embed_optimizer_get_asset_path( string $src_path, ?string $min_path = null ): string {
+	if ( null === $min_path ) {
+		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+	}
+
+	$force_src = false;
+	if ( WP_DEBUG && ! file_exists( trailingslashit( __DIR__ ) . $min_path ) ) {
+		$force_src = true;
+		wp_trigger_error(
+			__FUNCTION__,
+			sprintf(
+				/* translators: %s is the minified asset path */
+				__( 'Minified asset has not been built: %s', 'embed-optimizer' ),
+				$min_path
+			),
+			E_USER_WARNING
+		);
+	}
+
+	if ( SCRIPT_DEBUG || $force_src ) {
+		return $src_path;
+	}
+
+	return $min_path;
 }

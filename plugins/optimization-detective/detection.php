@@ -34,6 +34,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 0.8.0
  * @access private
  *
+ * @global WP_Query $wp_query WordPress Query object.
+ *
  * @return int|null Post ID or null if none found.
  */
 function od_get_cache_purge_post_id(): ?int {
@@ -69,7 +71,7 @@ function od_get_cache_purge_post_id(): ?int {
  */
 function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $group_collection ): string {
 	$web_vitals_lib_data = require __DIR__ . '/build/web-vitals.asset.php';
-	$web_vitals_lib_src  = add_query_arg( 'ver', $web_vitals_lib_data['version'], plugin_dir_url( __FILE__ ) . 'build/web-vitals.js' );
+	$web_vitals_lib_src  = plugins_url( add_query_arg( 'ver', $web_vitals_lib_data['version'], 'build/web-vitals.js' ), __FILE__ );
 
 	/**
 	 * Filters the list of extension script module URLs to import when performing detection.
@@ -83,16 +85,20 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 	$cache_purge_post_id = od_get_cache_purge_post_id();
 
 	$current_url = od_get_current_url();
+
+	$current_etag = $group_collection->get_current_etag();
+
 	$detect_args = array(
 		'minViewportAspectRatio' => od_get_minimum_viewport_aspect_ratio(),
 		'maxViewportAspectRatio' => od_get_maximum_viewport_aspect_ratio(),
 		'isDebug'                => WP_DEBUG,
 		'extensionModuleUrls'    => $extension_module_urls,
 		'restApiEndpoint'        => rest_url( OD_REST_API_NAMESPACE . OD_URL_METRICS_ROUTE ),
+		'currentETag'            => $current_etag,
 		'currentUrl'             => $current_url,
 		'urlMetricSlug'          => $slug,
 		'cachePurgePostId'       => od_get_cache_purge_post_id(),
-		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_url, $cache_purge_post_id ),
+		'urlMetricHMAC'          => od_get_url_metrics_storage_hmac( $slug, $current_etag, $current_url, $cache_purge_post_id ),
 		'urlMetricGroupStatuses' => array_map(
 			static function ( OD_URL_Metric_Group $group ): array {
 				return array(
@@ -112,7 +118,7 @@ function od_get_detection_script( string $slug, OD_URL_Metric_Group_Collection $
 	return wp_get_inline_script_tag(
 		sprintf(
 			'import detect from %s; detect( %s );',
-			wp_json_encode( add_query_arg( 'ver', OPTIMIZATION_DETECTIVE_VERSION, plugin_dir_url( __FILE__ ) . sprintf( 'detect%s.js', wp_scripts_get_suffix() ) ) ),
+			wp_json_encode( plugins_url( add_query_arg( 'ver', OPTIMIZATION_DETECTIVE_VERSION, od_get_asset_path( 'detect.js' ) ), __FILE__ ) ),
 			wp_json_encode( $detect_args )
 		),
 		array( 'type' => 'module' )

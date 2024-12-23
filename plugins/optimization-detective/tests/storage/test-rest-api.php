@@ -28,6 +28,18 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @return array<string, mixed>
 	 */
 	public function data_provider_to_test_rest_request_good_params(): array {
+		$add_root_extra_property = static function ( string $property_name ): void {
+			add_filter(
+				'od_url_metric_schema_root_additional_properties',
+				static function ( array $properties ) use ( $property_name ): array {
+					$properties[ $property_name ] = array(
+						'type' => 'string',
+					);
+					return $properties;
+				}
+			);
+		};
+
 		return array(
 			'not_extended'             => array(
 				'set_up' => function (): array {
@@ -35,17 +47,8 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				},
 			),
 			'extended'                 => array(
-				'set_up' => function (): array {
-					add_filter(
-						'od_url_metric_schema_root_additional_properties',
-						static function ( array $properties ): array {
-							$properties['extra'] = array(
-								'type' => 'string',
-							);
-							return $properties;
-						}
-					);
-
+				'set_up' => function () use ( $add_root_extra_property ): array {
+					$add_root_extra_property( 'extra' );
 					$params = $this->get_valid_params();
 					$params['extra'] = 'foo';
 					return $params;
@@ -57,7 +60,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					$params['cache_purge_post_id'] = self::factory()->post->create();
 					$params['url'] = get_permalink( $params['cache_purge_post_id'] );
 					$params['slug'] = od_get_url_metrics_slug( array( 'p' => $params['cache_purge_post_id'] ) );
-					$params['hmac'] = od_get_url_metrics_storage_hmac( $params['slug'], $params['url'], $params['cache_purge_post_id'] );
+					$params['hmac'] = od_get_url_metrics_storage_hmac( $params['slug'], $params['current_etag'], $params['url'], $params['cache_purge_post_id'] );
 					return $params;
 				},
 			),
@@ -96,12 +99,15 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertCount( 0, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
 		$request  = $this->create_request( $valid_params );
 		$response = rest_get_server()->dispatch( $request );
-		$this->assertSame( 200, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
 
+		$this->assertSame( 1, did_action( 'od_url_metric_stored' ) );
+
+		$this->assertSame( 200, $response->get_status(), 'Response: ' . wp_json_encode( $response ) );
 		$data = $response->get_data();
+		$this->assertCount( 1, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
+
 		$this->assertTrue( $data['success'] );
 
-		$this->assertCount( 1, get_posts( array( 'post_type' => OD_URL_Metrics_Post_Type::SLUG ) ) );
 		$post = OD_URL_Metrics_Post_Type::get_post( $valid_params['slug'] );
 		$this->assertInstanceOf( WP_Post::class, $post );
 
@@ -111,21 +117,21 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		$this->assertSame( $valid_params['viewport']['width'], $url_metrics[0]->get_viewport_width() );
 
 		$expected_data = $valid_params;
-		unset( $expected_data['hmac'], $expected_data['slug'], $expected_data['cache_purge_post_id'] );
+		unset( $expected_data['hmac'], $expected_data['slug'], $expected_data['current_etag'], $expected_data['cache_purge_post_id'] );
+		unset( $expected_data['unset_prop'] );
 		$this->assertSame(
 			$expected_data,
 			wp_array_slice_assoc( $url_metrics[0]->jsonSerialize(), array_keys( $expected_data ) )
 		);
-		$this->assertSame( 1, did_action( 'od_url_metric_stored' ) );
 
 		$this->assertInstanceOf( OD_URL_Metric_Store_Request_Context::class, $stored_context );
 
 		// Now check that od_trigger_page_cache_invalidation() cleaned caches as expected.
 		$this->assertSame( $url_metrics[0]->jsonSerialize(), $stored_context->url_metric->jsonSerialize() );
-		$cache_purge_post_id = $stored_context->request->get_param( 'cache_purge_post_id' );
-
 		if ( isset( $valid_params['cache_purge_post_id'] ) ) {
-			$scheduled = wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $valid_params['cache_purge_post_id'] ) );
+			$cache_purge_post_id = $stored_context->request->get_param( 'cache_purge_post_id' );
+			$this->assertSame( $valid_params['cache_purge_post_id'], $cache_purge_post_id );
+			$scheduled = wp_next_scheduled( 'od_trigger_page_cache_invalidation', array( $cache_purge_post_id ) );
 			$this->assertIsInt( $scheduled );
 			$this->assertGreaterThan( time(), $scheduled );
 		}
@@ -137,17 +143,24 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 	 * @return array<string, mixed> Test data.
 	 */
 	public function data_provider_invalid_params(): array {
-		$valid_element = $this->get_valid_params()['elements'][0];
+		$valid_params  = $this->get_valid_params();
+		$valid_element = $valid_params['elements'][0];
 
 		return array_map(
-			function ( $params ) {
+			static function ( $params ) use ( $valid_params ) {
 				return array(
-					'params' => array_merge( $this->get_valid_params(), $params ),
+					'params' => array_merge( $valid_params, $params ),
 				);
 			},
 			array(
 				'bad_url'                                  => array(
 					'url' => 'bad://url',
+				),
+				'bad_current_etag1'                        => array(
+					'current_etag' => 'foo',
+				),
+				'bad_current_etag2'                        => array(
+					'current_etag' => $valid_params['current_etag'] . "\n",
 				),
 				'bad_slug'                                 => array(
 					'slug' => '<script>document.write("evil")</script>',
@@ -156,10 +169,10 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 					'hmac' => 'not even a hash',
 				),
 				'invalid_hmac'                             => array(
-					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), home_url( '/' ) ),
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array( 'different' => 'query vars' ) ), $valid_params['current_etag'], home_url( '/' ) ),
 				),
 				'invalid_hmac_with_queried_object'         => array(
-					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), home_url( '/' ), 1 ),
+					'hmac' => od_get_url_metrics_storage_hmac( od_get_url_metrics_slug( array() ), $valid_params['current_etag'], home_url( '/' ), 1 ),
 				),
 				'invalid_viewport_type'                    => array(
 					'viewport' => '640x480',
@@ -525,6 +538,7 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		// Sanity check that the groups were constructed as expected.
 		$group_collection  = new OD_URL_Metric_Group_Collection(
 			OD_URL_Metrics_Post_Type::get_url_metrics_from_post( OD_URL_Metrics_Post_Type::get_post( od_get_url_metrics_slug( array() ) ) ),
+			$wider_viewport_params['current_etag'],
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			HOUR_IN_SECONDS
@@ -668,14 +682,15 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 				),
 			)
 		)->jsonSerialize();
-		unset( $data['timestamp'], $data['uuid'] ); // Since these are readonly.
 		$data = array_merge(
 			array(
-				'slug' => $slug,
-				'hmac' => od_get_url_metrics_storage_hmac( $slug, $data['url'] ),
+				'slug'         => $slug,
+				'hmac'         => od_get_url_metrics_storage_hmac( $slug, $data['etag'], $data['url'] ),
+				'current_etag' => $data['etag'],
 			),
 			$data
 		);
+		unset( $data['timestamp'], $data['uuid'], $data['etag'] ); // Since these are readonly.
 		if ( count( $extras ) > 0 ) {
 			$data = $this->recursive_merge( $data, $extras );
 		}
@@ -720,9 +735,9 @@ class Test_OD_Storage_REST_API extends WP_UnitTestCase {
 		 */
 		$request = new WP_REST_Request( 'POST', self::ROUTE );
 		$request->set_header( 'Content-Type', 'application/json' );
-		$request->set_query_params( wp_array_slice_assoc( $params, array( 'hmac', 'slug', 'cache_purge_post_id' ) ) );
+		$request->set_query_params( wp_array_slice_assoc( $params, array( 'hmac', 'current_etag', 'slug', 'cache_purge_post_id' ) ) );
 		$request->set_header( 'Origin', home_url() );
-		unset( $params['hmac'], $params['slug'], $params['cache_purge_post_id'] );
+		unset( $params['hmac'], $params['slug'], $params['current_etag'], $params['cache_purge_post_id'] );
 		$request->set_body( wp_json_encode( $params ) );
 		return $request;
 	}

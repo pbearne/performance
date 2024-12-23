@@ -2,7 +2,7 @@
 
 Contributors: wordpressdotorg
 Tested up to: 6.7
-Stable tag:   0.8.0
+Stable tag:   0.9.0
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Tags:         performance, optimization, rum
@@ -17,7 +17,7 @@ This plugin is a dependency which does not provide end-user functionality on its
 
 = Background =
 
-WordPress uses [server-side heuristics](https://make.wordpress.org/core/2023/07/13/image-performance-enhancements-in-wordpress-6-3/) to make educated guesses about which images are likely to be in the initial viewport. Likewise, it uses server-side heuristics to identify a hero image which is likely to be the Largest Contentful Paint (LCP) element. To optimize page loading, it avoids lazy-loading any of these images while also adding `fetchpriority=high` to the hero image. When these heuristics are applied successfully, the LCP metric for page loading can be improved 5-10%. Unfortunately, however, there are limitations to the heuristics that make the correct identification of which image is the LCP element only about 50% effective. See [Analyzing the Core Web Vitals performance impact of WordPress 6.3 in the field](https://make.wordpress.org/core/2023/09/19/analyzing-the-core-web-vitals-performance-impact-of-wordpress-6-3-in-the-field/). For example, it is [common](https://github.com/GoogleChromeLabs/wpp-research/pull/73) for the LCP element to vary between different viewport widths, such as desktop versus mobile. Since WordPress's heuristics are completely server-side it has no knowledge of how the page is actually laid out, and it cannot prioritize loading of images according to the client's viewport width.
+WordPress uses [server-side heuristics](https://make.wordpress.org/core/2023/07/13/image-performance-enhancements-in-wordpress-6-3/) to make educated guesses about which images are likely to be in the initial viewport. Likewise, it uses server-side heuristics to identify a hero image which is likely to be the Largest Contentful Paint (LCP) element. To optimize page loading, it avoids lazy loading any of these images while also adding `fetchpriority=high` to the hero image. When these heuristics are applied successfully, the LCP metric for page loading can be improved 5-10%. Unfortunately, however, there are limitations to the heuristics that make the correct identification of which image is the LCP element only about 50% effective. See [Analyzing the Core Web Vitals performance impact of WordPress 6.3 in the field](https://make.wordpress.org/core/2023/09/19/analyzing-the-core-web-vitals-performance-impact-of-wordpress-6-3-in-the-field/). For example, it is [common](https://github.com/GoogleChromeLabs/wpp-research/pull/73) for the LCP element to vary between different viewport widths, such as desktop versus mobile. Since WordPress's heuristics are completely server-side it has no knowledge of how the page is actually laid out, and it cannot prioritize loading of images according to the client's viewport width.
 
 In order to increase the accuracy of identifying the LCP element, including across various client viewport widths, this plugin gathers metrics from real users (RUM) to detect the actual LCP element and then use this information to optimize the page for future visitors so that the loading of the LCP element is properly prioritized. This is the purpose of Optimization Detective. The approach is heavily inspired by Philip Walton’s [Dynamic LCP Priority: Learning from Past Visits](https://philipwalton.com/articles/dynamic-lcp-priority/). See also the initial exploration document that laid out this project: [Image Loading Optimization via Client-side Detection](https://docs.google.com/document/u/1/d/16qAJ7I_ljhEdx2Cn2VlK7IkiixobY9zNn8FXxN9T9Ls/view).
 
@@ -39,6 +39,33 @@ URL Metrics have a “freshness TTL” after which they will be stale and the Ja
 There are currently **no settings** and no user interface for this plugin since it is designed to work without any configuration.
 
 When the `WP_DEBUG` constant is enabled, additional logging for Optimization Detective is added to the browser console.
+
+= Use Cases and Examples =
+
+As mentioned above, this plugin is a dependency that doesn't provide features on its own. Dependent plugins leverage the collected URL Metrics to apply optimizations. What follows us a running list of the optimizations which are enabled by Optimization Detective, along with a links to the related code used for the implementation:
+
+**[Image Prioritizer](https://wordpress.org/plugins/image-prioritizer/) ([GitHub](https://github.com/WordPress/performance/tree/trunk/plugins/image-prioritizer)):**
+
+1. Add breakpoint-specific `fetchpriority=high` preload links (`LINK[rel=preload]`) for image URLs of LCP elements:
+   1. An `IMG` element, including the `srcset`/`sizes` attributes supplied as `imagesrcset`/`imagesizes` on the `LINK`. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L167-L177), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L304-L349))
+   2. The first `SOURCE` element with a `type` attribute in a `PICTURE` element. (Art-directed `PICTURE` elements using media queries are not supported.) ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L192-L275), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L304-L349))
+   3. An element with a CSS `background-image` inline `style` attribute. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-background-image-styled-tag-visitor.php#L62-L92), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-background-image-styled-tag-visitor.php#L182-L203))
+   4. An element with a CSS `background-image` applied with a stylesheet (when the image is from an allowed origin). ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/hooks.php#L14-L16), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-background-image-styled-tag-visitor.php#L82-L83), [3](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-background-image-styled-tag-visitor.php#L135-L203), [4](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/helper.php#L83-L320), [5](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/detect.js))
+   5. A `VIDEO` element's `poster` image. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-video-tag-visitor.php#L127-L161))
+2. Ensure `fetchpriority=high` is only added to an `IMG` when it is the LCP element across all responsive breakpoints. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L65-L91), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L137-L146))
+3. Add `fetchpriority=low` to `IMG` tags which appear in the initial viewport but are not visible, such as when they are subsequent carousel slides. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L105-L123), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L137-L146))
+4. Lazy loading:
+   1. Apply lazy loading to `IMG` tags based on whether they appear in any breakpoint’s initial viewport. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L124-L133))
+   2. Implement lazy loading of CSS background images added via inline `style` attributes. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-background-image-styled-tag-visitor.php#L205-L238), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/helper.php#L365-L380), [3](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/lazy-load-bg-image.js))
+   3. Lazy-load `VIDEO` tags by setting the appropriate attributes based on whether they appear in the initial viewport. If a `VIDEO` is the LCP element, it gets `preload=auto`; if it is in an initial viewport, the `preload=metadata` default is left; if it is not in an initial viewport, it gets `preload=none`. Lazy-loaded videos also get initial `preload`, `autoplay`, and `poster` attributes restored when the `VIDEO` is going to enter the viewport. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-video-tag-visitor.php#L163-L246), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/helper.php#L365-L380), [3](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/lazy-load-video.js))
+5. Ensure that [`sizes=auto`](https://make.wordpress.org/core/2024/10/18/auto-sizes-for-lazy-loaded-images-in-wordpress-6-7/) is added to all lazy-loaded `IMG` elements. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-img-tag-visitor.php#L148-L163))
+6. Reduce the size of the `poster` image of a `VIDEO` from full size to the size appropriate for the maximum width of the video (on desktop). ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/image-prioritizer/class-image-prioritizer-video-tag-visitor.php#L84-L125))
+
+**[Embed Optimizer](https://wordpress.org/plugins/embed-optimizer/) ([GitHub](https://github.com/WordPress/performance/tree/trunk/plugins/embed-optimizer)):**
+
+1. Lazy loading embeds just before they come into view. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/class-embed-optimizer-tag-visitor.php#L191-L194), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/hooks.php#L168-L336))
+2. Adding preconnect links for embeds in the initial viewport. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/class-embed-optimizer-tag-visitor.php#L114-L190))
+3. Reserving space for embeds that resize to reduce layout shifting. ([1](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/hooks.php#L64-L65), [2](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/hooks.php#L81-L144), [3](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/detect.js), [4](https://github.com/WordPress/performance/blob/f5f50f9179c26deadeef966734367d199ba6de6f/plugins/embed-optimizer/class-embed-optimizer-tag-visitor.php#L218-L285))
 
 = Hooks =
 
@@ -92,9 +119,10 @@ Filters whether the current response can be optimized. By default, detection and
 2. It’s not a post embed template (`is_embed()`).
 3. It’s not the Customizer preview (`is_customize_preview()`)
 4. It’s not the response to a `POST` request.
-5. The user is not an administrator (`current_user_can( 'customize' )`).
+5. The user is not an administrator (`current_user_can( 'customize' )`), unless you're in plugin development mode (`wp_is_development_mode( 'plugin' )`).
+6. There is at least one queried post on the page. This is used to facilitate the purging of page caches after a new URL Metric is stored.
 
-During development, you may want to force this to always be enabled:
+To force every response to be optimized regardless of the conditions above, you can do:
 
 `
 <?php
@@ -103,7 +131,7 @@ add_filter( 'od_can_optimize_response', '__return_true' );
 
 **Filter:** `od_url_metrics_breakpoint_sample_size` (default: 3)
 
-Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. During development, it may be helpful to reduce the sample size to 1:
+Filters the sample size for a breakpoint's URL Metrics on a given URL. The sample size must be greater than zero. You can increase the sample size if you want better guarantees that the applied optimizations will be accurate. During development, it may be helpful to reduce the sample size to 1:
 
 `
 <?php
@@ -125,18 +153,36 @@ add_filter( 'od_metrics_storage_lock_ttl', function ( int $ttl ): int {
 
 **Filter:** `od_url_metric_freshness_ttl` (default: 1 day in seconds)
 
-Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. During development, this can be useful to set to zero:
+Filters the freshness age (TTL) for a given URL Metric. The freshness TTL must be at least zero, in which it considers URL Metrics to always be stale. In practice, the value should be at least an hour. If your site content does not change frequently, you may want to increase the TTL to a week:
 
 `
 <?php
-add_filter( 'od_url_metric_freshness_ttl', '__return_zero' );
+add_filter( 'od_url_metric_freshness_ttl', static function (): int {
+    return WEEK_IN_SECONDS;
+} );
+`
+
+During development, this can be useful to set to zero so that you don't have to wait for new URL Metrics to be requested when engineering a new optimization:
+
+`
+<?php
+add_filter( 'od_url_metric_freshness_ttl', static function (): int {
+    return 0;
+} );
 `
 
 **Filter:** `od_minimum_viewport_aspect_ratio` (default: 0.4)
 
 Filters the minimum allowed viewport aspect ratio for URL Metrics.
 
-The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429).
+The 0.4 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 when rotated 90 degrees to 9:21 (0.429). During development when you have the DevTools console open on the right, the viewport aspect ratio will be smaller than normal. In this case, you may want to set this to 0:
+
+`
+<?php
+add_filter( 'od_minimum_viewport_aspect_ratio', static function (): int {
+    return 0;
+} );
+`
 
 **Filter:** `od_maximum_viewport_aspect_ratio` (default: 2.5)
 
@@ -144,11 +190,11 @@ Filters the maximum allowed viewport aspect ratio for URL Metrics.
 
 The 2.5 value is intended to accommodate the phone with the greatest known aspect ratio at 21:9 (2.333).
 
-During development when you have the DevTools console open, for example, the viewport aspect ratio will be wider than normal. In this case, you may want to increase the maximum aspect ratio:
+During development when you have the DevTools console open on the bottom, for example, the viewport aspect ratio will be larger than normal. In this case, you may want to increase the maximum aspect ratio:
 
 `
 <?php
-add_filter( 'od_maximum_viewport_aspect_ratio', function () {
+add_filter( 'od_maximum_viewport_aspect_ratio', static function (): int {
 	return 5;
 } );
 `
@@ -211,13 +257,21 @@ For example:
 add_filter(
 	'od_extension_module_urls',
 	static function ( array $extension_module_urls ): array {
-		$extension_module_urls[] = add_query_arg( 'ver', '1.0', plugin_dir_url( __FILE__ ) . 'detect.js' );
+		$extension_module_urls[] = plugins_url( add_query_arg( 'ver', '1.0', 'detect.js' ), __FILE__ );
 		return $extension_module_urls;
 	}
 );
 `
 
 See also [example usage](https://github.com/WordPress/performance/blob/6bb8405c5c446e3b66c2bfa3ae03ba61b188bca2/plugins/embed-optimizer/hooks.php#L128-L144) in Embed Optimizer. Note in particular the structure of the plugin’s [detect.js](https://github.com/WordPress/performance/blob/trunk/plugins/embed-optimizer/detect.js) script module, how it exports `initialize` and `finalize` functions which Optimization Detective then calls when the page loads and when the page unloads, at which time the URL Metric is constructed and sent to the server for storage. Refer also to the [TypeScript type definitions](https://github.com/WordPress/performance/blob/trunk/plugins/optimization-detective/types.ts).
+
+**Filter:** `od_current_url_metrics_etag_data` (default: array with `tag_visitors` key)
+
+Filters the data that goes into computing the current ETag for URL Metrics.
+
+The ETag is a unique identifier that changes whenever the underlying data used to generate it changes. By default, the ETag calculation includes the names of registered tag visitors. This ensures that when a new Optimization Detective-dependent plugin is activated (like Image Prioritizer or Embed Optimizer), any existing URL Metrics are immediately considered stale. This happens because the newly registered tag visitors alter the ETag calculation, making it different from the stored ones.
+
+When the ETag for URL Metrics in a complete viewport group no longer matches the current environment's ETag, new URL Metrics will then begin to be collected until there are no more stored URL Metrics with the old ETag. These new URL Metrics will include data relevant to the newly activated plugins and their tag visitors.
 
 **Action:** `od_url_metric_stored` (argument: `OD_URL_Metric_Store_Request_Context`)
 
@@ -264,6 +318,25 @@ Contributions are always welcome! Learn more about how to get involved in the [C
 The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plugins/optimization-detective) is located in the [WordPress/performance](https://github.com/WordPress/performance) repo on GitHub.
 
 == Changelog ==
+
+= 0.9.0 =
+
+**Enhancements**
+
+* Add `fetchpriority=high` to `IMG` when it is the LCP element on desktop and mobile with other viewport groups empty. ([1723](https://github.com/WordPress/performance/pull/1723))
+* Improve debugging stored URL Metrics in Optimization Detective. ([1656](https://github.com/WordPress/performance/pull/1656))
+* Incorporate page state into ETag computation. ([1722](https://github.com/WordPress/performance/pull/1722))
+* Mark existing URL Metrics as stale when a new tag visitor is registered. ([1705](https://github.com/WordPress/performance/pull/1705))
+* Set development mode to 'plugin' in the dev environment and allow pages to be optimized when admin is logged-in (when in plugin dev mode). ([1700](https://github.com/WordPress/performance/pull/1700))
+* Add `get_xpath_elements_map()` helper methods to `OD_URL_Metric_Group_Collection` and `OD_URL_Metric_Group`, and add `get_all_element_max_intersection_ratios`/`get_element_max_intersection_ratio` methods to `OD_URL_Metric_Group`. ([1654](https://github.com/WordPress/performance/pull/1654))
+* Add `get_breadcrumbs()` method to `OD_HTML_Tag_Processor`. ([1707](https://github.com/WordPress/performance/pull/1707))
+* Add `get_sample_size()` and `get_freshness_ttl()` methods to `OD_URL_Metric_Group`. ([1697](https://github.com/WordPress/performance/pull/1697))
+* Expose `onTTFB`, `onFCP`, `onLCP`, `onINP`, and `onCLS` from web-vitals.js to extension JS modules via args their `initialize` functions. ([1697](https://github.com/WordPress/performance/pull/1697))
+
+**Bug Fixes**
+
+* Prevent submitting URL Metric if viewport size changed. ([1712](https://github.com/WordPress/performance/pull/1712))
+* Fix construction of XPath expressions for implicitly closed paragraphs. ([1707](https://github.com/WordPress/performance/pull/1707))
 
 = 0.8.0 =
 

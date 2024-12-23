@@ -2,7 +2,7 @@
 
 Contributors: wordpressdotorg
 Tested up to: 6.7
-Stable tag:   0.3.0
+Stable tag:   0.4.0
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 Tags:         performance, embeds
@@ -15,9 +15,9 @@ This plugin's purpose is to optimize the performance of [embeds in WordPress](ht
 
 The current optimizations include:
 
-1. Lazy loading embeds just before they come into view
-2. Adding preconnect links for embeds in the initial viewport
-3. Reserving space for embeds that resize to reduce layout shifting
+1. Lazy loading embeds just before they come into view.
+2. Adding preconnect links for embeds in the initial viewport.
+3. Reserving space for embeds that resize to reduce layout shifting.
 
 **Lazy loading embeds** improves performance because embeds are generally very resource-intensive, so lazy loading them ensures that they don't compete with resources when the page is loading. Lazy loading of `IFRAME`\-based embeds is handled simply by adding the `loading=lazy` attribute. Lazy loading embeds that include `SCRIPT` tags is handled by using an Intersection Observer to watch for when the embed’s `FIGURE` container is going to enter the viewport and then it dynamically inserts the `SCRIPT` tag.
 
@@ -67,10 +67,11 @@ The [plugin source code](https://github.com/WordPress/performance/tree/trunk/plu
 
 == Changelog ==
 
-= n.e.x.t =
+= 0.4.0 =
 
 **Enhancements**
 
+* Incorporate media queries into preconnect links to account for whether embeds are in viewport. ([1654](https://github.com/WordPress/performance/pull/1654))
 * Serve unminified scripts when `SCRIPT_DEBUG` is enabled. ([1643](https://github.com/WordPress/performance/pull/1643))
 
 = 0.3.0 =

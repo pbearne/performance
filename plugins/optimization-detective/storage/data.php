@@ -141,24 +141,132 @@ function od_get_url_metrics_slug( array $query_vars ): string {
 }
 
 /**
+ * Gets the current template for a block theme or a classic theme.
+ *
+ * @since 0.9.0
+ * @access private
+ *
+ * @global string|null $_wp_current_template_id Current template ID.
+ * @global string|null $template                Template file path.
+ *
+ * @return string|WP_Block_Template|null Template.
+ */
+function od_get_current_theme_template() {
+	global $template, $_wp_current_template_id;
+
+	if ( wp_is_block_theme() && isset( $_wp_current_template_id ) ) {
+		$block_template = get_block_template( $_wp_current_template_id, 'wp_template' );
+		if ( $block_template instanceof WP_Block_Template ) {
+			return $block_template;
+		}
+	}
+	if ( isset( $template ) && is_string( $template ) ) {
+		return basename( $template );
+	}
+	return null;
+}
+
+/**
+ * Gets the current ETag for URL Metrics.
+ *
+ * Generates a hash based on the IDs of registered tag visitors, the queried object,
+ * posts in The Loop, and theme information in the current environment. This ETag
+ * is used to assess if the URL Metrics are stale when its value changes.
+ *
+ * @since 0.9.0
+ * @access private
+ *
+ * @param OD_Tag_Visitor_Registry       $tag_visitor_registry Tag visitor registry.
+ * @param WP_Query|null                 $wp_query             The WP_Query instance.
+ * @param string|WP_Block_Template|null $current_template     The current template being used.
+ * @return non-empty-string Current ETag.
+ */
+function od_get_current_url_metrics_etag( OD_Tag_Visitor_Registry $tag_visitor_registry, ?WP_Query $wp_query, $current_template ): string {
+	$queried_object      = $wp_query instanceof WP_Query ? $wp_query->get_queried_object() : null;
+	$queried_object_data = array(
+		'id'   => null,
+		'type' => null,
+	);
+
+	if ( $queried_object instanceof WP_Post ) {
+		$queried_object_data['id']                = $queried_object->ID;
+		$queried_object_data['type']              = 'post';
+		$queried_object_data['post_modified_gmt'] = $queried_object->post_modified_gmt;
+	} elseif ( $queried_object instanceof WP_Term ) {
+		$queried_object_data['id']   = $queried_object->term_id;
+		$queried_object_data['type'] = 'term';
+	} elseif ( $queried_object instanceof WP_User ) {
+		$queried_object_data['id']   = $queried_object->ID;
+		$queried_object_data['type'] = 'user';
+	} elseif ( $queried_object instanceof WP_Post_Type ) {
+		$queried_object_data['type'] = $queried_object->name;
+	}
+
+	$data = array(
+		'tag_visitors'     => array_keys( iterator_to_array( $tag_visitor_registry ) ),
+		'queried_object'   => $queried_object_data,
+		'queried_posts'    => array_filter(
+			array_map(
+				static function ( $post ): ?array {
+					if ( is_int( $post ) ) {
+						$post = get_post( $post );
+					}
+					if ( ! ( $post instanceof WP_Post ) ) {
+						return null;
+					}
+					return array(
+						'id'                => $post->ID,
+						'post_modified_gmt' => $post->post_modified_gmt,
+					);
+				},
+				( $wp_query instanceof WP_Query && $wp_query->post_count > 0 ) ? $wp_query->posts : array()
+			)
+		),
+		'active_theme'     => array(
+			'template'   => array(
+				'name'    => get_template(),
+				'version' => wp_get_theme( get_template() )->get( 'Version' ),
+			),
+			'stylesheet' => array(
+				'name'    => get_stylesheet(),
+				'version' => wp_get_theme()->get( 'Version' ),
+			),
+		),
+		'current_template' => $current_template instanceof WP_Block_Template ? get_object_vars( $current_template ) : $current_template,
+	);
+
+	/**
+	 * Filters the data that goes into computing the current ETag for URL Metrics.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $data Data.
+	 */
+	$data = (array) apply_filters( 'od_current_url_metrics_etag_data', $data );
+
+	return md5( (string) wp_json_encode( $data ) );
+}
+
+/**
  * Computes HMAC for storing URL Metrics for a specific slug.
  *
  * This is used in the REST API to authenticate the storage of new URL Metrics from a given URL.
  *
  * @since 0.8.0
+ * @since 0.9.0 Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_verify_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
- * @todo This should also include an ETag as a parameter. See <https://github.com/WordPress/performance/issues/1466>.
  *
- * @param string   $slug                Slug (hash of normalized query vars).
- * @param string   $url                 URL.
- * @param int|null $cache_purge_post_id Cache purge post ID.
+ * @param string           $slug                Slug (hash of normalized query vars).
+ * @param non-empty-string $current_etag        Current ETag.
+ * @param string           $url                 URL.
+ * @param int|null         $cache_purge_post_id Cache purge post ID.
  * @return string HMAC.
  */
-function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache_purge_post_id = null ): string {
-	$action = "store_url_metric:$slug:$url:$cache_purge_post_id";
+function od_get_url_metrics_storage_hmac( string $slug, string $current_etag, string $url, ?int $cache_purge_post_id = null ): string {
+	$action = "store_url_metric:$slug:$current_etag:$url:$cache_purge_post_id";
 	return wp_hash( $action, 'nonce' );
 }
 
@@ -166,19 +274,21 @@ function od_get_url_metrics_storage_hmac( string $slug, string $url, ?int $cache
  * Verifies HMAC for storing URL Metrics for a specific slug.
  *
  * @since 0.8.0
+ * @since 0.9.0 Introduced the `$current_etag` parameter.
  * @access private
  *
  * @see od_get_url_metrics_storage_hmac()
  * @see od_get_url_metrics_slug()
  *
- * @param string   $hmac                HMAC.
- * @param string   $slug                Slug (hash of normalized query vars).
- * @param String   $url                 URL.
- * @param int|null $cache_purge_post_id Cache purge post ID.
+ * @param string           $hmac                HMAC.
+ * @param string           $slug                Slug (hash of normalized query vars).
+ * @param non-empty-string $current_etag        Current ETag.
+ * @param string           $url                 URL.
+ * @param int|null         $cache_purge_post_id Cache purge post ID.
  * @return bool Whether the HMAC is valid.
  */
-function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $url, ?int $cache_purge_post_id = null ): bool {
-	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $url, $cache_purge_post_id ), $hmac );
+function od_verify_url_metrics_storage_hmac( string $hmac, string $slug, string $current_etag, string $url, ?int $cache_purge_post_id = null ): bool {
+	return hash_equals( od_get_url_metrics_storage_hmac( $slug, $current_etag, $url, $cache_purge_post_id ), $hmac );
 }
 
 /**

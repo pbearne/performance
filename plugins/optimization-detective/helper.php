@@ -37,7 +37,7 @@ function od_initialize_extensions(): void {
  */
 function od_generate_media_query( ?int $minimum_viewport_width, ?int $maximum_viewport_width ): ?string {
 	if ( is_int( $minimum_viewport_width ) && is_int( $maximum_viewport_width ) && $minimum_viewport_width > $maximum_viewport_width ) {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'The minimum width must be greater than the maximum width.', 'optimization-detective' ), 'Optimization Detective 0.7.0' );
+		_doing_it_wrong( __FUNCTION__, esc_html__( 'The minimum width cannot be greater than the maximum width.', 'optimization-detective' ), 'Optimization Detective 0.7.0' );
 		return null;
 	}
 	$media_attributes = array();
@@ -63,4 +63,47 @@ function od_generate_media_query( ?int $minimum_viewport_width, ?int $maximum_vi
 function od_render_generator_meta_tag(): void {
 	// Use the plugin slug as it is immutable.
 	echo '<meta name="generator" content="optimization-detective ' . esc_attr( OPTIMIZATION_DETECTIVE_VERSION ) . '">' . "\n";
+}
+
+/**
+ * Gets the path to a script or stylesheet.
+ *
+ * @since 0.9.0
+ *
+ * @param string      $src_path Source path, relative to plugin root.
+ * @param string|null $min_path Minified path. If not supplied, then '.min' is injected before the file extension in the source path.
+ * @return string URL to script or stylesheet.
+ *
+ * @noinspection PhpDocMissingThrowsInspection
+ */
+function od_get_asset_path( string $src_path, ?string $min_path = null ): string {
+	if ( null === $min_path ) {
+		// Note: wp_scripts_get_suffix() is not used here because we need access to both the source and minified paths.
+		$min_path = (string) preg_replace( '/(?=\.\w+$)/', '.min', $src_path );
+	}
+
+	$force_src = false;
+	if ( WP_DEBUG && ! file_exists( trailingslashit( __DIR__ ) . $min_path ) ) {
+		$force_src = true;
+		/**
+		 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
+		 *
+		 * @noinspection PhpUnhandledExceptionInspection
+		 */
+		wp_trigger_error(
+			__FUNCTION__,
+			sprintf(
+				/* translators: %s is the minified asset path */
+				__( 'Minified asset has not been built: %s', 'optimization-detective' ),
+				$min_path
+			),
+			E_USER_WARNING
+		);
+	}
+
+	if ( SCRIPT_DEBUG || $force_src ) {
+		return $src_path;
+	}
+
+	return $min_path;
 }

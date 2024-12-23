@@ -3,12 +3,6 @@ return array(
 	'set_up'   => static function ( Test_Image_Prioritizer_Helper $test_case ): void {
 		$slug = od_get_url_metrics_slug( od_get_normalized_query_vars() );
 		$sample_size = od_get_url_metrics_breakpoint_sample_size();
-		$outside_viewport_rect = array_merge(
-			$test_case->get_sample_dom_rect(),
-			array(
-				'top' => 100000,
-			)
-		);
 
 		$get_dom_rect = static function ( $left, $top, $width, $height ) {
 			$dom_rect = array(

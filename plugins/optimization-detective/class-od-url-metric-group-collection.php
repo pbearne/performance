@@ -36,6 +36,14 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	private $groups;
 
 	/**
+	 * The current ETag.
+	 *
+	 * @since 0.9.0
+	 * @var non-empty-string
+	 */
+	private $current_etag;
+
+	/**
 	 * Breakpoints in max widths.
 	 *
 	 * Valid values are from 1 to PHP_INT_MAX - 1. This is because:
@@ -93,12 +101,27 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 *
 	 * @throws InvalidArgumentException When an invalid argument is supplied.
 	 *
-	 * @param OD_URL_Metric[] $url_metrics   URL Metrics.
-	 * @param int[]           $breakpoints   Breakpoints in max widths.
-	 * @param int             $sample_size   Sample size for the maximum number of viewports in a group between breakpoints.
-	 * @param int             $freshness_ttl Freshness age (TTL) for a given URL Metric.
+	 * @param OD_URL_Metric[]  $url_metrics   URL Metrics.
+	 * @param non-empty-string $current_etag  The current ETag.
+	 * @param int[]            $breakpoints   Breakpoints in max widths.
+	 * @param int              $sample_size   Sample size for the maximum number of viewports in a group between breakpoints.
+	 * @param int              $freshness_ttl Freshness age (TTL) for a given URL Metric.
 	 */
-	public function __construct( array $url_metrics, array $breakpoints, int $sample_size, int $freshness_ttl ) {
+	public function __construct( array $url_metrics, string $current_etag, array $breakpoints, int $sample_size, int $freshness_ttl ) {
+		// Set current ETag.
+		if ( 1 !== preg_match( '/^[a-f0-9]{32}\z/', $current_etag ) ) {
+			throw new InvalidArgumentException(
+				esc_html(
+					sprintf(
+						/* translators: %s is the invalid ETag */
+						__( 'The current ETag must be a valid MD5 hash, but provided: %s', 'optimization-detective' ),
+						$current_etag
+					)
+				)
+			);
+		}
+		$this->current_etag = $current_etag;
+
 		// Set breakpoints.
 		sort( $breakpoints );
 		$breakpoints = array_values( array_unique( $breakpoints, SORT_NUMERIC ) );
@@ -161,6 +184,17 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	}
 
 	/**
+	 * Gets the current ETag.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @return non-empty-string Current ETag.
+	 */
+	public function get_current_etag(): string {
+		return $this->current_etag;
+	}
+
+	/**
 	 * Gets the first URL Metric group.
 	 *
 	 * This group normally represents viewports for mobile devices. This group always has a minimum viewport width of 0
@@ -191,7 +225,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	}
 
 	/**
-	 * Clear result cache.
+	 * Clears result cache.
 	 *
 	 * @since 0.3.0
 	 */
@@ -200,7 +234,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	}
 
 	/**
-	 * Create groups.
+	 * Creates groups.
 	 *
 	 * @since 0.1.0
 	 *
@@ -393,6 +427,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * Gets common LCP element.
 	 *
 	 * @since 0.3.0
+	 * @since 0.9.0 An LCP element is also considered common if it is the same in the narrowest and widest viewport groups, and all intermediate groups are empty.
 	 *
 	 * @return OD_Element|null Common LCP element if it exists.
 	 */
@@ -403,38 +438,40 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 
 		$result = ( function () {
 
-			// If every group isn't populated, then we can't say whether there is a common LCP element across every viewport group.
-			if ( ! $this->is_every_group_populated() ) {
+			// Ensure both the narrowest (first) and widest (last) viewport groups are populated.
+			$first_group = $this->get_first_group();
+			$last_group  = $this->get_last_group();
+			if ( $first_group->count() === 0 || $last_group->count() === 0 ) {
 				return null;
 			}
 
-			// Look at the LCP elements across all the viewport groups.
-			$groups_by_lcp_element_xpath   = array();
-			$lcp_elements_by_xpath         = array();
-			$group_has_unknown_lcp_element = false;
-			foreach ( $this->groups as $group ) {
-				$lcp_element = $group->get_lcp_element();
-				if ( $lcp_element instanceof OD_Element ) {
-					$groups_by_lcp_element_xpath[ $lcp_element->get_xpath() ][] = $group;
-					$lcp_elements_by_xpath[ $lcp_element->get_xpath() ][]       = $lcp_element;
-				} else {
-					$group_has_unknown_lcp_element = true;
+			$first_group_lcp_element = $first_group->get_lcp_element();
+			$last_group_lcp_element  = $last_group->get_lcp_element();
+
+			// Validate LCP elements exist and have matching XPaths in the extreme viewport groups.
+			if (
+				! $first_group_lcp_element instanceof OD_Element
+				||
+				! $last_group_lcp_element instanceof OD_Element
+				||
+				$first_group_lcp_element->get_xpath() !== $last_group_lcp_element->get_xpath()
+			) {
+				return null; // No common LCP element across the narrowest and widest viewports.
+			}
+
+			// Check intermediate viewport groups for conflicting LCP elements.
+			foreach ( array_slice( $this->groups, 1, -1 ) as $group ) {
+				$group_lcp_element = $group->get_lcp_element();
+				if (
+					$group_lcp_element instanceof OD_Element
+					&&
+					$group_lcp_element->get_xpath() !== $first_group_lcp_element->get_xpath()
+				) {
+					return null; // Conflicting LCP element found in an intermediate group.
 				}
 			}
 
-			if (
-				// All breakpoints share the same LCP element.
-				1 === count( $groups_by_lcp_element_xpath )
-				&&
-				// The breakpoints don't share a common lack of a detected LCP element.
-				! $group_has_unknown_lcp_element
-			) {
-				$xpath = key( $lcp_elements_by_xpath );
-
-				return $lcp_elements_by_xpath[ $xpath ][0];
-			}
-
-			return null;
+			return $first_group_lcp_element;
 		} )();
 
 		$this->result_cache[ __FUNCTION__ ] = $result;
@@ -461,9 +498,9 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 		$result = ( function () {
 			$all_elements = array();
 			foreach ( $this->groups as $group ) {
-				foreach ( $group as $url_metric ) {
-					foreach ( $url_metric->get_elements() as $element ) {
-						$all_elements[ $element->get_xpath() ][] = $element;
+				foreach ( $group->get_xpath_elements_map() as $xpath => $elements ) {
+					foreach ( $elements as $element ) {
+						$all_elements[ $xpath ][] = $element;
 					}
 				}
 			}
@@ -488,12 +525,13 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 
 		$result = ( function () {
 			$elements_max_intersection_ratios = array();
-			foreach ( $this->get_xpath_elements_map() as $xpath => $elements ) {
-				$element_intersection_ratios = array();
-				foreach ( $elements as $element ) {
-					$element_intersection_ratios[] = $element->get_intersection_ratio();
+			foreach ( $this->groups as $group ) {
+				foreach ( $group->get_all_element_max_intersection_ratios() as $xpath => $element_max_intersection_ratio ) {
+					$elements_max_intersection_ratios[ $xpath ] = (float) max(
+						$elements_max_intersection_ratios[ $xpath ] ?? 0,
+						$element_max_intersection_ratio
+					);
 				}
-				$elements_max_intersection_ratios[ $xpath ] = (float) max( $element_intersection_ratios );
 			}
 			return $elements_max_intersection_ratios;
 		} )();
@@ -612,6 +650,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 * @since 0.3.1
 	 *
 	 * @return array{
+	 *             current_etag: non-empty-string,
 	 *             breakpoints: positive-int[],
 	 *             freshness_ttl: 0|positive-int,
 	 *             sample_size: positive-int,
@@ -630,6 +669,7 @@ final class OD_URL_Metric_Group_Collection implements Countable, IteratorAggrega
 	 */
 	public function jsonSerialize(): array {
 		return array(
+			'current_etag'                        => $this->current_etag,
 			'breakpoints'                         => $this->breakpoints,
 			'freshness_ttl'                       => $this->freshness_ttl,
 			'sample_size'                         => $this->sample_size,

@@ -115,6 +115,7 @@ class OD_URL_Metrics_Post_Type {
 	 *
 	 * @param WP_Post $post URL Metrics post.
 	 * @return OD_URL_Metric[] URL Metrics.
+	 * @noinspection PhpDocMissingThrowsInspection
 	 */
 	public static function get_url_metrics_from_post( WP_Post $post ): array {
 		$this_function = __METHOD__;
@@ -123,6 +124,11 @@ class OD_URL_Metrics_Post_Type {
 			if ( ! in_array( $error_level, array( E_USER_NOTICE, E_USER_WARNING, E_USER_ERROR, E_USER_DEPRECATED ), true ) ) {
 				$error_level = E_USER_NOTICE;
 			}
+			/**
+			 * No WP_Exception is thrown by wp_trigger_error() since E_USER_ERROR is not passed as the error level.
+			 *
+			 * @noinspection PhpUnhandledExceptionInspection
+			 */
 			wp_trigger_error( $this_function, esc_html( $message ), $error_level );
 		};
 
@@ -217,8 +223,18 @@ class OD_URL_Metrics_Post_Type {
 			$url_metrics            = array();
 		}
 
+		$etag = $new_url_metric->get_etag();
+		if ( null === $etag ) {
+			// This case actually will never occur in practice because the store_url_metric function is only called
+			// in the REST API endpoint where the ETag parameter is required. It is here exclusively for the sake of
+			// PHPStan's static analysis. This entire condition can be removed in a future release when the 'etag'
+			// property becomes required.
+			return new WP_Error( 'missing_etag' );
+		}
+
 		$group_collection = new OD_URL_Metric_Group_Collection(
 			$url_metrics,
+			$etag,
 			od_get_breakpoint_max_widths(),
 			od_get_url_metrics_breakpoint_sample_size(),
 			od_get_url_metric_freshness_ttl()
