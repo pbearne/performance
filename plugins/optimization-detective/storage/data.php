@@ -310,7 +310,7 @@ function od_get_minimum_viewport_aspect_ratio(): float {
 	 *
 	 * @param float $minimum_viewport_aspect_ratio Minimum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_minimum_viewport_aspect_ratio', 0.4 );
+	return round( (float) apply_filters( 'od_minimum_viewport_aspect_ratio', 0.4 ), 2 );
 }
 
 /**
@@ -332,7 +332,7 @@ function od_get_maximum_viewport_aspect_ratio(): float {
 	 *
 	 * @param float $maximum_viewport_aspect_ratio Maximum viewport aspect ratio.
 	 */
-	return (float) apply_filters( 'od_maximum_viewport_aspect_ratio', 2.5 );
+	return round( (float) apply_filters( 'od_maximum_viewport_aspect_ratio', 2.5 ), 2 );
 }
 
 /**
